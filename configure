@@ -3150,7 +3150,7 @@ if test "$enable_warnings" = yes ; then
 case "$CC" in *gcc*)
 echo "$as_me:3151: result: enabling selected compiler warnings" >&5
 echo "${ECHO_T}enabling selected compiler warnings" >&6
-CFLAGS="$CFLAGS -ansi -pedantic -Wall -Wno-implicit -Wno-long-long" ;;
+CFLAGS="$CFLAGS -ansi -pedantic -Wall" ;;
 *)
 echo "$as_me:3155: result: disabling warnings for non-gcc compiler" >&5
 echo "${ECHO_T}disabling warnings for non-gcc compiler" >&6 ;;
