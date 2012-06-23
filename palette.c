@@ -1,8 +1,8 @@
-
+#include <stdlib.h>
 
 #include "defs.h"
 #include "fb.h"
-
+#include "sys.h"
 
 static byte palmap[32768];
 static byte pallock[256];

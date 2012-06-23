@@ -7,10 +7,12 @@
  * This file may be distributed under the terms of the GNU GPL.
  */
 
+#undef _GNU_SOURCE
+#define _GNU_SOURCE
+#include <string.h>
 
 #include <stdlib.h>
-#include <string.h>
-char *strdup();
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <linux/fb.h>
@@ -20,6 +22,7 @@ char *strdup();
 #include "defs.h"
 #include "fb.h"
 #include "rc.h"
+#include "sys.h"
 #include "matrox.h"
 
 struct fb fb;

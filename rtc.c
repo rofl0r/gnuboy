@@ -2,6 +2,7 @@
 
 
 #include <stdio.h>
+#include <time.h>
 
 #include "defs.h"
 #include "mem.h"

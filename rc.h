@@ -55,6 +55,8 @@ int rc_getint(char *name);
 int *rc_getvec(char *name);
 char *rc_getstr(char *name);
 
+int rc_command(char *line);
+int rc_sourcefile(char *filename);
 
 #endif
 

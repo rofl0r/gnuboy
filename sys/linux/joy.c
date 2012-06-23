@@ -1,8 +1,9 @@
+#undef _GNU_SOURCE
+#define _GNU_SOURCE
+#include <string.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-char *strdup();
 #include <linux/joystick.h>
 #include <sys/types.h>
 #include <sys/stat.h>

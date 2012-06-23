@@ -10,6 +10,8 @@
 #include "fastmem.h"
 #include "cpuregs.h"
 #include "cpucore.h"
+#include "lcdc.h"
+#include "debug.h"
 
 #ifdef USE_ASM
 #include "asm.h"

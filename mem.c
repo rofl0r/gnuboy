@@ -8,6 +8,8 @@
 #include "mem.h"
 #include "rtc.h"
 #include "lcd.h"
+#include "lcdc.h"
+#include "sound.h"
 
 struct mbc mbc;
 struct rom rom;

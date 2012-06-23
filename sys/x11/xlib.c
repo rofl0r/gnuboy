@@ -4,6 +4,8 @@
  * Xlib interface.
  * dist under gnu gpl
  */
+#include <ctype.h>
+#include "../../sys.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

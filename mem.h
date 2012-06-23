@@ -57,6 +57,7 @@ void ioreg_write(byte r, byte b);
 void mbc_write(int a, byte b);
 void mem_write(int a, byte b);
 byte mem_read(int a);
+void mbc_reset();
 
 
 

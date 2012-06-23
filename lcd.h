@@ -47,7 +47,25 @@ struct lcd
 extern struct lcd lcd;
 extern struct scan scan;
 
-
+void updatepatpix();
+void tilebuf();
+void bg_scan();
+void wnd_scan();
+void bg_scan_pri();
+void wnd_scan_pri();
+void bg_scan_color();
+void wnd_scan_color();
+void spr_count();
+void spr_enum();
+void spr_scan();
+void lcd_begin();
+void lcd_refreshline();
+void pal_write(int i, byte b);
+void pal_write_dmg(int i, int mapnum, byte d);
+void vram_write(int a, byte b);
+void vram_dirty();
+void pal_dirty();
+void lcd_reset();
 
 
 

@@ -28,7 +28,9 @@ typedef signed int n32;
 typedef un16 word;
 typedef word addr;
 
-
+/* stuff from main.c ... */
+void die(char *fmt, ...);
+void doevents();
 
 
 
