@@ -209,7 +209,7 @@ esac
 #2.9*|3.*)
 CFLAGS="$CFLAGS -fstrength-reduce -fthread-jumps \
  -fcse-follow-jumps -fcse-skip-blocks -frerun-cse-after-loop \
- -fexpensive-optimizations -fforce-mem -fforce-addr"
+ -fexpensive-optimizations -fforce-addr"
 #;;
 #*)
 #AC_MSG_WARN(your compiler is too old for fancy optimizations)
