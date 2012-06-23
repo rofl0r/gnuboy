@@ -8,11 +8,10 @@
 #include "defs.h"
 #include "rc.h"
 #include "hw.h"
+#include "path.h"
 
 
 char *rcpath;
-
-char *path_search();
 
 int rc_sourcefile(char *filename)
 {

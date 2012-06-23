@@ -95,9 +95,9 @@ void rtc_tick()
 
 void rtc_save_internal(FILE *f)
 {
-	fprintf(f, "%d %d %d %02d %02d %02d %02d\n%d\n",
+	fprintf(f, "%d %d %d %02d %02d %02d %02d\n%ld\n",
 		rtc.carry, rtc.stop, rtc.d, rtc.h, rtc.m, rtc.s, rtc.t,
-		time(0));
+		(long) time(0));
 }
 
 void rtc_load_internal(FILE *f)

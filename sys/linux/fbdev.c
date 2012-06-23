@@ -218,7 +218,7 @@ void vid_init()
 	if (vmode[1] > vi.yres) vmode[1] = vi.yres;
 	
 	mmio = mmap(0, fi.mmio_len, PROT_READ|PROT_WRITE, MAP_SHARED, fbfd, fi.smem_len);
-	if ((int)mmio == -1) mmio = 0;
+	if ((long)mmio == -1) mmio = 0;
 
 	overlay_init();
 
