@@ -45,19 +45,20 @@ all of the following and much more:
   Wave pattern memory corruption when sound channel 3 is played.
   Pad, timer, divide counter, and other basic hardware registers.
   CGB double-speed CPU mode.
+  Sorting sprites by X coordinate in DMG mode.
+  HALT instruction skipping in DMG mode.
+  CPU stalls during HDMA and GDMA.
+  Configurable color filters to provide more authentic LCD look.
 
 Aspects not emulated at this time include:
 
 * Serial IO (link cable).
   Undocumented 'extra' ram in OAM space on Gameboy Color.
-  All Super Gameboy extensions.
+* All Super Gameboy extensions.
 * GBC, HuC1, and HuC3 IR ports.
 * Obscure mappers such as TAMA5.
-  Sorting sprites by X coordinate in DMG mode.
-  HALT instruction skipping in DMG mode.
-  CPU stalls during HDMA and GDMA.
 
-Only the two marked by * are known to affect the playability of
+Only the ones marked by * are known to affect the playability of
 actual games or demos; the rest are just listed for completeness'
 sake.
 
@@ -128,7 +129,6 @@ Here's a brief list of what may appear in gnuboy in the future:
   Super Gameboy support.
   Serial link over the internet.
   Serial link to a real Gameboy with a custom cable.
-  Configurable color filters to provide more authentic LCD look.
   Custom colorization of DMG games on a per-tile basis.
   Support for more colorspaces in the hardware scaler.
   Recording audio.

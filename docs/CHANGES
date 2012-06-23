@@ -9,6 +9,22 @@ GNUBOY CHANGES FILE -- detailed list of all changes made
   For an easy-to-read user-oriented list of major changes in each
   release, please refer to the file WHATSNEW.
 
+1.0.4-cvs
+fixed a possible out-of-bounds access which could allow a hacked savestate to
+crash gnuboy and possibly run arbitrary code on the host machine. Challenge:
+try to find a way to exploit it
+removed an incorrect restriction on when LY=LYC interrupts can occur, which
+broke at least one game and several PD roms. (extra special thanks to beware
+for helping us track this down!)
+fixed an SDL keymap issue which prevented the keypad '5' key from working when
+num-lock was off
+replaced the channel 4 PRNG tables with a computer-generated PRNG output table,
+as opposed to an approximation based on wavefiles
+fixed the HDMA behavior (properly?), several pinball games developed by 'Left
+Field Productions' now work correctly (thanks to beware for pointing us in the
+right direction)
+fixed GDMA so it consumes cpu cycles properly, now the intro to Magical Drop
+works correctly
 
 1.0.3
 fixed a typo in the SDL keymap file that kept . from working

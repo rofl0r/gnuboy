@@ -31,6 +31,9 @@ void mem_updatemap()
 	int n;
 	byte **map;
 	
+	mbc.rombank &= (mbc.romsize - 1);
+	mbc.rambank &= (mbc.ramsize - 1);
+	
 	map = mbc.rmap;
 	map[0x0] = rom.bank[0];
 	map[0x1] = rom.bank[0];
@@ -156,6 +159,9 @@ void ioreg_write(byte r, byte b)
 			hw_interrupt(0, IF_SERIAL);
 		}
 		R_SC = b; /* & 0x7f; */
+		break;
+	case RI_SB:
+		REG(r) = b;
 		break;
 	case RI_DIV:
 		REG(r) = 0;
@@ -428,8 +434,6 @@ void mbc_write(int a, byte b)
 		}
 		break;
 	}
-	mbc.rombank &= (mbc.romsize - 1);
-	mbc.rambank &= (mbc.ramsize - 1);
 	/* printf("%02X\n", mbc.rombank); */
 	mem_updatemap();
 }

@@ -8,6 +8,32 @@
 
 
 
+CVS 1.0.4
+
+Fixed a possible out-of-bounds access which could allow a hacked savestate to
+crash gnuboy and possibly run arbitrary code on the host machine. Challenge:
+try to find a way to exploit it
+
+Removed an incorrect restriction on when LY=LYC interrupts can occur (from 
+0.9.13, possibly to fix montezuma's return or pokemon yellow, though both games
+work fine now without it) which broke at least one commercial game and several
+PD roms. (extra special thanks to beware for helping us track this down!)
+
+Fixed an SDL keymap issue which prevented the keypad '5' key from working when
+num-lock was off
+
+Replaced the channel 4 PRNG tables with a shifter-generated PRNG output table,
+as opposed to the old approximations based on wavefiles
+
+Fixed the HDMA timing behavior (properly?), several pinball games developed by
+'Left Field Productions' now work correctly (thanks to beware for pointing us
+in the right direction)
+
+Fixed the GDMA behavior so it consumes cpu cycles as it should. This fixes the
+intro scene animation in 'Magical Drop'
+
+
+
 RELEASE 1.0.3
 
 All ANSI C incompatibilities should be fixed. Please report any that
