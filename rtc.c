@@ -2,7 +2,6 @@
 
 
 #include <stdio.h>
-#include <time.h>
 
 #include "defs.h"
 #include "mem.h"
@@ -95,9 +94,9 @@ void rtc_tick()
 
 void rtc_save_internal(FILE *f)
 {
-	fprintf(f, "%d %d %d %02d %02d %02d %02d\n%ld\n",
+	fprintf(f, "%d %d %d %02d %02d %02d %02d\n%d\n",
 		rtc.carry, rtc.stop, rtc.d, rtc.h, rtc.m, rtc.s, rtc.t,
-		(long) time(0));
+		time(0));
 }
 
 void rtc_load_internal(FILE *f)

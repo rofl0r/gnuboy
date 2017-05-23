@@ -1,10 +1,10 @@
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#include <string.h>
 
 
 
 #include <stdlib.h>
+#include <string.h>
+
+char *strdup();
 
 #include "defs.h"
 #include "rc.h"

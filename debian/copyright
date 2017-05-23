@@ -1,0 +1,16 @@
+This package was debianized by Davide Puricelli (evo) <evo@debian.org> on
+Mon, 16 Apr 2001 13:56:46 +0200.
+
+It was downloaded from http://gnuboy.unix-fu.org/
+
+Upstream Author: Laguna <laguna@aerifal.cx> 
+
+Copyright (C) 2000-2001 Laguna and Gilgamesh
+
+You are free to distribute this software under the terms of
+the GNU General Public License.
+On Debian systems, the complete text of the GNU General Public
+License can be found in /usr/share/common-licenses/GPL file.
+
+This package is not part of the Debian GNU/Linux distribution;
+it belongs to contrib area because it needs non-free roms to work.

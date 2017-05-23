@@ -1,11 +1,8 @@
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#include <string.h>
 
-#include <unistd.h>
-#include <sys/ioctl.h>
 
 #include <stdlib.h>
+#include <string.h>
+char *strdup();
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

@@ -3150,7 +3150,7 @@ if test "$enable_warnings" = yes ; then
 case "$CC" in *gcc*)
 echo "$as_me:3151: result: enabling selected compiler warnings" >&5
 echo "${ECHO_T}enabling selected compiler warnings" >&6
-CFLAGS="$CFLAGS -ansi -pedantic -Wall" ;;
+CFLAGS="$CFLAGS -ansi -pedantic -Wall -Wno-implicit -Wno-long-long" ;;
 *)
 echo "$as_me:3155: result: disabling warnings for non-gcc compiler" >&5
 echo "${ECHO_T}disabling warnings for non-gcc compiler" >&6 ;;
@@ -3231,7 +3231,7 @@ esac
 #2.9*|3.*)
 CFLAGS="$CFLAGS -fstrength-reduce -fthread-jumps \
  -fcse-follow-jumps -fcse-skip-blocks -frerun-cse-after-loop \
- -fexpensive-optimizations -fforce-addr"
+ -fexpensive-optimizations -fforce-mem -fforce-addr"
 #;;
 #*)
 #AC_MSG_WARN(your compiler is too old for fancy optimizations)

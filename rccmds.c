@@ -1,13 +1,13 @@
-#include <string.h>
+
+
+
+
 #include <stdlib.h>
 
 #include "defs.h"
 #include "rc.h"
-#include "rckeys.h"
 #include "hw.h"
-#include "emu.h"
-#include "loader.h"
-#include "split.h"
+
 
 
 /*

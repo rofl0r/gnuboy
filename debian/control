@@ -1,0 +1,27 @@
+Source: gnuboy
+Section: contrib/games
+Priority: optional
+Maintainer: Davide Puricelli (evo) <evo@debian.org>
+Build-Depends: debhelper (>> 5), libx11-dev, libxext-dev, libxt-dev, x11proto-xext-dev, libsdl1.2-dev, libaudiofile-dev, libaa1-dev, libesd0-dev, libncurses5-dev  
+Standards-Version: 3.8.3.0
+
+Package: gnuboy-sdl
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: SDL binaries for gnuboy - Game Boy Emulator
+ Gnuboy is a portable Game Boy emulator. It basically allows you to play
+ most games designed for the Game Boy and Game Boy Color on your PC or
+ workstation.
+ .
+ This package includes SDL binaries.
+
+Package: gnuboy-x
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: X binaries for gnuboy - Game Boy Emulator
+ Gnuboy is a portable Game Boy emulator. It basically allows you to play
+ most games designed for the Game Boy and Game Boy Color on your PC or
+ workstation.
+ .
+ This package includes X binaries.
+ 

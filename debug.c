@@ -1,7 +1,9 @@
-
-
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
+#include <pthread.h>
+#include <errno.h>
+#include <sys/types.h>
 
 #include "defs.h"
 #include "cpu.h"
@@ -9,9 +11,16 @@
 #include "fastmem.h"
 #include "regs.h"
 #include "rc.h"
-
 #include "cpuregs.h"
 
+#define RED   "\x1B[31m"
+#define GRN   "\x1B[32m"
+#define YEL   "\x1B[33m"
+#define BLU   "\x1B[34m"
+#define MAG   "\x1B[35m"
+#define CYN   "\x1B[36m"
+#define WHT   "\x1B[37m"
+#define RESET "\x1B[0m"
 
 static char *mnemonic_table[256] =
 {
@@ -553,10 +562,225 @@ static byte operand_count[256] =
 	2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 3, 1, 1, 1, 2, 1
 };
 
-
-/* replace with a real interactive debugger eventually... */
+#define MAX_BREAKPOINTS 5
 
 int debug_trace = 0;
+int *breakpoints = NULL;
+volatile int step = 0;
+
+extern void pcm_close();
+extern void pcm_init();
+extern byte *get_rom_content();
+
+
+void stop_emulator(){
+	pcm_close();
+	step = 0;
+}
+
+void run_emulator(){
+	pcm_init();
+	step = 1;
+}
+
+void exit_emulator(){
+	free(breakpoints);
+	exit(0);
+}
+
+void busy_waiting(){
+	while(step != 1);
+}
+
+void restart_emulator(){
+	emu_reset();
+	step = 1;
+}
+
+void clear_step(){
+     step = 0;
+}
+
+int return_step(){
+     return step;
+}
+
+
+
+void print_help(){
+
+	printf(YEL "\n\nCOMMANDS AVAILABLE:\n\n" RESET);
+	printf(
+	 YEL "help:           print the available commands \n"
+ 		"cart:           information about the cartridge that is being used\n"
+		"state:          print relevant information about the state of the CPU \n"
+		"run:            run the emulator indefinitely\n"
+	     "restart:        restart the emulator \n"
+		"stop:           stop emulation \n"
+		"break [addr]:   set a breakpoint at a certain address \n"
+		"del [addr]:     delete a breakpoint at a certain address \n"
+		"mdump:          obtain a memory dump in a file called 'memorydump' which is stored within gnuboy's installation directory \n"
+		"                All the addresses containing ASCII values are not shown in the resulting file.\n"
+          "                i.e: the information provided with the 'cart' command\n"
+          "exit:           exit both the emulator and the debugger"
+    	     "\n \n"
+	 RESET
+	);
+
+	printf(WHT "\n\nOTHER OPTIONS:\n\n" RESET);
+	printf(
+	 WHT "screenshots:    press F7 key in order to get an instant snapshot of the emulator \n"
+	     "screencasting:  press F8 to start screencasting and F9 to stop. The whole screen will be recorded, including sound"
+	     "\n \n \n"
+	 RESET
+	);
+
+}
+
+void print_cart(){
+     rom_info();
+}
+
+void exists_breakpoint(int breakpoint){
+
+ for(int i = 0; i < MAX_BREAKPOINTS; i++)
+	if(breakpoints[i] == breakpoint){
+       breakpoints[i] = 0;
+	  stop_emulator();
+	  cpu_status(PC,1);
+	  busy_waiting();
+	}
+}
+
+
+int init_breakpoints(){
+
+  breakpoints = malloc(MAX_BREAKPOINTS * sizeof(int));
+
+  if(!breakpoints){
+	printf("Could not initialize breakpoints. Stopping debugger \n");
+	return errno;
+  }
+  memset(breakpoints,0,MAX_BREAKPOINTS);
+  return 0;
+}
+
+void set_breakpoint(char *bkpoint){
+
+  char *address = NULL;
+
+  for(int i = 0; i < MAX_BREAKPOINTS; i++)
+  if(breakpoints[i] == 0){
+
+      strtok(bkpoint, " ");
+	 address = strtok(NULL, " ");
+	 breakpoints[i] = strtol(address, NULL, 16);
+	 printf("Breakpoint at %x has been set\n",  strtol(address, NULL, 16));
+
+	 return;
+  }
+
+  printf("Maximum number of breakpoints achieved. Delete a breakpoint before setting a new one\n");
+
+}
+
+
+void delete_breakpoint(char *bkpoint){
+
+  int address = 0;
+  char *addr = NULL;
+
+  strtok(bkpoint, " ");
+  addr = strtok(NULL, " ");
+  address = strtol(addr, NULL, 16);
+
+  for(int i = 0; i < MAX_BREAKPOINTS; i++)
+	if(breakpoints[i] == address){
+		breakpoints[i] == 0;
+		printf("Deleted breakpoint at %x\n", address);
+		return;
+	}
+
+  printf("Breakpoint not found\n");
+
+}
+
+void debugger_start(){
+
+
+  char *line = NULL;
+  ssize_t bufsize = 0;
+  int size = 0;
+  int end = 0;
+  int bp = 0;
+
+  bp = init_breakpoints();
+
+  if(bp != 0){
+	fprintf(stderr,"Error initializing breakpoints. Stopping debugger. %s \n", strerror(bp));
+	return;
+  }
+
+  printf(BLU "\n\n\nWelcome to the gnuboy debugger version 1.0.3\n" RESET);
+  printf(YEL "This version is being tested currently\n" RESET);
+  printf(YEL "If you have any issues, contact me via:  cmn263@gmail.com\n" RESET );
+  printf(WHT "\nType 'help' in order to display a list of the available commands\n\n" RESET);
+
+  while(end == 0){
+
+    printf(">");
+    size = getline(&line, &bufsize, stdin);
+
+	if (strcmp(line,"help\n") == 0){
+	     print_help();
+	}
+	else if (strcmp(line,"cart\n") == 0){
+		print_cart();
+	}
+     else if (strcmp(line,"state\n") == 0){
+	     cpu_status(PC,1);
+	}
+	else if (strcmp(line,"mdump\n") == 0){
+		memorydump();
+	}
+	else if (strcmp(line,"run\n") == 0){
+		run_emulator();
+	}
+	else if (strcmp(line,"restart\n") == 0){
+		restart_emulator();
+	}
+	else if (strcmp(line,"stop\n") == 0){
+		stop_emulator();
+	}
+	else if (strstr(line,"break") != NULL){
+	  set_breakpoint(line);
+	}
+	else if (strstr(line,"del") != NULL){
+		delete_breakpoint(line);
+	}
+	else if (strcmp(line,"exit\n") == 0){
+		exit_emulator();
+	}
+	else{
+	if(strcmp(line,"\n") != 0){
+		printf("Unrecognized command %s",line);
+	}
+  	}
+  }
+
+}
+
+void debugger_init(){
+
+	pthread_t th;
+
+	int err = 0;
+	err = pthread_create(&th, NULL, &debugger_start, NULL);
+	if (err != 0)
+	    printf("\nError when trying to run the debugger\n", strerror(err));
+
+}
+
 
 rcvar_t debug_exports[] =
 {
@@ -564,7 +788,8 @@ rcvar_t debug_exports[] =
 	RCV_END
 };
 
-void debug_disassemble(addr a, int c)
+
+void cpu_status(addr a, int c)
 {
 	static int i, j, k;
 	static byte code;
@@ -573,7 +798,11 @@ void debug_disassemble(addr a, int c)
 	static char mnemonic[256];
 	static char *pattern;
 
-	if (!debug_trace) return;
+	if (!debug_trace){
+		printf("Debugging is not enabled. Aborting this function \n");
+		return;
+     }
+
 	while (c > 0)
 	{
 		k = 0;
@@ -626,64 +855,194 @@ void debug_disassemble(addr a, int c)
 			}
 		}
 		mnemonic[j] = 0;
-		printf("%04X ", opaddr);
+
+		printf("PC = %06X\n", opaddr);
+
 		switch (operand_count[ops[0]]) {
 		case 1:
-			printf("%02X       ", ops[0]);
+			printf("Source operand = %02X       \n", ops[0]);
 			break;
 		case 2:
-			printf("%02X %02X    ", ops[0], ops[1]);
+			printf("Source operands = %02X %02X    \n", ops[0], ops[1]);
 			break;
 		case 3:
-			printf("%02X %02X %02X ", ops[0], ops[1], ops[2]);
+			printf("Source operands = %02X %02X %02X \n", ops[0], ops[1], ops[2]);
 			break;
 		}
-		printf("%-16.16s", mnemonic);
+
+		printf("Assembly instruction = %-16.16s\n", mnemonic);
 		printf(
-			" SP=%04X.%04X BC=%04X.%02X.%02X DE=%04X.%02X "
-			"HL=%04X.%02X A=%02X F=%02X %c%c%c%c%c",
-			SP, readw(SP),
-			BC, readb(BC), readb(0xFF00 | C),
-			DE, readb(DE),
-			HL, readb(HL), A,
-			F, (IME ? 'I' : '-'),
-			((F & 0x80) ? 'Z' : '-'),
-			((F & 0x40) ? 'N' : '-'),
-			((F & 0x20) ? 'H' : '-'),
-			((F & 0x10) ? 'C' : '-')
-		);
-		printf(
-			" IE=%02X IF=%02X LCDC=%02X STAT=%02X LY=%02X LYC=%02X",
-			R_IE, R_IF, R_LCDC, R_STAT, R_LY, R_LYC
-		);
-		printf("\n");
+				"Registers: \n  SP=%04X \n  BC=%04X \n  DE=%04X"
+				"\n  HL=%04X \n  A=%02X \n  F=%02X %c%c%c%c%c\n",
+				SP,
+				BC,
+				DE,
+				HL,
+				A,
+				F, (IME ? 'I' : '-'),
+				((F & 0x80) ? 'Z' : '-'),
+				((F & 0x40) ? 'N' : '-'),
+				((F & 0x20) ? 'H' : '-'),
+				((F & 0x10) ? 'C' : '-')
+			);
+			printf(
+				"Interrupts: \n   IE=%02X IF=%02X LCDC=%02X STAT=%02X LY=%02X LYC=%02X\n",
+				R_IE, R_IF, R_LCDC, R_STAT, R_LY, R_LYC
+			);
+
 		fflush(stdout);
 		c--;
 	}
+
+	return;
+
 }
 
+void memorydump()
+{
+
+	int a = 0;
+	static int i, j, k;
+	static byte code;
+	static byte ops[3];
+	static int opaddr = 0;
+	static char mnemonic[256];
+	static char *pattern;
+	byte *header = 0;
+
+	FILE *fp;
+	char aux[100];
+	fp = fopen("memorydump", "w+");
+
+	if(!fp){
+		fprintf(stderr, "Could not initialize source file for memorydump: %s\n", strerror(errno));
+		return;
+	}
+
+	if (!debug_trace){
+		printf("Debugging is not enabled. Aborting memorydump \n");
+		return;
+     }
+
+	while (a <= 0xFFFF)
+	{
+		k = 0;
+		opaddr = a;
+
+		print_regions(fp, a);
+
+		code = ops[k++] = readb(a); a++;
+		if (code != 0xCB)
+		{
+			pattern = mnemonic_table[code];
+			if (!pattern){
+				pattern = "***INVALID***";
+			}
+		}
+		else
+		{
+			code = ops[k++] = readb(a); a++;
+			pattern = cb_mnemonic_table[code];
+		}
+
+		i = j = 0;
+		while (pattern[i])
+		{
+			if (pattern[i] == '%')
+			{
+				switch (pattern[++i])
+				{
+				case 'B':
+				case 'b':
+					ops[k] = readb(a); a++;
+					j += sprintf(mnemonic + j,
+						"%02Xh", ops[k++]);
+					break;
+				case 'W':
+				case 'w':
+					ops[k] = readb(a); a++;
+					ops[k+1] = readb(a); a++;
+					j += sprintf(mnemonic + j, "%04Xh",
+						((ops[k+1] << 8) | ops[k]));
+					k += 2;
+					break;
+				case 'O':
+				case 'o':
+					ops[k] = readb(a); a++;
+					j += sprintf(mnemonic + j, "%+d",
+						(n8)(ops[k++]));
+					break;
+				}
+				i++;
+			}
+			else
+			{
+				mnemonic[j++] = pattern[i++];
+			}
+		}
+		mnemonic[j] = 0;
 
 
+          sprintf(aux, "0x%04X ", opaddr);
+          fprintf(fp, aux);
+		sprintf(aux, "%-16.16s\n", mnemonic);
+		fprintf(fp, aux);
+
+		fflush(stdout);
+	}
 
 
+	fclose(fp);
+
+}
+
+void print_regions(FILE *fp, int opaddr){
 
 
+	switch(opaddr){
+		case 0x0100:
+				fprintf(fp, ";#---------------------------------- 16 KB ROM BANK #0 ----------------------------------#\n");
+				fprintf(fp, ";#---------------------------------- BEGIN CODE EXECUTION POINT ----------------------------------#\n");
+				break;
+		case 0x0104:
+				fprintf(fp, ";#---------------------------------- Scrolling Nintendo Graphic ----------------------------------#\n");
+				break;
+		case 0x0134:
+				fprintf(fp, ";#---------------------------------- Title of the game in ASCII ----------------------------------#\n");
+				break;
+		case 0x4000:
+				fprintf(fp, ";#---------------------------------- 16KB SWITCHABLE ROM BANK ----------------------------------#\n");
+				break;
+		case 0x8000:
+				fprintf(fp, ";#---------------------------------- 8KB VIDEO RAM ----------------------------------#\n");
+				break;
+		case 0xA000:
+				fprintf(fp, ";#---------------------------------- 8KB SWITCHABLE RAM BANK ----------------------------------#\n");
+				break;
+		case 0xC000:
+				fprintf(fp, ";#---------------------------------- 8KB INTERNAL RAM ----------------------------------#\n");
+				break;
+		case 0xE000:
+				fprintf(fp, ";#---------------------------------- ECHO OF 8KB INTERNAL RAM ----------------------------------#\n");
+				break;
+		case 0xFE00:
+				fprintf(fp, ";#---------------------------------- SPRITE ATTRIB MEMORY (OAM) ----------------------------------#\n");
+				break;
+		case 0xFEA0:
+				fprintf(fp, ";#---------------------------------- EMPTY BUT UNUSABLE FOR I/O ----------------------------------#\n");
+				break;
+		case 0xFF00:
+				fprintf(fp, ";#---------------------------------- I/O PORTS ----------------------------------#\n");
+				break;
+		case 0xFF4C:
+				fprintf(fp, ";#---------------------------------- EMPTY BUT UNUSABLE FOR I/O ----------------------------------#\n");
+				break;
+		case 0xFF80:
+				fprintf(fp, ";#---------------------------------- INTERNAL RAM ----------------------------------#\n");
+				break;
+		case 0xFFFF:
+				fprintf(fp, ";#---------------------------------- INTERRUPT ENABLE REGISTER ----------------------------------#\n");
+					break;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

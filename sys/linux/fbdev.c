@@ -7,12 +7,10 @@
  * This file may be distributed under the terms of the GNU GPL.
  */
 
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#include <string.h>
 
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
+char *strdup();
 #include <unistd.h>
 #include <sys/mman.h>
 #include <linux/fb.h>
@@ -22,7 +20,6 @@
 #include "defs.h"
 #include "fb.h"
 #include "rc.h"
-#include "sys.h"
 #include "matrox.h"
 
 struct fb fb;
@@ -218,7 +215,7 @@ void vid_init()
 	if (vmode[1] > vi.yres) vmode[1] = vi.yres;
 	
 	mmio = mmap(0, fi.mmio_len, PROT_READ|PROT_WRITE, MAP_SHARED, fbfd, fi.smem_len);
-	if ((long)mmio == -1) mmio = 0;
+	if ((int)mmio == -1) mmio = 0;
 
 	overlay_init();
 

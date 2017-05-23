@@ -1,7 +1,6 @@
-#include <string.h>
 
-#include "refresh.h"
-#include "palette.h"
+
+
 #include "defs.h"
 #include "regs.h"
 #include "hw.h"

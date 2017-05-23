@@ -1,0 +1,113 @@
+gnuboy (1.0.3-7) unstable; urgency=low
+
+  * Acknowledging previous NMUs, thanks Moritz! closes: #711112. 
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sun, 30 Jun 2013 16:54:28 +0200
+
+gnuboy (1.0.3-6.2) unstable; urgency=low
+
+  * Drop gnuboy-svga, svgalib is scheduled for removal from the
+    archive (Bug ##711112)
+
+ -- Moritz Muehlenhoff <jmm@debian.org>  Tue, 11 Jun 2013 23:53:58 +0200
+
+gnuboy (1.0.3-6.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Remove spurios build-dep on libggi/libgii (which is going away for
+    Wheezy	 
+
+ -- Moritz Muehlenhoff <jmm@debian.org>  Sun, 08 Jul 2012 20:47:28 +0200
+
+gnuboy (1.0.3-6) unstable; urgency=low
+
+  * debian/control: removed libslang2-dev from Build-Depends.
+    closes: #560276.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Thu, 17 Dec 2009 16:19:10 +0100
+
+gnuboy (1.0.3-5) unstable; urgency=low
+
+  * Moving manpages to correct section.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Wed, 01 Apr 2009 15:59:40 +0200
+
+gnuboy (1.0.3-4) unstable; urgency=low
+
+  * Bumped Standards-Version to release 3.8.1.0.
+  * Fixed Build-Depends; closes: #483446.
+  * Moving binaries to /usr/games. 
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sun, 29 Mar 2009 13:11:07 +0200
+
+gnuboy (1.0.3-3) unstable; urgency=low
+
+  * Bumped Standards-Version to release 3.6.2.
+  * Added support for amd64 architecture: now we build gnuboy-svga for it,
+    too.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sat, 22 Apr 2006 14:06:49 +0200
+
+gnuboy (1.0.3-2.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Replace build-dependency on xlibs-dev with an explicit build-dependency
+    on each required package. (Closes: #346848)
+
+ -- Steinar H. Gunderson <sesse@debian.org>  Sat, 21 Jan 2006 02:47:14 +0100
+
+gnuboy (1.0.3-2) unstable; urgency=high
+
+  * Fixed Build-Depends; closes: #325294.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sat, 24 Sep 2005 14:11:01 +0200
+
+gnuboy (1.0.3-1) unstable; urgency=low
+
+  * New upstream version, closes: #143976.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Mon, 22 Apr 2002 13:54:01 +0200
+
+gnuboy (1.0.2-2) unstable; urgency=high
+
+  * Recompiled to fix a critical bug (sdlgnuboy didn't start);
+    closes: #143391.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Fri, 19 Apr 2002 17:15:39 +0200
+
+gnuboy (1.0.2-1) unstable; urgency=high
+
+  * New upstream version.
+  * Recompiled against libsdl1.2debian.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sat, 20 Oct 2001 16:55:27 +0200
+
+gnuboy (1.0.1-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sat, 21 Jul 2001 16:59:36 +0200
+
+gnuboy (1.0.0-2) unstable; urgency=high
+
+  * Build-Depends: added xutils; closes: #103513.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Wed, 11 Jul 2001 21:43:43 +0200
+
+gnuboy (1.0.0-1) unstable; urgency=high
+
+  * New upstream version.
+  * Built against libsdl1.2, closes: #102519.
+  * Added manpages.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Mon,  2 Jul 2001 16:31:07 +0200
+
+gnuboy (0.9.13-1) unstable; urgency=low
+
+  * Initial Release; closes: #94141.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Mon, 16 Apr 2001 13:56:46 +0200
+
+Local variables:
+mode: debian-changelog
+End:
