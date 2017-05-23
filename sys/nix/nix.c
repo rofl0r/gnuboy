@@ -3,10 +3,6 @@
  *
  * System interface for *nix systems.
  */
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#undef _BSD_SOURCE
-#define _BSD_SOURCE
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -16,13 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
-
-#include "../../defs.h"
-#include "../../rc.h"
 
 #define DOTDIR ".gnuboy"
 

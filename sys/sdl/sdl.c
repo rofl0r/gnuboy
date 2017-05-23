@@ -1,18 +1,20 @@
 /*
  * sdl.c
- * sdl interfaces -- based on svga.c 
+ * sdl interfaces -- based on svga.c
  *
  * (C) 2001 Damian Gryski <dgryski@uwaterloo.ca>
  * Joystick code contributed by David Lau
+ * Sound code added by Laguna
  *
  * Licensed under the GPLv2, or later.
  */
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <signal.h>
+#include <fcntl.h>
 
 #include <SDL/SDL.h>
-
 
 #include "fb.h"
 #include "input.h"
@@ -52,6 +54,46 @@ rcvar_t joy_exports[] =
 /* keymap - mappings of the form { scancode, localcode } - from sdl/keymap.c */
 extern int keymap[][2];
 
+volatile int record_pid = 0;
+
+void take_screenshot(){
+
+    int pid;
+	  pid_t child_pid;
+
+	  child_pid = fork();
+	  if(child_pid == 0) {
+	    execl("/usr/bin/scrot", "scrot", "-u", "screenshot.png", (char *)0);
+	  }
+}
+
+void init_screencast(){
+
+	int pid;
+	pid_t child_pid;
+
+	child_pid = fork();
+	if(child_pid == 0) {
+		execl("/bin/bash","bash","video.sh", NULL);
+		exit(0);
+	}
+	else if (child_pid > 0){
+		record_pid = child_pid;
+	}
+	else if (child_pid < 0){
+		perror("Could not initialize screencasting\n");
+	}
+
+}
+
+void stop_screencast(){
+	if(record_pid > 0){
+		printf("Stopping screencast\n");
+		system("killall ffmpeg");
+		kill(record_pid, SIGTERM);
+	}
+}
+
 static int mapscancode(SDLKey sym)
 {
 	/* this could be faster:  */
@@ -73,15 +115,15 @@ static void joy_init()
 {
 	int i;
 	int joy_count;
-	
+
 	/* Initilize the Joystick, and disable all later joystick code if an error occured */
 	if (!use_joy) return;
-	
+
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK))
 		return;
-	
+
 	joy_count = SDL_NumJoysticks();
-	
+
 	if (!joy_count)
 		return;
 
@@ -93,9 +135,9 @@ static void joy_init()
 		{
 			sdl_joy_num = i;
 			break;
-		}	
+		}
 	}
-	
+
 	/* make sure that Joystick event polling is a go */
 	SDL_JoystickEventState(SDL_ENABLE);
 }
@@ -103,11 +145,11 @@ static void joy_init()
 static void overlay_init()
 {
 	if (!use_yuv) return;
-	
+
 	if (use_yuv < 0)
 		if (vmode[0] < 320 || vmode[1] < 288)
 			return;
-	
+
 	overlay = SDL_CreateYUVOverlay(320, 144, SDL_YUY2_OVERLAY, screen);
 
 	if (!overlay) return;
@@ -120,7 +162,7 @@ static void overlay_init()
 	}
 
 	SDL_LockYUVOverlay(overlay);
-	
+
 	fb.w = 160;
 	fb.h = 144;
 	fb.pelsize = 4;
@@ -130,7 +172,7 @@ static void overlay_init()
 	fb.cc[0].r = fb.cc[1].r = fb.cc[2].r = fb.cc[3].r = 0;
 	fb.dirty = 1;
 	fb.enabled = 1;
-	
+
 	overlay_rect.x = 0;
 	overlay_rect.y = 0;
 	overlay_rect.w = vmode[0];
@@ -148,7 +190,7 @@ static void overlay_init()
 		fb.cc[3].l = 16;
 		break;
 	}
-	
+
 	SDL_UnlockYUVOverlay(overlay);
 }
 
@@ -163,7 +205,7 @@ void vid_init()
 		vmode[0] = 160 * scale;
 		vmode[1] = 144 * scale;
 	}
-	
+
 	flags = SDL_ANYFORMAT | SDL_HWPALETTE | SDL_HWSURFACE;
 
 	if (fullscreen)
@@ -180,11 +222,11 @@ void vid_init()
 	joy_init();
 
 	overlay_init();
-	
+
 	if (fb.yuv) return;
-	
+
 	SDL_LockSurface(screen);
-	
+
 	fb.w = screen->w;
 	fb.h = screen->h;
 	fb.pelsize = screen->format->BytesPerPixel;
@@ -202,7 +244,7 @@ void vid_init()
 
 	fb.enabled = 1;
 	fb.dirty = 0;
-	
+
 }
 
 
@@ -223,6 +265,15 @@ void ev_poll()
 		case SDL_KEYDOWN:
 			if ((event.key.keysym.sym == SDLK_RETURN) && (event.key.keysym.mod & KMOD_ALT))
 				SDL_WM_ToggleFullScreen(screen);
+			else if(event.key.keysym.sym == SDLK_F7){
+				take_screenshot();
+			}
+			else if(event.key.keysym.sym == SDLK_F8){
+				init_screencast();
+			}
+			else if(event.key.keysym.sym == SDLK_F9){
+				stop_screencast();
+			}
 			ev.type = EV_PRESS;
 			ev.code = mapscancode(event.key.keysym.sym);
 			ev_postevent(&ev);
@@ -240,106 +291,106 @@ void ev_poll()
 				if (axisval > joy_commit_range)
 				{
 					if (Xstatus==2) break;
-					
+
 					if (Xstatus==0)
 					{
 						ev.type = EV_RELEASE;
 						ev.code = K_JOYLEFT;
-        			  		ev_postevent(&ev);				 		
+        			  		ev_postevent(&ev);
 					}
-					
+
 					ev.type = EV_PRESS;
 					ev.code = K_JOYRIGHT;
 					ev_postevent(&ev);
 					Xstatus=2;
 					break;
-				}	   				   
-				
+				}
+
 				if (axisval < -(joy_commit_range))
 				{
 					if (Xstatus==0) break;
-					
+
 					if (Xstatus==2)
 					{
 						ev.type = EV_RELEASE;
 						ev.code = K_JOYRIGHT;
-        			  		ev_postevent(&ev);				 		
+        			  		ev_postevent(&ev);
 					}
-					
+
 					ev.type = EV_PRESS;
 					ev.code = K_JOYLEFT;
 					ev_postevent(&ev);
 					Xstatus=0;
 					break;
-				}	   				   
-				
+				}
+
 				/* if control reaches here, the axis is centered,
-				 * so just send a release signal if necisary */
-				
+				 * so just send a release signal if necessary */
+
 				if (Xstatus==2)
 				{
 					ev.type = EV_RELEASE;
 					ev.code = K_JOYRIGHT;
 					ev_postevent(&ev);
 				}
-				
+
 				if (Xstatus==0)
 				{
 					ev.type = EV_RELEASE;
 					ev.code = K_JOYLEFT;
 					ev_postevent(&ev);
-				}	       
+				}
 				Xstatus=1;
 				break;
-				
-			case 1: /* Y axis*/ 
+
+			case 1: /* Y axis*/
 				axisval = event.jaxis.value;
 				if (axisval > joy_commit_range)
 				{
 					if (Ystatus==2) break;
-					
+
 					if (Ystatus==0)
 					{
 						ev.type = EV_RELEASE;
 						ev.code = K_JOYUP;
-        			  		ev_postevent(&ev);				 		
+        			  		ev_postevent(&ev);
 					}
-					
+
 					ev.type = EV_PRESS;
 					ev.code = K_JOYDOWN;
 					ev_postevent(&ev);
 					Ystatus=2;
 					break;
-				}	   				   
-				
+				}
+
 				if (axisval < -joy_commit_range)
 				{
 					if (Ystatus==0) break;
-					
+
 					if (Ystatus==2)
 					{
 						ev.type = EV_RELEASE;
 						ev.code = K_JOYDOWN;
         			  		ev_postevent(&ev);
 					}
-					
+
 					ev.type = EV_PRESS;
 					ev.code = K_JOYUP;
 					ev_postevent(&ev);
 					Ystatus=0;
 					break;
-				}	   				   
-				
+				}
+
 				/* if control reaches here, the axis is centered,
 				 * so just send a release signal if necisary */
-				
+
 				if (Ystatus==2)
 				{
 					ev.type = EV_RELEASE;
 					ev.code = K_JOYDOWN;
 					ev_postevent(&ev);
 				}
-				
+
 				if (Ystatus==0)
 				{
 					ev.type = EV_RELEASE;
@@ -384,6 +435,7 @@ void vid_preinit()
 {
 }
 
+
 void vid_close()
 {
 	if (overlay)
@@ -400,6 +452,7 @@ void vid_settitle(char *title)
 {
 	SDL_WM_SetCaption(title, title);
 }
+
 
 void vid_begin()
 {
@@ -426,10 +479,75 @@ void vid_end()
 	if (fb.enabled) SDL_Flip(screen);
 }
 
+#include "pcm.h"
 
 
+struct pcm pcm;
 
 
+static int sound = 1;
+static int samplerate = 44100;
+static int stereo = 1;
+static volatile int audio_done;
+
+rcvar_t pcm_exports[] =
+{
+	RCV_BOOL("sound", &sound),
+	RCV_INT("stereo", &stereo),
+	RCV_INT("samplerate", &samplerate),
+	RCV_END
+};
 
 
+static void audio_callback(void *blah, byte *stream, int len)
+{
+	memcpy(stream, pcm.buf, len);
+	audio_done = 1;
+}
 
+
+void pcm_init()
+{
+	int i;
+	SDL_AudioSpec as;
+
+	if (!sound) return;
+
+	SDL_InitSubSystem(SDL_INIT_AUDIO);
+	as.freq = samplerate;
+	as.format = AUDIO_U8;
+	as.channels = 1 + stereo;
+	as.samples = samplerate / 60;
+	for (i = 1; i < as.samples; i<<=1);
+	as.samples = i;
+	as.callback = audio_callback;
+	as.userdata = 0;
+	if (SDL_OpenAudio(&as, 0) == -1)
+		return;
+
+	pcm.hz = as.freq;
+	pcm.stereo = as.channels - 1;
+	pcm.len = as.size;
+	pcm.buf = malloc(pcm.len);
+	pcm.pos = 0;
+	memset(pcm.buf, 0, pcm.len);
+
+	SDL_PauseAudio(0);
+}
+
+int pcm_submit()
+{
+	if (!pcm.buf) return 0;
+	if (pcm.pos < pcm.len) return 1;
+	while (!audio_done)
+		SDL_Delay(4);
+	audio_done = 0;
+	pcm.pos = 0;
+	return 1;
+}
+
+
+void pcm_close()
+{
+	if (sound) SDL_CloseAudio();
+}

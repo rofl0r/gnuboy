@@ -26,7 +26,7 @@ FB_LIBS =
 SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o @JOY@ @SOUND@
 SVGA_LIBS = -L/usr/local/lib -lvga
 
-SDL_OBJS = sys/sdl/sdl.o sys/sdl/sdl-audio.o sys/sdl/keymap.o
+SDL_OBJS = sys/sdl/sdl.o sys/sdl/keymap.o
 SDL_LIBS = @SDL_LIBS@
 SDL_CFLAGS = @SDL_CFLAGS@
 

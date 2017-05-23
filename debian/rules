@@ -1,0 +1,51 @@
+#!/usr/bin/make -f
+BUILD_ARCH = $(shell dpkg --print-architecture)
+
+CFLAGS= -g
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+        CFLAGS += -O0
+                else
+        CFLAGS += -O2
+endif
+
+build: build-stamp
+build-stamp:
+	dh_testdir
+	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr --includedir=/usr/include --without-fb --without-svgalib --with-sdl --with-x --disable-asm --enable-optimize=none
+	$(MAKE)
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	[ ! -f Makefile ] || $(MAKE) clean
+	rm -f Makefile build-stamp config.log config.cache config.status sys/nix/config.h
+	dh_clean 
+
+binary-indep: 
+
+binary-arch: build 
+	dh_testdir -a
+	dh_testroot -a
+	mkdir -p debian/tmp/usr/games/
+	install -m 755 sdlgnuboy debian/tmp/usr/games
+	install -m 755 xgnuboy debian/tmp/usr/games
+	dh_movefiles -a
+	dh_installdocs -A docs/CREDITS docs/FAQ docs/HACKING docs/LIBERTY \
+								docs/CONFIG 
+	dh_installchangelogs -a docs/CHANGES docs/WHATSNEW
+	dh_installexamples -A etc/*.rc
+	dh_installman -A
+ifeq "$(findstring nostrip,$(DEB_BUILD_OPTIONS))" ""
+	dh_strip -a
+endif
+	dh_compress -a 
+	dh_fixperms -a
+	dh_shlibdeps -a
+	dh_installdeb -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary 

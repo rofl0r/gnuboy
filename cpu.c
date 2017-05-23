@@ -1,7 +1,3 @@
-
-
-
-
 #include "defs.h"
 #include "regs.h"
 #include "hw.h"
@@ -10,32 +6,23 @@
 #include "fastmem.h"
 #include "cpuregs.h"
 #include "cpucore.h"
-#include "lcdc.h"
-#include "debug.h"
 
 #ifdef USE_ASM
 #include "asm.h"
 #endif
 
-
 struct cpu cpu;
-
-
-
 
 #define ZFLAG(n) ( (n) ? 0 : FZ )
 
-
 #define PUSH(w) ( (SP -= 2), (writew(xSP, (w))) )
 #define POP(w) ( ((w) = readw(xSP)), (SP += 2) )
-
 
 #define FETCH_OLD ( mbc.rmap[PC>>12] \
 ? mbc.rmap[PC>>12][PC++] \
 : mem_read(PC++) )
 
 #define FETCH (readb(PC++))
-
 
 #define INC(r) { ((r)++); \
 F = (F & (FL|FC)) | incflag_table[(r)]; }
@@ -209,12 +196,7 @@ case (base)+6: b = readb(HL); goto label; \
 case (base)+7: b = A; \
 label: op(b); break;
 
-
-
-
-
-
-
+/* Macros para facilitar el uso de determinadas instrucciones */
 
 #define JR ( PC += 1+(n8)readb(PC) )
 #define JP ( PC = readw(PC) )
@@ -233,13 +215,18 @@ label: op(b); break;
 #define EI ( IMA = 1 )
 #define DI ( cpu.halt = IMA = IME = 0 )
 
-
-
 #define PRE_INT ( DI, PUSH(PC) )
 #define THROW_INT(n) ( (IF &= ~(1<<(n))), (PC = 0x40+((n)<<3)) )
 
+int global_PC;
 
+int return_globalpc(){
+	return global_PC;
+}
 
+int set_globalpc(){
+	global_PC = 0;
+}
 
 void cpu_reset()
 {
@@ -249,18 +236,23 @@ void cpu_reset()
 	cpu.tim = 0;
 	cpu.lcdc = 40;
 
-	IME = 0;
-	IMA = 0;
-	
-	PC = 0x0100;
-	SP = 0xFFFE;
+	IME = 0;  //Interrupt master enable
+	IMA = 0; //
+
+	PC = 0x0100;  //Contador de programa
+	SP = 0xFFFE;  //Puntero a la pila
+
+	/* Estos cuatro son registros de proposito general, de 16 bits si se juntan
+	   y de 8 bits cada letra por separado
+  */
 	AF = 0x01B0;
 	BC = 0x0013;
 	DE = 0x00D8;
 	HL = 0x014D;
-	
+
 	if (hw.cgb) A = 0x11;
 	if (hw.gba) B = 0x01;
+
 }
 
 
@@ -277,7 +269,7 @@ void div_advance(int cnt)
 void timer_advance(int cnt)
 {
 	int unit, tima;
-	
+
 	if (!(R_TAC & 0x04)) return;
 
 	unit = ((-R_TAC) & 3) << 1;
@@ -322,6 +314,7 @@ int cpu_idle(int max)
 	int cnt, unit;
 
 	if (!(cpu.halt && IME)) return 0;
+
 	if (R_IF & R_IE)
 	{
 		cpu.halt = 0;
@@ -331,7 +324,7 @@ int cpu_idle(int max)
 	/* Make sure we don't miss lcdc status events! */
 	if ((R_IE & (IF_VBLANK | IF_STAT)) && (max > cpu.lcdc))
 		max = cpu.lcdc;
-	
+
 	/* If timer interrupt cannot happen, this is very simple! */
 	if (!((R_IE & IF_TIMER) && (R_TAC & 0x04)))
 	{
@@ -346,7 +339,7 @@ int cpu_idle(int max)
 
 	if (max < cnt)
 		cnt = max;
-	
+
 	cpu_timers(cnt);
 	return cnt;
 }
@@ -354,6 +347,8 @@ int cpu_idle(int max)
 #ifndef ASM_CPU_EMULATE
 
 extern int debug_trace;
+
+
 
 int cpu_emulate(int cycles)
 {
@@ -365,7 +360,9 @@ int cpu_emulate(int cycles)
 	static word w;
 
 	i = cycles;
-next:
+
+
+  next:
 	if ((clen = cpu_idle(i)))
 	{
 		i -= clen;
@@ -373,8 +370,11 @@ next:
 		return cycles-i;
 	}
 
+
 	if (IME && (IF & IE))
 	{
+
+
 		PRE_INT;
 		switch ((byte)(IF & IE))
 		{
@@ -395,11 +395,13 @@ next:
 		}
 	}
 	IME = IMA;
-	
-	if (debug_trace) debug_disassemble(PC, 1);
+
+
 	op = FETCH;
+
 	clen = cycles_table[op];
 
+     
 	switch(op)
 	{
 	case 0x00: /* NOP */
@@ -411,7 +413,7 @@ next:
 	case 0x6D: /* LD L,L */
 	case 0x7F: /* LD A,A */
 		break;
-			
+
 	case 0x41: /* LD B,C */
 		B = C; break;
 	case 0x42: /* LD B,D */
@@ -486,7 +488,7 @@ next:
 		H = readb(xHL); break;
 	case 0x67: /* LD H,A */
 		H = A; break;
-			
+
 	case 0x68: /* LD L,B */
 		L = B; break;
 	case 0x69: /* LD L,C */
@@ -501,7 +503,7 @@ next:
 		L = readb(xHL); break;
 	case 0x6F: /* LD L,A */
 		L = A; break;
-			
+
 	case 0x70: /* LD (HL),B */
 		b = B; goto __LD_HL;
 	case 0x71: /* LD (HL),C */
@@ -519,7 +521,7 @@ next:
 	__LD_HL:
 		writeb(xHL,b);
 		break;
-			
+
 	case 0x78: /* LD A,B */
 		A = B; break;
 	case 0x79: /* LD A,C */
@@ -592,7 +594,7 @@ next:
 		A = readhi(FETCH); break;
 	case 0xF2: /* LDH A,(C) (undocumented) */
 		A = readhi(C); break;
-			
+
 
 	case 0xF8: /* LD HL,SP+imm */
 		b = FETCH; LDHLSP(b); break;
@@ -641,7 +643,7 @@ next:
 		break;
 	case 0x3C: /* INC A */
 		INC(A); break;
-			
+
 	case 0x03: /* INC BC */
 		INCW(BC); break;
 	case 0x13: /* INC DE */
@@ -650,7 +652,7 @@ next:
 		INCW(HL); break;
 	case 0x33: /* INC SP */
 		INCW(SP); break;
-			
+
 	case 0x05: /* DEC B */
 		DEC(B); break;
 	case 0x0D: /* DEC C */
@@ -764,7 +766,7 @@ next:
 		b = 0x38;
 	__RST:
 		RST(b); break;
-			
+
 	case 0xC1: /* POP BC */
 		POP(BC); break;
 	case 0xC5: /* PUSH BC */
@@ -805,7 +807,7 @@ next:
 		}
 		/* NOTE - we do not implement dmg STOP whatsoever */
 		break;
-			
+
 	case 0x76: /* HALT */
 		cpu.halt = 1;
 		break;
@@ -833,7 +835,7 @@ next:
 			break;
 		}
 		break;
-			
+
 	default:
 		die(
 			"invalid opcode 0x%02X at address 0x%04X, rombank = %d\n",
@@ -847,6 +849,9 @@ next:
 	clen >>= cpu.speed;
 	lcdc_advance(clen);
 	sound_advance(clen);
+
+	global_PC = PC;
+	exists_breakpoint(global_PC);
 
 	i -= clen;
 	if (i > 0) goto next;
@@ -866,15 +871,3 @@ int cpu_step(int max)
 }
 
 #endif /* ASM_CPU_STEP */
-
-
-
-
-
-
-
-
-
-
-
-

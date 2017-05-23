@@ -1,19 +1,15 @@
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+char *strdup();
 
 #include <stdarg.h>
 #include <signal.h>
 
 #include "input.h"
 #include "rc.h"
-#include "sys.h"
-#include "rckeys.h"
-#include "emu.h"
-#include "exports.h"
-#include "loader.h"
+
 
 #include "Version"
 

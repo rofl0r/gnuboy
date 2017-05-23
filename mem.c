@@ -1,6 +1,5 @@
-
-
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "defs.h"
 #include "hw.h"
@@ -8,12 +7,29 @@
 #include "mem.h"
 #include "rtc.h"
 #include "lcd.h"
-#include "lcdc.h"
-#include "sound.h"
 
 struct mbc mbc;
 struct rom rom;
 struct ram ram;
+
+
+char *ramsizes[] = {
+
+	"None",
+	"2 KB, 1 bank",
+	"8 KB, 1 bank",
+	"32 KB, 4 banks",
+	"128 KB, 16 banks",
+
+};
+
+char *mbctypes[] = {
+
+	"ROM only",
+	"ROM + MBC1",
+	"ROM + MBC1 + RAM"
+
+};
 
 
 /*
@@ -32,10 +48,7 @@ void mem_updatemap()
 {
 	int n;
 	byte **map;
-	
-	mbc.rombank &= (mbc.romsize - 1);
-	mbc.rambank &= (mbc.ramsize - 1);
-	
+
 	map = mbc.rmap;
 	map[0x0] = rom.bank[0];
 	map[0x1] = rom.bank[0];
@@ -70,7 +83,7 @@ void mem_updatemap()
 	map[0xD] = ram.ibank[n?n:1] - 0xD000;
 	map[0xE] = ram.ibank[0] - 0xE000;
 	map[0xF] = NULL;
-	
+
 	map = mbc.wmap;
 	map[0x0] = map[0x1] = map[0x2] = map[0x3] = NULL;
 	map[0x4] = map[0x5] = map[0x6] = map[0x7] = NULL;
@@ -116,7 +129,7 @@ void ioreg_write(byte r, byte b)
 			return;
 		}
 	}
-	
+
 	switch(r)
 	{
 	case RI_TIMA:
@@ -161,9 +174,6 @@ void ioreg_write(byte r, byte b)
 			hw_interrupt(0, IF_SERIAL);
 		}
 		R_SC = b; /* & 0x7f; */
-		break;
-	case RI_SB:
-		REG(r) = b;
 		break;
 	case RI_DIV:
 		REG(r) = 0;
@@ -436,6 +446,8 @@ void mbc_write(int a, byte b)
 		}
 		break;
 	}
+	mbc.rombank &= (mbc.romsize - 1);
+	mbc.rambank &= (mbc.ramsize - 1);
 	/* printf("%02X\n", mbc.rombank); */
 	mem_updatemap();
 }
@@ -451,7 +463,7 @@ void mem_write(int a, byte b)
 {
 	int n;
 	byte ha = (a>>12) & 0xE;
-	
+
 	/* printf("write to 0x%04X: 0x%02X\n", a, b); */
 	switch (ha)
 	{
@@ -521,7 +533,7 @@ byte mem_read(int a)
 {
 	int n;
 	byte ha = (a>>12) & 0xE;
-	
+
 	/* printf("read %04x\n", a); */
 	switch (ha)
 	{
@@ -566,6 +578,51 @@ byte mem_read(int a)
 	return 0xff; /* not reached */
 }
 
+
+char *type(char *key){
+
+	char *value = "Not implemented";
+
+	if (strcmp(key,"rom.name") == 0){
+		value = rom.name;
+	}
+
+	else if (strcmp(key,"mbc.type") == 0){
+		value = mbctypes[mbc.type];
+	}
+
+	else if (strcmp(key,"mbc.ramsize") == 0){
+		value = ramsizes[mbc.ramsize];
+	}
+
+	else if (strcmp(key,"hw.cgb") == 0){
+		value = hw.cgb == 0? "No" : "Yes";
+	}
+
+	return value;
+
+}
+
+void rom_info(){
+
+	printf(
+		"\n\n"
+		"Name of the ROM:               %s \n"
+		"Type of cartridge:             %s \n"
+		"Model of cartridge:            %s \n"
+		"Size of RAM:                   %s \n"
+		"Supports GBC functions:        %s \n"
+		"\n\n",
+		type("rom.name"),
+		type("mbc.type"),
+		type("mbc.model"),
+		type("mbc.ramsize"),
+		type("hw.cgb")
+	);
+
+}
+
+
 void mbc_reset()
 {
 	mbc.rombank = 1;
@@ -573,10 +630,3 @@ void mbc_reset()
 	mbc.enableram = 0;
 	mem_updatemap();
 }
-
-
-
-
-
-
-

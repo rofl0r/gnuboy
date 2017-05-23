@@ -1,13 +1,4 @@
-#undef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
-#undef _GNU_SOURCE
-#define _GNU_SOURCE
-#include <string.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <time.h>
 
 #include "defs.h"
 #include "regs.h"
@@ -15,11 +6,12 @@
 #include "hw.h"
 #include "rtc.h"
 #include "rc.h"
-#include "lcd.h"
-#include "inflate.h"
-#include "save.h"
-#include "sound.h"
-#include "sys.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char *strdup();
 
 static int mbc_table[256] =
 {

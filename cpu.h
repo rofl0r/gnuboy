@@ -1,11 +1,9 @@
-
-
 #ifndef __CPU_H__
 #define __CPU_H__
 
 
-
 #include "defs.h"
+
 
 
 union reg
@@ -14,6 +12,7 @@ union reg
 	word w[2];
 	un32 d; /* padding for alignment, carry */
 };
+
 
 struct cpu
 {
@@ -26,16 +25,10 @@ struct cpu
 	int snd;
 };
 
+
 extern struct cpu cpu;
 
-void cpu_reset();
-void div_advance(int cnt);
-void timer_advance(int cnt);
-void lcdc_advance(int cnt);
-void sound_advance(int cnt);
-void cpu_timers(int cnt);
-int cpu_emulate(int cycles);
+int return_globalpc();
+int set_globalpc();
 
 #endif
-
-
