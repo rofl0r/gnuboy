@@ -17,6 +17,7 @@
 #include "rc.h"
 #include "lcd.h"
 #include "inflate.h"
+#include "xz/xz.h"
 #include "save.h"
 #include "sound.h"
 #include "sys.h"
@@ -142,17 +143,83 @@ static void inflate_callback(byte b)
 	inf_buf[inf_pos++] = b;
 }
 
-static byte *decompress(byte *data, int *len)
-{
-	unsigned long pos = 0;
-	if (data[0] != 0x1f || data[1] != 0x8b)
-		return data;
+static byte *gunzip(byte *data, int *len) {
+	long pos = 0;
 	inf_buf = 0;
 	inf_pos = inf_len = 0;
 	if (unzip(data, &pos, inflate_callback) < 0)
 		return data;
 	*len = inf_pos;
 	return inf_buf;
+}
+
+static void write_dec(byte *data, int len) {
+	int i;
+	for(i=0; i < len; i++)
+		inflate_callback(data[i]);
+}
+
+static int unxz(byte *data, int len) {
+	struct xz_buf b;
+	struct xz_dec *s;
+	enum xz_ret ret;
+	unsigned char out[4096];
+
+	/*
+	 * Support up to 64 MiB dictionary. The actually needed memory
+	 * is allocated once the headers have been parsed.
+	*/
+	s = xz_dec_init(XZ_DYNALLOC, 1 << 26);
+	if(!s) goto err;
+
+	b.in = data;
+	b.in_pos = 0;
+	b.in_size = len;
+	b.out = out;
+	b.out_pos = 0;
+	b.out_size = sizeof(out);
+
+	while (1) {
+		ret = xz_dec_run(s, &b);
+		if(b.out_pos == sizeof(out)) {
+			write_dec(out, sizeof(out));
+			b.out_pos = 0;
+		}
+
+		if(ret == XZ_OK) continue;
+
+		write_dec(out, b.out_pos);
+
+		if(ret == XZ_STREAM_END) {
+			xz_dec_end(s);
+			return 0;
+		}
+		goto err;
+	}
+
+	err:
+	xz_dec_end(s);
+	return -1;
+}
+
+static byte *do_unxz(byte *data, int *len) {
+	xz_crc32_init();
+	xz_crc64_init();
+	inf_buf = 0;
+	inf_pos = inf_len = 0;
+	if (unxz(data, *len) < 0)
+		return data;
+	*len = inf_pos;
+	return inf_buf;
+}
+
+static byte *decompress(byte *data, int *len)
+{
+	if (data[0] == 0x1f && data[1] == 0x8b)
+		return gunzip(data, len);
+	if(data[0] == 0xFD && !memcmp(data+1, "7zXZ", 4))
+		return do_unxz(data, len);
+	return data;
 }
 
 

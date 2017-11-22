@@ -60,7 +60,7 @@ install: all
 	$(INSTALL) -m 755 $(TARGETS) $(bindir)
 
 clean:
-	rm -f *gnuboy gmon.out *.o sys/*.o sys/*/*.o asm/*/*.o
+	rm -f *gnuboy gmon.out *.o sys/*.o sys/*/*.o asm/*/*.o $(OBJS)
 
 distclean: clean
 	rm -f config.* sys/nix/config.h Makefile
