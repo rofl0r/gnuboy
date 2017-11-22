@@ -21,7 +21,7 @@
 struct fb fb;
 
 static int use_yuv = -1;
-static int fullscreen = 1;
+static int fullscreen = 0;
 static int use_altenter = 1;
 static int use_joy = 1, sdl_joy_num;
 static SDL_Joystick * sdl_joy = NULL;
