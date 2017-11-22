@@ -6,9 +6,9 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <linux/kd.h>
-#include <sys/signal.h>
+#include <signal.h>
 #include <sys/ioctl.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <sys/vt.h>
 #include <termios.h>
 
