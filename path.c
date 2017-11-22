@@ -18,7 +18,8 @@ char *path_search(char *name, char *mode, char *path)
 	char *p, *n;
 	int l;
 
-	if (buf) free(buf); buf = 0;
+	if (buf) free(buf);
+	buf = 0;
 	if (!path || !*path || *name == '/')
 		return (buf = strdup(name));
 
