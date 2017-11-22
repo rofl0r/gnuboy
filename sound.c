@@ -134,14 +134,14 @@ void sound_off()
 	R_NR30 = 0x7F;
 	R_NR31 = 0xFF;
 	R_NR32 = 0x9F;
-	R_NR34 = 0xBF;
+	R_NR33 = 0xBF;
 	R_NR41 = 0xFF;
 	R_NR42 = 0x00;
 	R_NR43 = 0x00;
 	R_NR44 = 0xBF;
 	R_NR50 = 0x77;
 	R_NR51 = 0xF3;
-	R_NR52 = 0x70;
+	R_NR52 = 0xF1;
 	sound_dirty();
 }
 
@@ -153,7 +153,6 @@ void sound_reset()
 	memcpy(WAVE, hw.cgb ? cgbwave : dmgwave, 16);
 	memcpy(ram.hi+0x30, WAVE, 16);
 	sound_off();
-	R_NR52 = 0xF1;
 }
 
 

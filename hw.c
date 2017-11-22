@@ -54,33 +54,6 @@ void hw_dma(byte b)
 		lcd.oam.mem[i] = readb(a);
 }
 
-/* COMMENT A:
- * Beware was pretty sure that this HDMA implementation was incorrect, as when
- * he used it in bgb, it broke Pokemon Crystal (J). I tested it with this and
- * it seems to work fine, so until I find any problems with it, it's staying.
- * (Lord Nightmare)
- */
-
-
-void hw_hdma()
-{
-	int cnt;
-	addr sa;
-	int da;
-
-	sa = ((addr)R_HDMA1 << 8) | (R_HDMA2&0xf0);
-	da = 0x8000 | ((int)(R_HDMA3&0x1f) << 8) | (R_HDMA4&0xf0);
-	cnt = 16;
-	while (cnt--)
-		writeb(da++, readb(sa++));
-	cpu_timers(16); /* SEE COMMENT A ABOVE */
-	R_HDMA1 = sa >> 8;
-	R_HDMA2 = sa & 0xF0;
-	R_HDMA3 = 0x1F & (da >> 8);
-	R_HDMA4 = da & 0xF0;
-	R_HDMA5--;
-	hw.hdma--;
-}
 
 
 void hw_hdma_cmd(byte c)
@@ -94,7 +67,6 @@ void hw_hdma_cmd(byte c)
 	{
 		hw.hdma = c;
 		R_HDMA5 = c & 0x7f;
-		if ((R_STAT&0x03) == 0x00) hw_hdma(); /* SEE COMMENT A ABOVE */
 		return;
 	}
 	
@@ -104,8 +76,6 @@ void hw_hdma_cmd(byte c)
 	cnt = ((int)c)+1;
 	/* FIXME - this should use cpu time! */
 	/*cpu_timers(102 * cnt);*/
-	cpu_timers((460>>cpu.speed)+cnt*16); /*dalias*/
-	/*cpu_timers(228 + (16*cnt));*/ /* this should be right according to no$ */
 	cnt <<= 4;
 	while (cnt--)
 		writeb(da++, readb(sa++));
@@ -114,6 +84,26 @@ void hw_hdma_cmd(byte c)
 	R_HDMA3 = 0x1F & (da >> 8);
 	R_HDMA4 = da & 0xF0;
 	R_HDMA5 = 0xFF;
+}
+
+
+void hw_hdma()
+{
+	int cnt;
+	addr sa;
+	int da;
+
+	sa = ((addr)R_HDMA1 << 8) | (R_HDMA2&0xf0);
+	da = 0x8000 | ((int)(R_HDMA3&0x1f) << 8) | (R_HDMA4&0xf0);
+	cnt = 16;
+	while (cnt--)
+		writeb(da++, readb(sa++));
+	R_HDMA1 = sa >> 8;
+	R_HDMA2 = sa & 0xF0;
+	R_HDMA3 = 0x1F & (da >> 8);
+	R_HDMA4 = da & 0xF0;
+	R_HDMA5--;
+	hw.hdma--;
 }
 
 
