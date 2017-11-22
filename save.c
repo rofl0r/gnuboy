@@ -170,7 +170,7 @@ void loadstate(FILE *f)
 	{
 		for (i = 0; svars[i].ptr; i++)
 		{
-			if (header[j][0] != *(un32 *)svars[i].key)
+			if (memcmp(&header[j][0], svars[i].key, 4))
 				continue;
 			d = LIL(header[j][1]);
 			switch (svars[i].len)
@@ -231,7 +231,7 @@ void savestate(FILE *f)
 
 	for (i = 0; svars[i].len > 0; i++)
 	{
-		header[i][0] = *(un32 *)svars[i].key;
+		memcpy(&header[i][0], svars[i].key, 4);
 		switch (svars[i].len)
 		{
 		case 1:
