@@ -35,9 +35,19 @@ rcvar_t joy_exports[] =
 
 void joy_init()
 {
+	int set;
 	if (!usejoy) return;
-	if (!joydev) joydev = strdup("/dev/js0");
+	set = 0;
+	if (!joydev) {
+		joydev = strdup("/dev/js0");
+		set = 1;
+	}
 	joyfd = open(joydev, O_RDONLY|O_NONBLOCK);
+	if(joyfd == -1 && set) {
+		free(joydev);
+		joydev = strdup("/dev/input/js0");
+		joyfd = open(joydev, O_RDONLY|O_NONBLOCK);
+	}
 }
 
 void joy_close()
@@ -92,3 +102,30 @@ void joy_poll()
 		}
 	}
 }
+
+#ifdef JOY_TEST
+
+#include "../../events.c"
+#include "../../keytable.c"
+
+int main() {
+	joy_init();
+	event_t e;
+	while(1) {
+		joy_poll();
+		if(ev_getevent(&e)) {
+			static const char* evt_str[] = {
+				[EV_NONE] = "none",
+				[EV_PRESS] = "press",
+				[EV_RELEASE]  = "release",
+				[EV_REPEAT] = "repeat",
+				[EV_MOUSE] = "mouse",
+			};
+			printf("%s: %s\n", evt_str[e.type], k_keyname(e.code));
+		} else {
+			usleep(300);
+		}
+	}
+}
+
+#endif
