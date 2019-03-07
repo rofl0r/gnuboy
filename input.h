@@ -105,6 +105,15 @@
 #define K_JOYRIGHT 0x1cc
 #define K_JOYLEFT 0x1cd
 
+#define K_XO_CHECK 0x141
+#define K_XO_DOWN 0x142
+#define K_XO_CROSS 0x143
+#define K_XO_LEFT 0x144
+#define K_XO_RIGHT 0x146
+#define K_XO_BOX 0x147
+#define K_XO_UP 0x148
+#define K_XO_CIRCLE 0x149
+
 #define MAX_KEYS 0x200
 
 typedef struct keytable_s

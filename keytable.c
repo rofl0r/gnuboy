@@ -125,14 +125,14 @@ keytable_t keytable[] =
 	{ "joy14", K_JOY14 },
 	{ "joy15", K_JOY15 },
 
-	{ "xocheck",  321 },
-	{ "xodown",   322 },
-	{ "xocross",  323 },
-	{ "xoleft",   324 },
-	{ "xoright",  326 },
-	{ "xobox",    327 },
-	{ "xoup",     328 },
-	{ "xocircle", 329 },
+	{ "xocheck", K_XO_CHECK },
+	{ "xodown", K_XO_DOWN },
+	{ "xocross", K_XO_CROSS },
+	{ "xoleft", K_XO_LEFT },
+	{ "xoright", K_XO_RIGHT },
+	{ "xobox", K_XO_BOX },
+	{ "xoup", K_XO_UP },
+	{ "xocircle", K_XO_CIRCLE },
 
 	{ NULL, 0 }
 };
