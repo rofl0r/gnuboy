@@ -62,6 +62,15 @@ actual games or demos; the rest are just listed for completeness'
 sake.
 
 
+  CONFIGURATION
+
+Please refer to docs/CONFIG and the sample files in etc/.
+The default search path order for configuration files is:
+
+  $HOME/.gnuboy/gnuboy.rc
+  ./gnuboy.rc
+
+
   FEATURES
 
 In addition to basic emulation, gnuboy provides the following
