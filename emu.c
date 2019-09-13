@@ -40,9 +40,9 @@ void emu_init()
 
 void emu_reset()
 {
+	hw_reset();
 	lcd_reset();
 	cpu_reset();
-	hw_reset();
 	mbc_reset();
 	sound_reset();
 }

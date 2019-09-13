@@ -36,7 +36,7 @@ static void usleep(unsigned long us)
 void sys_shutdown(int err)
 {
 	cleanup(err);
-	vid_disable();
+	vid_close();
 	pcm_close();
 }
 

@@ -281,6 +281,8 @@ void vid_init()
 	fb.pelsize = x_bytes == 3 ? 4 : x_bytes;
 	fb.pitch = 160 * fb.pelsize;
 	fb.indexed = x_pseudo;
+	fb.enabled = 1;
+	fb.dirty = 0;
 	
 	x_win_x = x_win_y = 0;
 	x_width = fb.w;
@@ -327,11 +329,14 @@ void vid_init()
 	colorshifts();
 	allocscreen();
 
+	joy_init();
+
 	initok = 1;
 }
 
-void vid_disable()
+void vid_close()
 {
+	joy_close();
 	if (!initok) return;
 	freescreen();
 	XFreeGC(x_display, x_gc);
@@ -346,8 +351,8 @@ void vid_disable()
 
 
 
-/* xkeymap - mappings of the form { keysym, localcode } - from xkeymap.c */
-extern int xkeymap[][2];
+/* keymap - mappings of the form { keysym, localcode } - from x11/keymap.c */
+extern int keymap[][2];
 
 static int mapxkeycode(int xkeycode)
 {
@@ -356,9 +361,9 @@ static int mapxkeycode(int xkeycode)
 	int code;
 
 	sym = XKeycodeToKeysym(x_display, xkeycode, 0);
-	for (i = 0; xkeymap[i][0]; i++)
-		if (xkeymap[i][0] == sym)
-			return xkeymap[i][1];
+	for (i = 0; keymap[i][0]; i++)
+		if (keymap[i][0] == sym)
+			return keymap[i][1];
 	if (sym < XK_space || sym > XK_asciitilde)
 		return 0;
 	code = sym - XK_space + ' ';
@@ -402,9 +407,10 @@ static int nextevent(int sync)
 
 
 
-void ev_refresh()
+void ev_poll()
 {
 	while (nextevent(0));
+	joy_poll();
 }
 
 
@@ -433,7 +439,7 @@ void vid_begin()
 		nextevent(1);
 }
 
-void doswap()
+static void endianswap()
 {
 	int cnt;
 	un16 t16;
@@ -470,7 +476,7 @@ void vid_end()
 {
 	if (!initok) return;
 
-	if (x_byteswap) doswap();
+	if (x_byteswap) endianswap();
 	if (x_useshm)
 	{
 #ifdef USE_XSHM

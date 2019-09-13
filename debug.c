@@ -651,7 +651,7 @@ void debug_disassemble(addr a, int c)
 			((F & 0x20) ? 'H' : '-'),
 			((F & 0x10) ? 'C' : '-')
 		);
-		0&&printf(
+		printf(
 			" IE=%02X IF=%02X LCDC=%02X STAT=%02X LY=%02X LYC=%02X",
 			R_IE, R_IF, R_LCDC, R_STAT, R_LY, R_LYC
 		);

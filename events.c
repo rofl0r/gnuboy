@@ -56,7 +56,7 @@ int ev_getevent(event_t *ev)
 	return 1;
 }
 
-void ev_dorepeat(int cnt)
+void ev_repeatkeys(int cnt)
 {
 	int i;
 	int t;

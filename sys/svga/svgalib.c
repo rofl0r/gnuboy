@@ -24,25 +24,27 @@ struct fb fb;
 
 
 static int svga_mode, svga_dims[3];
+static int svga_vsync = 1;
 
 rcvar_t vid_exports[] =
 {
 	RCV_INT("svga_mode", &svga_mode),
 	RCV_VECTOR("svga_dims", svga_dims, 3),
+	RCV_INT("svga_vsync", &svga_vsync),
 	RCV_END
 };
 
 
 
-/* pckeymap - mappings of the form { scancode, localcode } - from pckeymap.c */
-extern int pckeymap[][2];
+/* keymap - mappings of the form { scancode, localcode } - from pc/keymap.c */
+extern int keymap[][2];
 
 static int mapscancode(int scan)
 {
 	int i;
-	for (i = 0; pckeymap[i][0]; i++)
-		if (pckeymap[i][0] == scan)
-			return pckeymap[i][1];
+	for (i = 0; keymap[i][0]; i++)
+		if (keymap[i][0] == scan)
+			return keymap[i][1];
 	return 0;
 }
 
@@ -135,6 +137,8 @@ void vid_init()
 	fb.pelsize = mi->bytesperpixel;
 	fb.pitch = mi->linewidth;
 	fb.ptr = vga_getgraphmem();
+	fb.enabled = 1;
+	fb.dirty = 0;
 
 	switch (mi->colors)
 	{
@@ -169,39 +173,19 @@ void vid_init()
 	
 	keyboard_init();
 	keyboard_seteventhandler(kbhandler);
+
+	joy_init();
 }
 
 
-void vid_disable()
+void vid_close()
 {
 	if (!fb.ptr) return;
 	memset(&fb, 0, sizeof fb);
+	joy_close();
 	keyboard_close();
 	vga_setmode(TEXT);
 }
-
-
-
-
-
-void ev_refresh()
-{
-	keyboard_update();
-}
-
-void ev_wait()
-{
-	int done;
-	while (!done)
-	{
-		done = keyboard_update();
-		usleep(10000);
-	}
-}
-
-
-
-
 
 void vid_setpal(int i, int r, int g, int b)
 {
@@ -210,12 +194,32 @@ void vid_setpal(int i, int r, int g, int b)
 
 void vid_begin()
 {
-	vga_waitretrace();
+	if (svga_vsync) vga_waitretrace();
 }
 
 void vid_end()
 {
 }
+
+void kb_init()
+{
+}
+
+void kb_close()
+{
+}
+
+void kb_poll()
+{
+	keyboard_update();
+}
+
+void ev_poll()
+{
+	kb_poll();
+	joy_poll();
+}
+
 
 
 

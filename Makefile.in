@@ -14,21 +14,27 @@ ASFLAGS = $(CFLAGS)
 TARGETS = @TARGETS@
 
 SYS_DEFS = @DEFS@ @ENDIAN@ @ASM@
-SYS_OBJS = sys/nix/nix.o @ASM_OBJS@ @SOUND@
+SYS_OBJS = sys/nix/nix.o @ASM_OBJS@ @SOUND@ @JOY@
 SYS_INCS = -I/usr/local/include @XINCS@ -I./sys/nix
+
+FB_OBJS = @FB_OBJS@
+FB_LIBS = 
 
 SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o
 SVGA_LIBS = -L/usr/local/lib -lvga
 
 SDL_OBJS = sys/sdl/sdl.o sys/sdl/keymap.o
-SDL_LIBS = -L/usr/local/lib -lSDL
+SDL_LIBS = -L/usr/local/lib -lSDL -lpthread
 
-X11_OBJS = sys/x11/xlib.o sys/x11/xkeymap.o
+X11_OBJS = sys/x11/xlib.o sys/x11/keymap.o
 X11_LIBS = @XLIBS@ -lX11 -lXext
 
 all: $(TARGETS)
 
 include Rules
+
+fbgnuboy: $(OBJS) $(SYS_OBJS) $(FB_OBJS)
+	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(FB_OBJS) -o $@ $(FB_LIBS)
 
 sgnuboy: $(OBJS) $(SYS_OBJS) $(SVGA_OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(SVGA_OBJS) -o $@ $(SVGA_LIBS)

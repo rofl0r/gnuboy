@@ -6,7 +6,7 @@
 
 #include "input.h"
 
-int pckeymap[][2] =
+int keymap[][2] =
 {
 	{ 1, K_ESC },
 	{ 2, '1' },
