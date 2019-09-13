@@ -9,6 +9,8 @@
 	# %esi - number of cycles we have left
 	# %edi - number of cycles used by current instruction
 
+#include "asmnames.h"
+	
 	.set PC, cpu
 	.set SP, cpu+4
 	.set BC, cpu+8

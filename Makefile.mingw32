@@ -5,18 +5,10 @@ LD = $(CC)
 
 CFLAGS = -O3 -I./asm/i386 -Dmain=SDL_main
 LDFLAGS = -s -lmingw32 -lSDLmain -lSDL
-ASFLAGS = -x assembler-with-cpp -Dcpu=_cpu -Dhw=_hw -Dram=_ram \
- -Dmbc=_mbc -Dlcd=_lcd -Dscan=_scan \
- -Dpatpix=_patpix -Danydirty=_anydirty -Dpatdirty=_patdirty \
- -Dcpu_emulate=_cpu_emulate -Dcpu_step=_cpu_step \
- -Dlcdc_trans=_lcdc_trans -Ddebug_trace=_debug_trace \
- -Dpat_updatepix=_pat_updatepix -Ddebug_disassemble=_debug_disassemble \
- -Drefresh_1=_refresh_1 -Drefresh_2=_refresh_2 -Drefresh_4=_refresh_4 \
- -Dmem_read=_mem_read -Dmem_write=_mem_write -Dcpu_idle=_cpu_idle \
- -Ddie=_die -Dprintf=_printf
+ASFLAGS = -x assembler-with-cpp
 
 SYS_DEFS = -DIS_LITTLE_ENDIAN -DALT_PATH_SEP -DNO_AALIB -DUSE_ASM
-ASM_OBJS = asm/i386/cpu.o asm/i386/lcd.o
+ASM_OBJS = asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.o
 #SND_OBJS = sys/dummy/nosound.o
 
 SYS_OBJS = $(ASM_OBJS) $(SND_OBJS) sys/mingw32/mingw32.o

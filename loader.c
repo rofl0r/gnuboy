@@ -229,7 +229,7 @@ void rtc_load()
 }
 
 
-static void unload()
+void loader_unload()
 {
 	sram_save();
 	if (romfile) free(romfile);

@@ -19,7 +19,7 @@ typedef enum rctype
 typedef struct rcvar_s
 {
 	char *name;
-	rcvtype_t type;
+	int type;
 	int len;
 	void *mem;
 } rcvar_t;

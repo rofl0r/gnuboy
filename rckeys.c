@@ -38,13 +38,13 @@ int rc_bindkey(char *keyname, char *cmd)
 int rc_unbindkey(char *keyname)
 {
 	int key;
-	char *a;
 
 	key = k_keycode(keyname);
 	if (!key) return -1;
 	
 	if (keybind[key]) free(keybind[key]);
 	keybind[key] = NULL;
+	return 0;
 }
 
 

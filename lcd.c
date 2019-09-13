@@ -44,7 +44,12 @@ byte patpix[4096][8][8];
 byte patdirty[1024];
 byte anydirty;
 
-static int sprsort = 1;
+static int scale = 1;
+static int density = 1;
+
+static int rgb332;
+
+static int sprsort;
 static int sprdebug;
 
 #define DEF_PAL { 0x78f0f0, 0x58b8b8, 0x487878, 0x184848 }
@@ -53,6 +58,9 @@ static int dmg_pal[4][4] = { DEF_PAL, DEF_PAL, DEF_PAL, DEF_PAL };
 
 rcvar_t lcd_exports[] =
 {
+	RCV_INT("scale", &scale),
+	RCV_INT("density", &density),
+	RCV_BOOL("rgb332", &rgb332),
 	RCV_VECTOR("dmg_bgp", dmg_pal[0], 4),
 	RCV_VECTOR("dmg_wndp", dmg_pal[1], 4),
 	RCV_VECTOR("dmg_obp0", dmg_pal[2], 4),
@@ -397,6 +405,8 @@ void spr_count()
 	NS = 0;
 	if (!(R_LCDC & 0x02)) return;
 	
+	o = lcd.oam.obj;
+	
 	for (i = 40; i; i--, o++)
 	{
 		if (L >= o->y || L + 16 < o->y)
@@ -524,48 +534,6 @@ void spr_scan()
 	if (sprdebug) for (i = 0; i < NS; i++) BUF[i<<1] = 36;
 }
 
-#ifndef ASM_REFRESH_1
-void refresh_1(byte *dest, byte *pal)
-{
-	int i; byte *src = BUF-1;
-	dest--; for (i = 160; i; i--) dest[i] = pal[src[i]];
-}
-#endif
-
-#ifndef ASM_REFRESH_2
-void refresh_2(un16 *dest, un16 *pal)
-{
-	int i; byte *src = BUF-1;
-	dest--; for (i = 160; i; i--) dest[i] = pal[src[i]];
-}
-#endif
-
-#ifndef ASM_REFRESH_3
-void refresh_3(byte *dest, un32 *pal)
-{
-	int i; byte *src = BUF;
-	un32 color;
-	for (i = 160; i; i--)
-	{
-		color = pal[*(src++)];
-		*(dest++) = color;
-		*(dest++) = color>>8;
-		*(dest++) = color>>16;
-	}
-}
-#endif
-
-#ifndef ASM_REFRESH_4
-void refresh_4(un32 *dest, un32 *pal)
-{
-	int i; byte *src = BUF-1;
-	dest--; for (i = 160; i; i--) dest[i] = pal[src[i]];
-}
-#endif
-
-
-
-
 
 
 
@@ -573,21 +541,26 @@ void refresh_4(un32 *dest, un32 *pal)
 
 void lcd_begin()
 {
-	if (fb.indexed) pal_expire();
+	if (fb.indexed)
+	{
+		if (rgb332) pal_set332();
+		else pal_expire();
+	}
+	while (scale * 160 > fb.w || scale * 144 > fb.h) scale--;
 	vdest = fb.ptr + ((fb.w*fb.pelsize)>>1)
-		- (80*fb.pelsize)
-		+ ((fb.h>>1) - 72) * fb.pitch;
+		- (80*fb.pelsize) * scale
+		+ ((fb.h>>1) - 72*scale) * fb.pitch;
 	WY = R_WY;
 }
 
 void lcd_refreshline()
 {
+	int i;
+	
+	if (!fb.enabled) return;
+	
 	if (!(R_LCDC & 0x80))
-	{
-		if (fb.enabled) memset(vdest, 0, fb.pitch);
-		vdest += fb.pitch;
-		return;
-	}
+		return; /* should not happen... */
 	
 	pat_updatepix();
 
@@ -606,6 +579,7 @@ void lcd_refreshline()
 	WV = (L - WY) & 7;
 
 	spr_enum();
+
 	tilebuf();
 	if (hw.cgb)
 	{
@@ -625,28 +599,54 @@ void lcd_refreshline()
 	}
 	spr_scan();
 
-	if (fb.enabled)
+	if (fb.dirty) memset(fb.ptr, 0, fb.pitch * fb.h);
+	fb.dirty = 0;
+	if (density > scale) density = scale;
+	for (i = 0; i < density; i++)
 	{
-		if (fb.dirty) memset(fb.ptr, 0, fb.pitch * fb.h);
-		fb.dirty = 0;
-		switch (fb.pelsize)
+		switch (scale)
 		{
+		case 0:
 		case 1:
-			refresh_1(vdest, PAL1);
+			switch (fb.pelsize)
+			{
+			case 1:
+				refresh_1(vdest, BUF, PAL1, 160);
+				break;
+			case 2:
+				refresh_2(vdest, BUF, PAL2, 160);
+				break;
+			case 3:
+				refresh_3(vdest, BUF, PAL4, 160);
+				break;
+			case 4:
+				refresh_4(vdest, BUF, PAL4, 160);
+				break;
+			}
 			break;
 		case 2:
-			refresh_2((void*)vdest, PAL2);
-			break;
-		case 3:
-			refresh_3((void*)vdest, PAL4);
-			break;
-		case 4:
-			refresh_4((void*)vdest, PAL4);
+		default:
+			switch (fb.pelsize)
+			{
+			case 1:
+				refresh_1_2x(vdest, BUF, PAL1, 160);
+				break;
+			case 2:
+				refresh_2_2x(vdest, BUF, PAL2, 160);
+				break;
+			case 3:
+				refresh_3_2x(vdest, BUF, PAL4, 160);
+				break;
+			case 4:
+				refresh_4_2x(vdest, BUF, PAL4, 160);
+				break;
+			}
 			break;
 		}
+		vdest += fb.pitch;
 	}
-	
-	vdest += fb.pitch;
+	for (; i < scale; i++)
+		vdest += fb.pitch;
 }
 
 

@@ -4,16 +4,7 @@ AS = $(CC)
 LD = $(CC)
 
 CFLAGS = -O3 -fstrength-reduce -fomit-frame-pointer -I./asm/i386
-ASFLAGS = -x assembler-with-cpp -Dcpu=_cpu -Dhw=_hw -Dram=_ram \
- -Dmbc=_mbc -Dlcd=_lcd -Dscan=_scan \
- -Dpatpix=_patpix -Danydirty=_anydirty -Dpatdirty=_patdirty \
- -Dcpu_emulate=_cpu_emulate -Dcpu_step=_cpu_step \
- -Dlcdc_trans=_lcdc_trans -Ddebug_trace=_debug_trace \
- -Dpat_updatepix=_pat_updatepix -Ddebug_disassemble=_debug_disassemble \
- -Dbg_scan_color=_bg_scan_color \
- -Drefresh_1=_refresh_1 -Drefresh_2=_refresh_2 -Drefresh_4=_refresh_4 \
- -Dmem_read=_mem_read -Dmem_write=_mem_write -Dcpu_idle=_cpu_idle \
- -Ddie=_die -Dprintf=_printf
+ASFLAGS = -x assembler-with-cpp
 LDFLAGS = -s
 
 THIN_NAMES = tl_main tl_log tl_timer tl_key tl_mouse tl_joy \
@@ -24,7 +15,7 @@ SYS_DEFS = -DIS_LITTLE_ENDIAN -DALLOW_UNALIGNED_IO -DALT_PATH_SEP -DUSE_ASM -DNO
 
 SYS_INCS = -I./sys/dos -I./sys/thinlib/lib
 SYS_OBJS = sys/dos/dos.o sys/thinlib/thinlib.o sys/thinlib/keymap.o $(THIN_OBJS) \
-	sys/dummy/nojoy.o asm/i386/cpu.o asm/i386/lcd.o
+	sys/dummy/nojoy.o asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.o
 
 all: gnuboy.exe
 

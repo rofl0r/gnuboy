@@ -278,7 +278,7 @@ void timer_advance(int cnt)
 	
 	if (!(R_TAC & 0x04)) return;
 
-	unit = ((-R_TAC) & 3) << 1; //timer_table[R_TAC & 0x03];
+	unit = ((-R_TAC) & 3) << 1;
 	cpu.tim += (cnt<<unit);
 
 	if (cpu.tim >= 512)

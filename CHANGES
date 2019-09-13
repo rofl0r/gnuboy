@@ -3,6 +3,28 @@
 CHANGES file -- detailed list of all changes made...
 please see WHATSNEW instead for user-oriented information.
 
+0.9.10
+hopefully fixed issue with X header locations affecting some users
+rewrote refresh_* functions to be faster and more flexible
+added scale-by-two versions of the above, including super-fast asm versions
+implemented primitive but fully functional scale-by-two mode
+added vmode rcvar to set the video mode
+disabled dmg sprite sorting by default because it doesn't seem to work right
+removed deprecated rcvars from various display modules
+heavily updated README
+changed VBLANK timings slightly - seems to fix Daedalian Opus
+enlarged OSS dma output buffer slightly; this may reduce occurance of underruns
+cleaned up all warnings 
+fixed bug that prevented reading from OAM
+fixed all compiler warnings except implicit functions
+found and fixed a few minor bugs in the process
+added spacebar to SDL keymap
+up to 16 joystick buttons are now supported w/linux and SDL
+added sdl_hwsurface rcvar to turn hardware surface back on
+added static palette mode
+quick and dirty hack to make super rc pro-am work
+fixed bug that made OAM unreadable
+
 0.9.9
 removed some unused code from mingw32.c, fixed some bugs there too
 fixed a bad sound bug in sdl.c

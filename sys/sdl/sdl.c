@@ -21,6 +21,7 @@
 
 struct fb fb;
 
+static int hwsurface = 0;
 static int fullscreen = 1;
 static int use_altenter = 1;
 static int use_joy = 1, sdl_joy_num;
@@ -31,8 +32,12 @@ static char Xstatus, Ystatus;
 
 static SDL_Surface *screen;
 
+static int vmode[3] = { 160, 144, 16 };
+
 rcvar_t vid_exports[] =
 {
+	RCV_VECTOR("vmode", &vmode, 3),
+	RCV_BOOL("sdl_hwsurface", &hwsurface),
 	RCV_BOOL("sdl_fullscreen", &fullscreen),
 	RCV_BOOL("sdl_altenter", &use_altenter),
 	RCV_END
@@ -67,16 +72,20 @@ void vid_init()
 {
 	int i;
 	int joy_count;
+	int flags;
 	
-	int video_flags = SDL_ANYFORMAT | SDL_HWPALETTE /* | SDL_HWSURFACE */;
+	flags = SDL_ANYFORMAT | SDL_HWPALETTE;
+
+	if (hwsurface)
+		flags |= SDL_HWSURFACE;
 
 	if (fullscreen)
-		video_flags |= SDL_FULLSCREEN;
+		flags |= SDL_FULLSCREEN;
 
 	if (SDL_Init(SDL_INIT_VIDEO))
 		die("SDL: Couldn't initialize SDL: %s\n", SDL_GetError());
 
-	if ((screen = SDL_SetVideoMode(160, 144, 16, video_flags)) == NULL)
+	if (!(screen = SDL_SetVideoMode(vmode[0], vmode[1], vmode[2], flags)))
 		die("SDL: can't set video mode: %s\n", SDL_GetError());
 
 	SDL_ShowCursor(0);
@@ -239,7 +248,7 @@ void ev_poll()
 					break;
 				}	   				   
 				
-				if (axisval <  -(joy_commit_range))
+				if (axisval < -joy_commit_range)
 				{
 					if (Ystatus==0) break;
 					
@@ -278,13 +287,13 @@ void ev_poll()
 			}
 			break;
 		case SDL_JOYBUTTONUP:
-			if (event.jbutton.button>7) break;
+			if (event.jbutton.button>15) break;
 			ev.type = EV_RELEASE;
 			ev.code = K_JOY0 + event.jbutton.button;
 			ev_postevent(&ev);
 			break;
 		case SDL_JOYBUTTONDOWN:
-			if (event.jbutton.button>7) break;
+			if (event.jbutton.button>15) break;
 			ev.type = EV_PRESS;
 			ev.code = K_JOY0+event.jbutton.button;
 			ev_postevent(&ev);
@@ -324,12 +333,12 @@ void vid_settitle(char *title)
 
 void vid_begin()
 {
-	/* SDL_LockSurface(screen); */
+	if (hwsurface) SDL_LockSurface(screen);
 }
 
 void vid_end()
 {
-	/* SDL_UnlockSurface(screen); */
+	if (hwsurface) SDL_UnlockSurface(screen);
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 

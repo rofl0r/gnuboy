@@ -1,4 +1,5 @@
 
+#include "asmnames.h"
 
 	.set vram, lcd
 	.set buf, scan+512
@@ -15,13 +16,12 @@
 	.data
 	.balign 4
 
-debug:	.string "%08x\n"
-
-
 
 	.text
 	.balign 32
 
+debug:	.string "%08x\n"
+	
 	.globl pat_updatepix
 
 	.macro _print arg=0
@@ -195,143 +195,6 @@ pat_updatepix:
 	ret
 
 
-	.globl refresh_1
-refresh_1:
-	pushl %ebx
-	pushl %esi
-	pushl %edi
-	movl 16(%esp), %edi
-	movl $-40, %esi
-	xorl %eax, %eax
-	xorl %ebx, %ebx
-	addl $160, %edi
-	
-	movl buf+160(,%esi,4), %edx
-	movb %dl, %al
-	movb %dh, %bl
-.Lrefresh_1:
-	bswap %edx
-	movb pal1(%eax), %cl
-	movb %dh, %al
-	movb pal1(%ebx), %ch
-	movb %dl, %bl
-	bswap %ecx
-	movl buf+164(,%esi,4), %edx
-	movb pal1(%eax), %ch
-	movb %dl, %al
-	movb pal1(%ebx), %cl
-	movb %dh, %bl
-	bswap %ecx
-	movl %ecx, (%edi,%esi,4)
-	incl %esi
-	jnz .Lrefresh_1
-	popl %edi
-	popl %esi
-	popl %ebx
-	ret
-
-
-	.globl refresh_2
-refresh_2:
-	pushl %ebx
-	pushl %esi
-	pushl %edi
-	movl 16(%esp), %edi
-	movl $-80, %esi
-	xorl %eax, %eax
-	xorl %ebx, %ebx
-	movl buf+160(,%esi,2), %edx
-	movb %dh, %bl
-	movb %dl, %al
-.Lrefresh_2:
-	bswap %edx
-	movw pal2(,%ebx,2), %cx
-	movb %dl, %bl
-	roll $16, %ecx
-	movw pal2(,%eax,2), %cx
-	movb %dh, %al
-	movl %ecx, 320(%edi,%esi,4)
-	movl buf+164(,%esi,2), %edx
-	movw pal2(,%ebx,2), %cx
-	movb %dh, %bl
-	roll $16, %ecx
-	movw pal2(,%eax,2), %cx
-	movb %dl, %al
-	movl %ecx, 324(%edi,%esi,4)
-	addl $2, %esi
-	jnz .Lrefresh_2
-	popl %edi
-	popl %esi
-	popl %ebx
-	ret
-
-
-
-
-
-	.globl refresh_4
-refresh_4:
-	pushl %ebp
-	pushl %ebx
-	pushl %esi
-	pushl %edi
-	movl 20(%esp), %edi
-	movl $-160, %esi
-	xorl %eax, %eax
-	xorl %ebx, %ebx
-	movl buf+160(%esi), %edx
-	movb %dl, %al
-	movb %dh, %bl
-.Lrefresh_4:	
-	bswap %edx
-	movl pal4(,%eax,4),%ecx
-	movl pal4(,%ebx,4),%ebp
-	movb %dh, %al
-	movb %dl, %bl
-	movl %ecx, 640(%edi,%esi,4)
-	movl %ebp, 644(%edi,%esi,4)
-	movl buf+164(%esi), %edx
-	movl pal4(,%eax,4),%ecx
-	movl pal4(,%ebx,4),%ebp
-	movb %dl, %al
-	movb %dh, %bl
-	movl %ecx, 648(%edi,%esi,4)
-	movl %ebp, 652(%edi,%esi,4)
-	addl $4, %esi
-	jnz .Lrefresh_4
-	popl %edi
-	popl %esi
-	popl %ebx
-	popl %ebp
-	ret
-	
-
-
-
-	.globl blendcpy8
-blendcpy8:
-	pushl %ebx
-	movl 16(%esp), %ecx
-	movb %cl, %ch
-	movl 12(%esp), %eax
-	movl %ecx, %ebx
-	roll $16, %ecx
-	movl 8(%esp), %edx
-	orl %ebx, %ecx
-	movl (%eax), %ebx
-	orl %ecx, %ebx
-	movl 4(%eax), %eax
-	orl %ecx, %eax
-	movl %ebx, (%edx)
-	movl %eax, 4(%edx)
-	popl %ebx
-	ret
-
-
-
-
-
-
 
 	.globl bg_scan_color
 bg_scan_color:
@@ -404,6 +267,13 @@ bg_scan_color:
 	popl %ebx
 .Lbsc_done_nopop:
 	ret
+
+
+
+
+
+
+
 
 	
 

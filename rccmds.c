@@ -16,7 +16,7 @@
 
 #define CMD_PAD(b, B) \
 static int (cmd_ ## b)(int c, char **v) \
-{ pad_set((PAD_ ## B), v[0][0] == '+'); }
+{ pad_set((PAD_ ## B), v[0][0] == '+'); return 0; }
 
 CMD_PAD(up, UP);
 CMD_PAD(down, DOWN);

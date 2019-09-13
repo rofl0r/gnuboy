@@ -63,8 +63,7 @@ void pcm_init()
 	if (!dsp_device) dsp_device = strdup(DSP_DEVICE);
 	dsp = open(dsp_device, O_WRONLY);
 
-	/* n = 0x10000a; */
-	n = 0x80008;
+	n = 0x80009;
 	ioctl(dsp, SNDCTL_DSP_SETFRAGMENT, &n);
 	n = AFMT_U8;
 	ioctl(dsp, SNDCTL_DSP_SETFMT, &n);
@@ -87,7 +86,6 @@ void pcm_close()
 
 int pcm_submit()
 {
-	int i;
 	if (dsp < 0)
 	{
 		pcm.pos = 0;
