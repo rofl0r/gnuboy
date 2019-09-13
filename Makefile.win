@@ -11,8 +11,8 @@ SYS_DEFS = -DIS_LITTLE_ENDIAN -DALT_PATH_SEP -DUSE_ASM
 ASM_OBJS = asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.o
 #SND_OBJS = sys/dummy/nosound.o
 
-SYS_OBJS = $(ASM_OBJS) $(SND_OBJS) sys/mingw32/mingw32.o sys/mingw32/resource.o
-SYS_INCS = -I./sys/mingw32
+SYS_OBJS = $(ASM_OBJS) $(SND_OBJS) sys/windows/windows.o sys/windows/resource.o
+SYS_INCS = -I./sys/windows
 
 SDL_OBJS = sys/sdl/sdl.o sys/sdl/keymap.o
 SDL_LIBS = -lSDL

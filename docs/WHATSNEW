@@ -8,6 +8,18 @@
 
 
 
+RELEASE 1.0.1
+
+  BUGS FIXED
+
+Keys that didn't work in the SDL-based ports have now been fixed.
+The --bindir= option to the configure script now works properly.
+Running "make install" no longer fails when the destination directory
+doesn't already exist.
+Various minor cleanups.
+
+
+
 RELEASE 1.0.0
 
   NEW FEATURES

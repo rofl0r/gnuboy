@@ -10,6 +10,13 @@ GNUBOY CHANGES FILE -- detailed list of all changes made
   release, please refer to the file WHATSNEW.
 
 
+1.0.1 (2001-07-09)
+fixed problem in "make install" if dest dir doesn't exist
+cleaned up some compiler warnings
+fixed a problem with --bindir= not working in the autoconf process
+renamed several things from mingw32 to just plain windows
+fixed lots of keys that were still missing on the SDL port
+
 1.0.0 (2001-06-29)
 renamed Makefile.mingw32 to Makefile.win to be 8.3 filename friendly
 finally fixed up configure to work around broken gcc 2.96 on Redhat 7, et al

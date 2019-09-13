@@ -10,7 +10,6 @@
 
 #include <vga.h>
 #include <vgakeyboard.h>
-#include <vgamouse.h>
 
 #include "fb.h"
 #include "input.h"

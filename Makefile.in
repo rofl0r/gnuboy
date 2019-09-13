@@ -1,5 +1,6 @@
 
 prefix = @prefix@
+exec_prefix = @exec_prefix@
 bindir = @bindir@
 
 CC = @CC@
@@ -55,7 +56,8 @@ xgnuboy: $(OBJS) $(SYS_OBJS) $(X11_OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(X11_OBJS) -o $@ $(X11_LIBS)
 
 install: all
-	$(INSTALL) -m 755 $(TARGETS) $(prefix)$(bindir)
+	$(INSTALL) -d $(bindir)
+	$(INSTALL) -m 755 $(TARGETS) $(bindir)
 
 clean:
 	rm -f *gnuboy gmon.out *.o sys/*.o sys/*/*.o asm/*/*.o
