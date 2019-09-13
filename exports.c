@@ -5,7 +5,7 @@
 #include "rc.h"
 
 extern rcvar_t rcfile_exports[], emu_exports[], loader_exports[],
-	lcd_exports[], debug_exports[], vid_exports[],
+	lcd_exports[], rtc_exports[], debug_exports[], vid_exports[],
 	sound_exports[], pcm_exports[];
 
 
@@ -15,6 +15,7 @@ rcvar_t *sources[] =
 	emu_exports,
 	loader_exports,
 	lcd_exports,
+	rtc_exports,
 	debug_exports,
 	vid_exports,
 	sound_exports,

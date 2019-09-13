@@ -27,7 +27,6 @@ struct mbc
 	byte *rmap[0x10], *wmap[0x10];
 };
 
-
 struct rom
 {
 	byte (*bank)[16384];
@@ -40,8 +39,6 @@ struct ram
 	byte stack[128];
 	int loaded;
 };
-
-
 
 
 extern struct mbc mbc;
@@ -59,7 +56,7 @@ void mem_write(int a, byte b);
 byte mem_read(int a);
 
 
-extern int forcedmg;
+/* extern int forcedmg; */
 
 #define READB(a) ( mbc.rmap[(a)>>12] \
 ? mbc.rmap[(a)>>12][(a)] \

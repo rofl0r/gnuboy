@@ -6,6 +6,7 @@
 #include "hw.h"
 #include "regs.h"
 #include "mem.h"
+#include "rtc.h"
 #include "lcd.h"
 
 struct mbc mbc;
@@ -54,7 +55,7 @@ void mem_updatemap()
 		map[0x8] = lcd.vbank[n] - 0x8000;
 		map[0x9] = lcd.vbank[n] - 0x8000;
 	}
-	if (mbc.enableram && mbc.rambank < mbc.ramsize)
+	if (mbc.enableram && !(rtc.sel&8))
 	{
 		map[0xA] = ram.sbank[mbc.rambank] - 0xA000;
 		map[0xB] = ram.sbank[mbc.rambank] - 0xA000;
@@ -70,7 +71,7 @@ void mem_updatemap()
 	map[0x0] = map[0x1] = map[0x2] = map[0x3] = NULL;
 	map[0x4] = map[0x5] = map[0x6] = map[0x7] = NULL;
 	map[0x8] = map[0x9] = NULL;
-	if (mbc.enableram)
+	if (mbc.enableram && !(rtc.sel&8))
 	{
 		map[0xA] = ram.sbank[mbc.rambank] - 0xA000;
 		map[0xB] = ram.sbank[mbc.rambank] - 0xA000;
@@ -340,7 +341,11 @@ void mbc_write(int a, byte b)
 			mbc.rombank = b & 0x7F;
 			break;
 		case 0x4:
-			mbc.rambank = b & 0x03; /* FIXME - is this right?! */
+			rtc.sel = b & 0x0f;
+			mbc.rambank = b & 0x03;
+			break;
+		case 0x6:
+			rtc_latch(b);
 			break;
 		}
 		break;
@@ -409,6 +414,11 @@ void mem_write(int a, byte b)
 		break;
 	case 0xA:
 		if (!mbc.enableram) break;
+		if (rtc.sel&8)
+		{
+			rtc_write(b);
+			break;
+		}
 		ram.sbank[mbc.rambank][a & 0x1FFF] = b;
 		break;
 	case 0xC:
@@ -473,6 +483,8 @@ byte mem_read(int a)
 	case 0xA:
 		if (!mbc.enableram)
 			return 0xFF;
+		if (rtc.sel&8)
+			return rtc.regs[rtc.sel&7];
 		return ram.sbank[mbc.rambank][a & 0x1FFF];
 	case 0xC:
 		if ((a & 0xF000) == 0xC000)

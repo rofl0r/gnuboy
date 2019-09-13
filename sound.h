@@ -6,15 +6,10 @@
 
 struct sndchan
 {
-	int on;
-	int pos, freq, pat;
-	int len, cnt;
-	int envol, endir, enlen, encnt;
-};
-
-struct sweep
-{
-	int len, cnt, dir, shift;
+	int on, pos, cnt, encnt, swcnt;
+	int len, enlen, swlen;
+	int freq;
+	int envol, endir;
 };
 
 
@@ -23,7 +18,6 @@ struct snd
 	byte wave[16];
 	int rate;
 	struct sndchan ch[4];
-	struct sweep sw;
 };
 
 

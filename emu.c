@@ -75,6 +75,7 @@ void emu_run()
 			emu_step();
 		
 		vid_end();
+		rtc_tick();
 		sound_mix();
 		delay = pcm_submit() ? 0 : framelen - sys_elapsed(timer);
 		/* printf("%d\n", delay); */

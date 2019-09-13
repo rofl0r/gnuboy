@@ -43,17 +43,6 @@ static char *defaultconfig[] =
 };
 
 
-/*
- * The shutdown function may be called when a critical error occurs,
- * mostly in the system-specific modules, in order to do any necessary
- * cleanup/saving before the process terminates.
- */
-
-void shutdown()
-{
-	sram_save();
-}
-
 static void banner()
 {
 	fprintf(stderr, "\ngnuboy " VERSION "\n");
@@ -83,7 +72,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 static void usage(char *name)
 {
-	vid_disable();
 	copyright();
 	fprintf(stderr, "Type %s --help for detailed help.\n\n", name);
 	exit(1);
@@ -91,14 +79,12 @@ static void usage(char *name)
 
 static void copying()
 {
-	vid_disable();
 	copyright();
 	exit(0);
 }
 
 static void help(char *name)
 {
-	vid_disable();
 	banner();
 	fprintf(stderr, "Usage: %s [options] romfile\n", name);
 	fprintf(stderr, "
@@ -118,7 +104,6 @@ static void help(char *name)
 
 static void version(char *name)
 {
-	vid_disable();
 	fprintf(stderr, "%s-" VERSION "\n", name);
 	exit(0);
 }
@@ -190,10 +175,7 @@ int real_main(int argc, char *argv[])
 
 	for (i = 1; i < argc; i++)
 	{
-		if (!strcmp(argv[i], "--help"));
-		else if (!strcmp(argv[i], "--version"));
-		else if (!strcmp(argv[i], "--copying"));
-		else if (!strcmp(argv[i], "--bind"))
+		if (!strcmp(argv[i], "--bind"))
 		{
 			if (i + 2 >= argc) die("missing arguments to bind\n");
 			cmd = malloc(strlen(argv[i+1]) + strlen(argv[i+2]) + 9);

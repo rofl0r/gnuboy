@@ -8,7 +8,9 @@
 #include "hw.h"
 #include "regs.h"
 #include "lcd.h"
+#include "rtc.h"
 #include "mem.h"
+#include "sound.h"
 
 
 
@@ -33,7 +35,7 @@ struct svar
 
 static int ver;
 static int sramblock, iramblock, vramblock;
-static int hramofs, palofs, oamofs;
+static int hramofs, palofs, oamofs, wavofs;
 
 static byte regmask[128];
 
@@ -55,6 +57,7 @@ struct svar svars[] =
 	I4("div ", &cpu.div),
 	I4("tim ", &cpu.tim),
 	I4("lcdc", &cpu.lcdc),
+	I4("snd ", &cpu.snd),
 	
 	I1("ints", &hw.ilines),
 	I1("pad ", &hw.pad),
@@ -66,12 +69,48 @@ struct svar svars[] =
 	I4("enab", &mbc.enableram),
 	I4("batt", &mbc.batt),
 	
+	I4("rtcR", &rtc.sel),
+	I4("rtcL", &rtc.latch),
+	I4("rtcC", &rtc.carry),
+	I4("rtcS", &rtc.stop),
+	I4("rtcd", &rtc.d),
+	I4("rtch", &rtc.h),
+	I4("rtcm", &rtc.m),
+	I4("rtcs", &rtc.s),
+	I4("rtct", &rtc.t),
+	I1("rtR8", &rtc.regs[0]),
+	I1("rtR9", &rtc.regs[1]),
+	I1("rtRA", &rtc.regs[2]),
+	I1("rtRB", &rtc.regs[3]),
+	I1("rtRC", &rtc.regs[4]),
+
+	I4("S1on", &snd.ch[0].on),
+	I4("S1p ", &snd.ch[0].pos),
+	I4("S1c ", &snd.ch[0].cnt),
+	I4("S1ec", &snd.ch[0].encnt),
+	I4("S1sc", &snd.ch[0].swcnt),
+
+	I4("S2on", &snd.ch[1].on),
+	I4("S2p ", &snd.ch[1].pos),
+	I4("S2c ", &snd.ch[1].cnt),
+	I4("S2ec", &snd.ch[1].encnt),
+	
+	I4("S3on", &snd.ch[2].on),
+	I4("S3p ", &snd.ch[2].pos),
+	I4("S3c ", &snd.ch[2].cnt),
+	
+	I4("S4on", &snd.ch[3].on),
+	I4("S4p ", &snd.ch[3].pos),
+	I4("S4c ", &snd.ch[3].cnt),
+	I4("S4ec", &snd.ch[3].encnt),
+	
 	I4("sram", &sramblock),
 	I4("iram", &iramblock),
 	I4("vram", &vramblock),
 	I4("hram", &hramofs),
 	I4("pal ", &palofs),
 	I4("oam ", &oamofs),
+	I4("wav ", &wavofs),
 	
 	R(P1), R(SB), R(SC),
 	R(DIV), R(TIMA), R(TMA), R(TAC),
@@ -83,6 +122,12 @@ struct svar svars[] =
 
 	R(VBK), R(SVBK), R(KEY1),
 	R(BCPS), R(BCPD), R(OCPS), R(OCPD),
+
+	R(NR10), R(NR11), R(NR12), R(NR13), R(NR14),
+	R(NR21), R(NR22), R(NR23), R(NR24),
+	R(NR30), R(NR31), R(NR32), R(NR33), R(NR34),
+	R(NR41), R(NR42), R(NR43), R(NR44),
+	R(NR50), R(NR51), R(NR52),
 
 	I1("DMA1", &R_HDMA1),
 	I1("DMA2", &R_HDMA2),
@@ -104,13 +149,14 @@ void savestate(FILE *f)
 	int vrl = hw.cgb ? 4 : 2;
 	int srl = mbc.ramsize << 1;
 
-	ver = 0x102;
+	ver = 0x103;
 	iramblock = 1;
 	vramblock = 1+irl;
 	sramblock = 1+irl+vrl;
 	hramofs = 4096 - 512;
 	palofs = 4096 - 384;
 	oamofs = 4096 - 256;
+	wavofs = 4096 - 96;
 	memset(buf, 0, sizeof buf);
 
 	for (i = 0; svars[i].ptr; i++)
@@ -135,6 +181,7 @@ void savestate(FILE *f)
 	memcpy(buf+hramofs, ram.stack, sizeof ram.stack);
 	memcpy(buf+palofs, lcd.pal, sizeof lcd.pal);
 	memcpy(buf+oamofs, lcd.oam.mem, sizeof lcd.oam);
+	memcpy(buf+wavofs, snd.wave, sizeof snd.wave);
 
 	fseek(f, 0, SEEK_SET);
 	fwrite(buf, 4096, 1, f);
@@ -158,6 +205,8 @@ void loadstate(FILE *f)
 	int irl = hw.cgb ? 8 : 2;
 	int vrl = hw.cgb ? 4 : 2;
 	int srl = mbc.ramsize << 1;
+
+	hramofs = palofs = oamofs = wavofs = 0;
 
 	fseek(f, 0, SEEK_SET);
 	fread(buf, 4096, 1, f);
@@ -184,9 +233,10 @@ void loadstate(FILE *f)
 		}
 	}
 
-	memcpy(ram.stack, buf+hramofs, sizeof ram.stack);
-	memcpy(lcd.pal, buf+palofs, sizeof lcd.pal);
-	memcpy(lcd.oam.mem, buf+oamofs, sizeof lcd.oam);
+	if (hramofs) memcpy(ram.stack, buf+hramofs, sizeof ram.stack);
+	if (palofs) memcpy(lcd.pal, buf+palofs, sizeof lcd.pal);
+	if (oamofs) memcpy(lcd.oam.mem, buf+oamofs, sizeof lcd.oam);
+	if (wavofs) memcpy(snd.wave, buf+wavofs, sizeof snd.wave);
 
 	fseek(f, iramblock<<12, SEEK_SET);
 	fread(ram.ibank, 4096, irl, f);

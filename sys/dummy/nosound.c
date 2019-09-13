@@ -26,8 +26,9 @@ void pcm_init()
 	pcm.pos = 0;
 }
 
-void pcm_shutdown()
+void pcm_close()
 {
+	memset(&pcm, 0, sizeof pcm);
 }
 
 int pcm_submit()

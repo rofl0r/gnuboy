@@ -57,7 +57,7 @@ void pcm_init()
 	pcm.buf = malloc(pcm.len);
 }
 
-void pcm_shutdown()
+void pcm_close()
 {
 	if (pcm.buf) free(pcm.buf);
 	memset(&pcm, 0, sizeof pcm);

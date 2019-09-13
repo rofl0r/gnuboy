@@ -86,6 +86,8 @@ file. Some of the more interesting variables are:
   dmg_obp0    - and for sprite palette 0
   dmg_obp1    - and sprite palette 1
 
+  syncrtc     - fake elapsed time on rtc since last session at startup
+
   trace       - output a complete cpu trace to stdout
                 (not supported with asm cpu core by default)
   sprdebug    - display bars indicating sprite count per line
@@ -184,9 +186,10 @@ you can provide us with accurate information, please do!
 
   SOUND SUPPORT
 
-Sound is the present development focus of gnuboy. While not perfect
-yet, the quality is reasonably good, and most digital voice demos and
-games tested work. Channel 4 is still missing.
+Sound is the present development focus of gnuboy. At this point all
+features are implemented and everything should be right, so any
+incorrect sound output should be treated as a bug, which we'll try to
+fix as soon as possible.
 
 
   JOYSTICK AND GAMEPAD SUPPORT
@@ -228,9 +231,8 @@ the game freezes for a second or two building the incorrect animation
 when entering those screens.
 
 Lemmings Color freezes right before getting into the actual gameplay.
-This might be an issue with HDMA and/or GDMA.
-
-The MBC3 realtime clock is not implemented.
+This might be an issue with HDMA and/or GDMA. The music continues to
+play however.
 
 GDMA finishes instantly, whereas it should take time. Making it take
 time breaks Wacky Races, last I checked, so apparently the documents I
@@ -242,11 +244,14 @@ works.
 
 Things might run a little too fast on DOS and maybe slightly too slow
 on *nix. The timing code isn't quite perfect yet. Experiment with the
-framelen rcvar if you like.
+framelen rcvar if you like -- or enable sound, which will take over
+the timing and keep it perfect.
 
-Not all sound functionality is in place, and some games that used to
-work fail now that partial sound support is in place. These problems
-should all go away soon.
+There is no way to disable building the svgalib and SDL targets from
+the configure script. I don't see this as a real problem, but since
+there's --without-x to skip the X interface, there probably should be
+similar options for the others, just in case they cause problems on
+some systems.
 
 
   REPORTING OR FIXING BUGS
@@ -258,6 +263,14 @@ the GPL, so if you don't agree to this, don't send code to us or
 anyone else. Let us know if you wish to be included in the credits.
 
 For guidelines regarding code contributions, see the file HACKING.
+
+
+  THANKS
+
+Thanks goes out to everyone who's expressed interest in gnuboy by
+writing -- users, porters, authors of other emulators, and so forth.
+Apologies if we don't get a personal response out to everyone, but
+either way, consider your feedback well appreciated.
 
 
   EPILOGUE
