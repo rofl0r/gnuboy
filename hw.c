@@ -93,9 +93,6 @@ void hw_hdma()
 	addr sa;
 	int da;
 	
-	if (!(R_LCDC & 0x80))
-		return;
-
 	sa = ((addr)R_HDMA1 << 8) | (R_HDMA2&0xf0);
 	da = 0x8000 | ((int)(R_HDMA3&0x1f) << 8) | (R_HDMA4&0xf0);
 	cnt = 16;
@@ -173,6 +170,7 @@ void hw_reset()
 	R_OBP0 = 0xFF;
 	R_OBP1 = 0xFF;
 	R_SVBK = 0x01;
+	R_HDMA5 = 0xFF;
 }
 
 

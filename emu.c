@@ -69,6 +69,7 @@ void emu_run()
 	int delay;
 
 	vid_begin();
+	lcd_begin();
 	for (;;)
 	{
 		cpu_emulate(2280);

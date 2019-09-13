@@ -34,11 +34,13 @@
 
 struct fb fb;
 
-static int vmode[3] = { 160, 144, 0 };
+static int vmode[3] = { 0, 0, 0 };
+static int x_shmsync = 1;
 
 rcvar_t vid_exports[] =
 {
 	RCV_VECTOR("vmode", &vmode, 3),
+	RCV_BOOL("x_shmsync", &x_shmsync),
 	RCV_END
 };
 
@@ -279,6 +281,14 @@ void vid_init()
 	x_gcvalmask = GCGraphicsExposures;
 	x_gcval.graphics_exposures = False;
 
+	if (!vmode[0] || !vmode[1])
+	{
+		int scale = rc_getint("scale");
+		if (scale < 1) scale = 1;
+		vmode[0] = 160 * scale;
+		vmode[1] = 144 * scale;
+	}
+	
 	fb.w = vmode[0];
 	fb.h = vmode[1];
 	fb.pelsize = x_bytes == 3 ? 4 : x_bytes;
@@ -442,7 +452,7 @@ void vid_begin()
 	if (!x_useshm) return;
 
 	/* XSync(x_display, False); */
-	while (!x_shmdone)
+	while (!x_shmdone && x_shmsync)
 		nextevent(1);
 }
 
@@ -486,13 +496,14 @@ void vid_end()
 	if (x_byteswap) endianswap();
 	if (x_useshm)
 	{
+		if (!x_shmdone) return;
 #ifdef USE_XSHM
 		if (!XShmPutImage(
 			x_display, x_win, x_gc, x_image,
 			0, 0, 0, 0, x_width, x_height, True))
 			die("XShmPutImage failed\n");
-		x_shmdone = 0;
 #endif
+		x_shmdone = 0;
 	}
 	else
 	{

@@ -131,6 +131,53 @@ refresh_2_2x:
 
 
 
+	.globl refresh_4_2x
+refresh_4_2x:
+	_enter
+	subl $2, %esi
+	subl $16, %edi
+.Lrefresh_4_2x:
+	movb (%esi,%ecx), %al
+	movb 1(%esi,%ecx), %bl
+	movl (%ebp,%eax,4), %edx
+	movl %edx, (%edi,%ecx,8)
+	movl %edx, 4(%edi,%ecx,8)
+	movl (%ebp,%ebx,4), %edx
+	movl %edx, 8(%edi,%ecx,8)
+	movl %edx, 12(%edi,%ecx,8)
+	subl $2, %ecx
+	jnz .Lrefresh_4_2x
+	_leave
+
+
+
+	.globl refresh_4_4x
+refresh_4_4x:
+	_enter
+	shll $4, %ecx
+	addl %ecx, %edi
+	shrl $5, %ecx
+	subl $2, %esi
+	subl $32, %edi
+.Lrefresh_4_4x:
+	movb (%esi,%ecx,2), %al
+	movb 1(%esi,%ecx,2), %bl
+	movl (%ebp,%eax,4), %edx
+	movl %edx, (%edi)
+	movl %edx, 4(%edi)
+	movl %edx, 8(%edi)
+	movl %edx, 12(%edi)
+	movl (%ebp,%ebx,4), %edx
+	movl %edx, 16(%edi)
+	movl %edx, 20(%edi)
+	movl %edx, 24(%edi)
+	movl %edx, 28(%edi)
+	subl $32, %edi
+	decl %ecx
+	jnz .Lrefresh_4_4x
+	_leave
+
+
 
 
 

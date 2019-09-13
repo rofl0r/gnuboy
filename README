@@ -178,12 +178,20 @@ an error message or use a similar available mode.
 
   SCREEN SCALING
 
-Scaling of the screen by a factor of two has now been implemented.
-Just set the "scale" rcvar to 2 and be sure your video mode is at
-least 320x288 in size. By default, for improved performance, true
-scaling will only be done horizontally, and blank scanlines will just
-be left vertically. If you prefer a full vertical scale, set the
-"density" rcvar to 2 (the default is 1).
+Scaling by integral factors 1-4 is now supported. Just set the rcvar
+"scale" to the desired scaling factor. Most of the display targets
+will automatically choose a video mode appropriate to the chosen
+scale, but DOS and Linux fbcon users should be aware they they need to
+set the mode manually, as described above. Of course, if you prefer,
+you can always set it manually.
+
+By default, for performance reasons, vertical scaling will not be
+fully dense but will leave some blank scanlines. This behavior can be
+adjusted by means of the "density" rcvar. Density 0, the default,
+skips every other line. Nonzero values N fill in the first N copies of
+the scanline, and leave the remaining scale-N scanlines blank. So, if
+you want a fully filled in display (and the worst performance), you
+should set density to the same value as scale.
 
 Please be aware that this code is still slightly experimental, and the
 ways of configuring scaling may change considerably in the next few
@@ -265,6 +273,11 @@ bugs for the few cases where roms fails.
 
 
   KNOWN BUGS
+
+The homebrew game Binary Chaos has serious graphical glitches, which
+seem to occur on a good number of emulators, if not all of them.
+Hopefully we'll figure out why this happens soon, and perhaps be the
+first emulator to correctly emulate this impressive game.
 
 The portal between the temple and the Talon in FFL3 is glitched and
 the game freezes for a second or two building the incorrect animation

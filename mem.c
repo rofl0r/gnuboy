@@ -44,7 +44,7 @@ void mem_updatemap()
 		map[0x7] = rom.bank[mbc.rombank] - 0x4000;
 	}
 	else map[0x4] = map[0x5] = map[0x6] = map[0x7] = NULL;
-	if ((R_STAT & 0x03) == 0x03)
+	if (0 && (R_STAT & 0x03) == 0x03)
 	{
 		map[0x8] = NULL;
 		map[0x9] = NULL;
@@ -228,7 +228,6 @@ void ioreg_write(byte r, byte b)
 	case RI_HDMA4:
 	case RI_HDMA5:
 		/* printf("HDMA %d: %02X\n", r - RI_HDMA1 + 1, b); */
-		return;
 	}
 	/* printf("reg %02X => %02X (%02X)\n", r, REG(r), b); */
 }
@@ -501,7 +500,7 @@ byte mem_read(int a)
 		{
 			/* if (R_STAT & 0x02) return 0xFF; */
 			if (a < 0xFEA0) return lcd.oam.mem[a & 0xFF];
-			else return 0xFF;
+			return 0xFF;
 		}
 		/* return readhi(a & 0xFF); */
 		if (a == 0xFFFF) return REG(0xFF);
@@ -509,7 +508,6 @@ byte mem_read(int a)
 			return sound_read(a & 0xFF);
 		if ((a & 0xFF80) == 0xFF80)
 			return ram.hi[a & 0xFF];
-		/* printf("reg %02X = %02X\n", a & 0xff, REG(a&0xff)); */
 		return ioreg_read(a & 0xFF);
 	}
 	return 0xff; /* not reached */

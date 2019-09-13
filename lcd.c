@@ -45,7 +45,7 @@ byte patdirty[1024];
 byte anydirty;
 
 static int scale = 1;
-static int density = 1;
+static int density = 0;
 
 static int rgb332;
 
@@ -81,8 +81,8 @@ static byte *vdest;
 
 
 
-#ifndef ASM_PAT_UPDATEPIX
-void pat_updatepix()
+#ifndef ASM_UPDATEPATPIX
+void updatepatpix()
 {
 	int i, j, k;
 	int a, c;
@@ -121,7 +121,7 @@ void pat_updatepix()
 	}
 	anydirty = 0;
 }
-#endif /* ASM_PAT_UPDATEPIX */
+#endif /* ASM_UPDATEPATPIX */
 
 
 
@@ -556,13 +556,14 @@ void lcd_begin()
 void lcd_refreshline()
 {
 	int i;
+	byte scalebuf[160*4*4], *dest;
 	
 	if (!fb.enabled) return;
 	
 	if (!(R_LCDC & 0x80))
 		return; /* should not happen... */
 	
-	pat_updatepix();
+	updatepatpix();
 
 	L = R_LY;
 	X = R_SCX;
@@ -602,51 +603,95 @@ void lcd_refreshline()
 	if (fb.dirty) memset(fb.ptr, 0, fb.pitch * fb.h);
 	fb.dirty = 0;
 	if (density > scale) density = scale;
-	for (i = 0; i < density; i++)
+	if (scale == 1) density = 1;
+
+	dest = (density != 1) ? scalebuf : vdest;
+	
+	switch (scale)
 	{
-		switch (scale)
+	case 0:
+	case 1:
+		switch (fb.pelsize)
 		{
-		case 0:
 		case 1:
-			switch (fb.pelsize)
-			{
-			case 1:
-				refresh_1(vdest, BUF, PAL1, 160);
-				break;
-			case 2:
-				refresh_2(vdest, BUF, PAL2, 160);
-				break;
-			case 3:
-				refresh_3(vdest, BUF, PAL4, 160);
-				break;
-			case 4:
-				refresh_4(vdest, BUF, PAL4, 160);
-				break;
-			}
+			refresh_1(dest, BUF, PAL1, 160);
 			break;
 		case 2:
-		default:
-			switch (fb.pelsize)
-			{
-			case 1:
-				refresh_1_2x(vdest, BUF, PAL1, 160);
-				break;
-			case 2:
-				refresh_2_2x(vdest, BUF, PAL2, 160);
-				break;
-			case 3:
-				refresh_3_2x(vdest, BUF, PAL4, 160);
-				break;
-			case 4:
-				refresh_4_2x(vdest, BUF, PAL4, 160);
-				break;
-			}
+			refresh_2(dest, BUF, PAL2, 160);
+			break;
+		case 3:
+			refresh_3(dest, BUF, PAL4, 160);
+			break;
+		case 4:
+			refresh_4(dest, BUF, PAL4, 160);
 			break;
 		}
-		vdest += fb.pitch;
+		break;
+	case 2:
+		switch (fb.pelsize)
+		{
+		case 1:
+			refresh_2(dest, BUF, PAL2, 160);
+			break;
+		case 2:
+			refresh_4(dest, BUF, PAL4, 160);
+			break;
+		case 3:
+			refresh_3_2x(dest, BUF, PAL4, 160);
+			break;
+		case 4:
+			refresh_4_2x(dest, BUF, PAL4, 160);
+			break;
+		}
+		break;
+	case 3:
+		switch (fb.pelsize)
+		{
+		case 1:
+			refresh_3(dest, BUF, PAL4, 160);
+			break;
+		case 2:
+			refresh_2_3x(dest, BUF, PAL2, 160);
+			break;
+		case 3:
+			refresh_3_3x(dest, BUF, PAL4, 160);
+			break;
+		case 4:
+			refresh_4_3x(dest, BUF, PAL4, 160);
+			break;
+		}
+		break;
+	case 4:
+		switch (fb.pelsize)
+		{
+		case 1:
+			refresh_4(dest, BUF, PAL4, 160);
+			break;
+		case 2:
+			refresh_4_2x(dest, BUF, PAL4, 160);
+			break;
+		case 3:
+			refresh_3_4x(dest, BUF, PAL4, 160);
+			break;
+		case 4:
+			refresh_4_4x(dest, BUF, PAL4, 160);
+			break;
+		}
+		break;
+	default:
+		break;
 	}
-	for (; i < scale; i++)
-		vdest += fb.pitch;
+
+	if (density != 1)
+	{
+		for (i = 0; i < scale; i++)
+		{
+			if ((i < density) || ((density <= 0) && !(i&1)))
+				memcpy(vdest, scalebuf, 160 * fb.pelsize * scale);
+			vdest += fb.pitch;
+		}
+	}
+	else vdest += fb.pitch * scale;
 }
 
 
@@ -670,7 +715,10 @@ static void updatepalette(int i)
 	if (fb.indexed)
 	{
 		pal_release(PAL1[i]);
-		PAL1[i] = pal_getcolor(c, r, g, b);
+		c = pal_getcolor(c, r, g, b);
+		PAL1[i] = c;
+		PAL2[i] = (c<<8) | c;
+		PAL4[i] = (c<<24) | (c<<16) | (c<<8) | c;
 		return;
 	}
 
@@ -678,7 +726,23 @@ static void updatepalette(int i)
 	g = (g >> fb.cc[1].r) << fb.cc[1].l;
 	b = (b >> fb.cc[2].r) << fb.cc[2].l;
 	c = r|g|b;
-	PAL1[i] = PAL2[i] = PAL4[i] = c;
+	
+	switch (fb.pelsize)
+	{
+	case 1:
+		PAL1[i] = c;
+		PAL2[i] = (c<<8) | c;
+		PAL4[i] = (c<<24) | (c<<16) | (c<<8) | c;
+		break;
+	case 2:
+		PAL2[i] = c;
+		PAL4[i] = (c<<16) | c;
+		break;
+	case 3:
+	case 4:
+		PAL4[i] = c;
+		break;
+	}
 }
 
 void pal_write(int i, byte b)

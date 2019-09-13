@@ -97,7 +97,7 @@ byte pal_getcolor(int c, int r, int g, int b)
 	}
 	for (n = l+1; n != l; n++)
 	{
-		if (!n || pallock[n] || n < 16) continue;
+		if (!n || pallock[n] /* || n < 16 */) continue;
 		pal_lock(n);
 		palmap[c] = n;
 		palrev[n] = c;

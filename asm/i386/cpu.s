@@ -2122,7 +2122,8 @@ __STOP:
 	andb $0x7e, %al
 	orb %ah, %al
 	movb %al, KEY1
-.Loldstop:	
+.Loldstop:
+	incw %bp
 	_end
 	
 
@@ -2282,9 +2283,7 @@ __LD_H_H:
 __LD_L_L:
 __LD_A_A:
 opdone:
-	movb speed, %cl
-	xorb $1, %cl
-	shll %cl, %edi
+	shll $1, %edi
 
 	# advance div
 	movl %edi, %ecx
@@ -2301,6 +2300,9 @@ opdone:
 	jnz .Ltimer
 .Lendtimer:
 
+	movb speed, %cl
+	shrl %cl, %edi
+	
 	# advance lcdc
 	subl %edi, lcdc
 	jg .Lnolcdc
@@ -2332,6 +2334,11 @@ opdone:
 
 
 .Ltimer:
+	pushl %edi
+	call timer_advance
+	popl %ecx
+	jmp .Lendtimer
+	
 	xorb $0xff, %cl
 	movl %edi, %eax
 	incb %cl
