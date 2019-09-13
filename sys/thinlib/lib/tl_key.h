@@ -1,27 +1,12 @@
 /*
-** thinlib (c) 2000 Matthew Conte (matt@conte.com)
-**
-**
-** This program is free software; you can redistribute it and/or
-** modify it under the terms of version 2 of the GNU Library General 
-** Public License as published by the Free Software Foundation.
-**
-** This program is distributed in the hope that it will be useful, 
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-** Library General Public License for more details.  To obtain a 
-** copy of the GNU Library General Public License, write to the Free 
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** thinlib (c) 2001 Matthew Conte (matt@conte.com)
 **
 **
 ** tl_key.h
 **
 ** DOS keyboard handling defines / protos
-** Thanks to Shawn Hargreaves and Allegro for most of this.
-** $Id: tl_key.h,v 1.3 2001/03/12 06:06:56 matt Exp $
+**
+** $Id: $
 */
 
 #ifndef _TL_KEY_H_
@@ -116,11 +101,12 @@
 #define  THIN_KEY_NUMPAD_0       82
 #define  THIN_KEY_NUMPAD_DECIMAL 83
 
-/*
-#define  THIN_KEY_PRINT_SCREEN   84
-*/
+/* TODO: investigate */
+/*#define  THIN_KEY_PRINT_SCREEN   84*/
 
-/* TODO: are these correct? */
+/* TODO: are these correct? 
+** I don't have one of them new winders keyboards.
+*/
 #define  THIN_KEY_LEFT_WINDOWS   91
 #define  THIN_KEY_RIGHT_WINDOWS  92
 #define  THIN_KEY_MENU           93
@@ -145,40 +131,16 @@
 #define  THIN_KEY_SYSRQ          116
 
 /* PAUSE generates a ^X sequence... bleh */
-/*
-#define  THIN_KEY_PAUSE          115
-*/
+/*#define  THIN_KEY_PAUSE          115*/
 
 #define  THIN_MAX_KEYS           128
-
-enum
-{
-   THIN_CODE_BREAK = 0,
-   THIN_CODE_MAKE
-};
-
-typedef struct keydata_s
-{
-   int key;
-   int signal;
-} keydata_t;
 
 extern int thin_key_init(void);
 extern void thin_key_shutdown(void);
 extern void thin_key_set_repeat(bool state);
-extern keydata_t *thin_key_dequeue(void);
 
 #endif /* !_TL_KEY_H_ */
 
 /*
-** $Log: tl_key.h,v $
-** Revision 1.3  2001/03/12 06:06:56  matt
-** better keyboard driver, support for bit depths other than 8bpp
-**
-** Revision 1.2  2000/12/13 13:58:20  matt
-** cosmetic fixes
-**
-** Revision 1.1  2000/11/05 06:29:03  matt
-** initial revision
-**
+** $Log: $
 */

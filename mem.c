@@ -413,7 +413,9 @@ void mbc_write(int a, byte b)
 		switch (ha & 0xE)
 		{
 		case 0x0:
-			mbc.enableram = ((b & 0x0F) == 0x0A);
+			/* mbc.enableram = ((b & 0x0F) == 0x0A); */
+			mbc.enableram = 1;
+			mbc.rambank = b;
 			break;
 		case 0x2:
 			if (!b) b = 1;

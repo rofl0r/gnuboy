@@ -57,12 +57,12 @@ void sys_initpath(char *exe)
 	else
 	{
 		/* FIXME dbk: this isnt working */
-		/*rc_setvar("rcpath",1, ".");
+		rc_setvar("rcpath",1, ".");
 		rc_setvar("savedir",1, ".");
-		return;*/
+		return;
 	}
 	buf = malloc(strlen(home) + 8);
-	sprintf(buf, ".:%s/", home);
+	sprintf(buf, ".;%s/", home);
 	rc_setvar("rcpath", 1, &buf);
 	sprintf(buf, ".", home);
 	rc_setvar("savedir", 1, &buf);

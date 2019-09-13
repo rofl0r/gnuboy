@@ -19,7 +19,7 @@
 #define DOTDIR ".gnuboy"
 
 #ifndef HAVE_USLEEP
-static void usleep(unsigned long us)
+static void my_usleep(unsigned int us)
 {
 	struct timeval tv;
 	tv.tv_sec = 0;
@@ -50,28 +50,14 @@ int sys_elapsed(struct timeval *prev)
 	return 1000000 + usecs;
 }
 
-static void hardsleep(int us)
-{
-	struct timeval tv, start;
-	int secs, usecs;
-	
-	gettimeofday(&tv, NULL);
-	start = tv;
-	usecs = 0;
-	while(usecs < us)
-	{
-		gettimeofday(&tv, NULL);
-		secs = tv.tv_sec - start.tv_sec;
-		usecs = tv.tv_usec - start.tv_usec;
-		if (secs) usecs += 1000000;
-	}
-}
-
 void sys_sleep(int us)
 {
 	if (us <= 0) return;
+#ifdef HAVE_USLEEP
 	usleep(us);
-	/* hardsleep(us); */
+#else
+	my_usleep(us);
+#endif
 }
 
 void sys_checkdir(char *path, int wr)

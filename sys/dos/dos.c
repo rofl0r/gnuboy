@@ -62,9 +62,9 @@ void sys_initpath(char *exe)
 		return;
 	}
 	buf = malloc(strlen(home) + 8);
-	sprintf(buf, ".:%s/", home);
+	sprintf(buf, ".;%s/", home);
 	rc_setvar("rcpath", 1, &buf);
-	sprintf(buf, ".", home);
+	sprintf(buf, ".");
 	rc_setvar("savedir", 1, &buf);
 	free(buf);
 }

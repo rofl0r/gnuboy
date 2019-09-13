@@ -1,26 +1,12 @@
 /*
-** thinlib (c) 2000 Matthew Conte (matt@conte.com)
-**
-**
-** This program is free software; you can redistribute it and/or
-** modify it under the terms of version 2 of the GNU Library General 
-** Public License as published by the Free Software Foundation.
-**
-** This program is distributed in the hope that it will be useful, 
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-** Library General Public License for more details.  To obtain a 
-** copy of the GNU Library General Public License, write to the Free 
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** thinlib (c) 2001 Matthew Conte (matt@conte.com)
 **
 **
 ** tl_vesa.c
 **
 ** VESA code.
-** $Id: tl_vesa.c,v 1.8 2001/03/12 06:06:55 matt Exp $
+**
+** $Id: $
 */
 
 #include <stdio.h>
@@ -36,7 +22,7 @@
 
 #include "tl_djgpp.h"
 
-#include "tl_vga.h"
+#include "tl_video.h"
 #include "tl_vesa.h"
 
 #define  __PACKED__  __attribute__ ((packed))
@@ -55,7 +41,6 @@ typedef struct vesainfo_s
    uint32 OemProductNamePtr   __PACKED__; 
    uint32 OemProductRevPtr    __PACKED__; 
    uint8  Reserved[222]       __PACKED__; 
-   char   OemData[256]        __PACKED__; 
 } vesainfo_t;
 
 /* SuperVGA mode information block */
@@ -130,45 +115,71 @@ typedef struct modeinfo_s
 #define  VBE_FUNC_GETMODE     0x4F03
 #define  VBE_FUNC_FLIPPAGE    0x4F07
 
-#define  VBE_MAX_NUM_MODES    1024  /* liberal */
+#define  MAX_NUM_MODES        256
 
-
-static struct
-{
-   uint32 address;
-   int width, height;
-   int bpp;
-} cur_mode;
-
-
-static vesainfo_t vesa_info;
+short int vid_selector = -1;
+static uint16 modelist[MAX_NUM_MODES];
 static bitmap_t *screen = NULL;
 static bitmap_t *hardware = NULL;
+static int total_memory = 0;
+static bool vesa_hardware = false;
 
 /* look for vesa */
-static int vesa_detect(vesainfo_t *vesainfo)
+static int vesa_detect(void)
 {
+   vesainfo_t vesa_info;
    __dpmi_regs regs;
+   long list_ptr;
+   int mode_pos;
 
    /* Use DOS transfer buffer to hold VBE info */
-   THIN_ASSERT(sizeof(*vesainfo) < _go32_info_block.size_of_transfer_buffer);
-   memset(&regs, 0, sizeof(regs));
+   THIN_ASSERT(sizeof(vesainfo_t) < _go32_info_block.size_of_transfer_buffer);
+   memset(&regs, 0, sizeof(__dpmi_regs));
 
-   strncpy(vesainfo->VESASignature, "VBE2", 4);
-   dosmemput(vesainfo, sizeof(*vesainfo), MASK_LINEAR(__tb));
-
+   strncpy(vesa_info.VESASignature, "VBE2", 4);
+   dosmemput(&vesa_info, sizeof(vesainfo_t), MASK_LINEAR(__tb));
+   
    regs.x.ax = VBE_FUNC_DETECT;
-   regs.x.di = RM_OFFSET(__tb);
    regs.x.es = RM_SEGMENT(__tb);
+   regs.x.di = RM_OFFSET(__tb);
 
    __dpmi_int(VBE_INT, &regs);
    if (VBE_SUCCESS != regs.x.ax)
       return -1;
 
-   dosmemget(MASK_LINEAR(__tb), sizeof(*vesainfo), vesainfo);
-   if (strncmp(vesainfo->VESASignature, "VESA", 4) != 0)
+   dosmemget(MASK_LINEAR(__tb), sizeof(vesainfo_t), &vesa_info);
+   if (strncmp(vesa_info.VESASignature, "VESA", 4) != 0)
       return -1;
 
+   /* check to see if linear framebuffer is available */
+   if ((vesa_info.VESAVersion >> 8) < 2)
+   {
+      thin_printf("thinlib.vesa: no linear framebuffer available\n");
+      return -1;
+   }
+
+   /* build list of available modes */
+   memset(&modelist, 0, MAX_NUM_MODES * sizeof(uint16));
+   mode_pos = 0;
+   
+   list_ptr = RM_TO_LINEAR(vesa_info.VideoModePtr);
+   while (1)
+   {
+      uint16 mode;
+
+      dosmemget(list_ptr + mode_pos * 2, 2, &mode);
+
+      if (0xFFFF == mode)
+      {
+         modelist[mode_pos] = 0;
+         break;
+      }
+
+      modelist[mode_pos++] = mode;
+   }
+
+   total_memory = vesa_info.TotalMemory;
+  
    return 0;
 }
 
@@ -176,92 +187,104 @@ static int vesa_getmodeinfo(uint16 mode, modeinfo_t *modeinfo)
 {
    __dpmi_regs regs;
 
-   THIN_ASSERT(sizeof(*modeinfo) < _go32_info_block.size_of_transfer_buffer);
+   THIN_ASSERT(sizeof(modeinfo_t) < _go32_info_block.size_of_transfer_buffer);
 
    memset(&regs, 0, sizeof(regs));
    regs.x.ax = VBE_FUNC_GETMODEINFO; 
    regs.x.cx = mode;
-   regs.x.di = RM_OFFSET(__tb);
    regs.x.es = RM_SEGMENT(__tb);
+   regs.x.di = RM_OFFSET(__tb);
   
    __dpmi_int(VBE_INT, &regs);
    if (VBE_SUCCESS != regs.x.ax)
       return -1;
 
-   dosmemget(MASK_LINEAR(__tb), sizeof(*modeinfo), modeinfo);
+   dosmemget(MASK_LINEAR(__tb), sizeof(modeinfo_t), modeinfo);
    return 0;
 }
 
-static uint16 vesa_findmode(vesainfo_t *vesainfo, int width, int height, int bpp)
+static uint16 vesa_findmode(int width, int height, int bpp)
 {
    modeinfo_t mode_info;
-   uint16 modes[VBE_MAX_NUM_MODES], mode;
-   int i, mode_total = 0;
-   long list_ptr;
-   
-   list_ptr = RM_TO_LINEAR(vesainfo->VideoModePtr);
+   uint16 mode;
+   int mode_pos;
 
-   while (mode_total < VBE_MAX_NUM_MODES)
+   for (mode_pos = 0; ; mode_pos++)
    {
-      dosmemget(list_ptr, 2, &mode);
-
-      if (0xFFFF == mode)
+      mode = modelist[mode_pos];
+      
+      if (0 == mode)
          break;
 
-      modes[mode_total++] = mode;
-      list_ptr += 2;
-   }
-
-   /* VESA card on steroids? */
-   THIN_ASSERT(mode_total < VBE_MAX_NUM_MODES);
-
-   for (i = 0; i < mode_total; i++)
-   {
-      mode = modes[i];
-
       if (vesa_getmodeinfo(mode, &mode_info))
-         return -1; /* we are definitely screwed */
+         break; /* we are definitely screwed */
       
-      if (mode_info.XResolution == width 
-          && mode_info.YResolution == height 
+      if (mode_info.XResolution == width && mode_info.YResolution == height 
           && mode_info.BitsPerPixel == bpp)
+      {
          return mode;
+      }
    }
 
    return 0;
 }
 
-short int vid_selector = -1;
-
-static int vesa_setmodenum(uint16 mode)
+int thin_vesa_setmode(int width, int height, int bpp)
 {
+   uint16 mode;
    __dpmi_regs regs;
    __dpmi_meminfo mi;
    modeinfo_t mode_info;
+   unsigned int address;
+
+   mode = vesa_findmode(width, height, bpp);
+   if (0 == mode)
+   {
+      thin_printf("thinlib.vesa: yikes, couldn't find mode\n");
+      return -1;
+   }
 
    if (vesa_getmodeinfo(mode, &mode_info))
+   {
+      thin_printf("thinlib.vesa: error in vesa_getmodeinfo\n");
       return -1;
+   }
 
    mi.size = mode_info.BytesPerScanLine * mode_info.YResolution;
    mi.address = mode_info.PhysBasePtr;
    if (-1 == __dpmi_physical_address_mapping(&mi))
+   {
+      thin_printf("thinlib.vesa: error in __dpmi_physical_address_mapping\n");
       return -1;
+   }
 
-   if (0 == thinlib_nearptr)
+   if (false == vesa_hardware)
    {
       vid_selector = __dpmi_allocate_ldt_descriptors(1);
       if (-1 == vid_selector)
+      {
+         thin_printf("thinlib.vesa: error in __dpmi_allocate_ldt_descriptors\n");
          return -1;
+      }
 
       /* paranoid */
       if (-1 == __dpmi_set_descriptor_access_rights(vid_selector, 0x40f3))
+      {
+         thin_printf("thinlib.vesa: error in __dpmi_set_descriptor_access_rights\n");
          return -1;
+      }
 
       if (-1 == __dpmi_set_segment_base_address(vid_selector, mi.address))
+      {
+         thin_printf("thinlib.vesa: error in __dpmi_set_segment_base_address\n");
          return -1;
+      }
 
-      if (-1 == __dpmi_set_segment_limit(vid_selector, vesa_info.TotalMemory << 16 | 0xfff))
+      if (-1 == __dpmi_set_segment_limit(vid_selector, total_memory << 16 | 0xfff))
+      {
+         thin_printf("thinlib.vesa: error in __dpmi_set_segment_limit\n");
          return -1;
+      }
    }
 
    memset(&regs, 0, sizeof(regs));
@@ -270,42 +293,51 @@ static int vesa_setmodenum(uint16 mode)
  
    __dpmi_int(VBE_INT, &regs);
    if (VBE_SUCCESS != regs.x.ax)
+   {
+      thin_printf("thinlib.vesa: vesa dpmi int failed\n");
       return -1;
+   }
 
-   if (0 == thinlib_nearptr)
-      cur_mode.address = 0;
+   if (false == vesa_hardware)
+      address = 0;
    else
-      cur_mode.address = mi.address;
-
-   cur_mode.width = mode_info.XResolution;
-   cur_mode.height = mode_info.YResolution;
-   cur_mode.bpp = mode_info.BitsPerPixel;
+      address = mi.address;
 
    if (NULL != screen)
       thin_bmp_destroy(&screen);
 
-   if (thinlib_nearptr)
+   if (vesa_hardware)
    {
-      screen = thin_bmp_createhw((uint8 *) THIN_PHYS_ADDR(cur_mode.address),
-                                 cur_mode.width, cur_mode.height, cur_mode.bpp,
-                                 cur_mode.width);
+      screen = thin_bmp_createhw((uint8 *) THIN_PHYSICAL_ADDR(address),
+                                 mode_info.XResolution, mode_info.YResolution, 
+                                 mode_info.BitsPerPixel, mode_info.XResolution);
       if (NULL == screen)
+      {
+         thin_printf("thinlib.vesa: failed creating hardware surface\n");
          return -1;
+      }
    }
    else
    {
       if (NULL != hardware)
          thin_bmp_destroy(&hardware);
 
-      hardware = thin_bmp_createhw((uint8 *) cur_mode.address, 
-                                   cur_mode.width, cur_mode.height, cur_mode.bpp,
-                                   cur_mode.width);
+      hardware = thin_bmp_createhw((uint8 *) address, 
+                                   mode_info.XResolution, mode_info.YResolution, 
+                                   mode_info.BitsPerPixel, mode_info.XResolution);
       if (NULL == hardware)
+      {
+         thin_printf("thinlib.vesa: failed creating hardware surface\n");
          return -1;
+      }
 
-      screen = thin_bmp_create(cur_mode.width, cur_mode.height, cur_mode.bpp, 0);
+      screen = thin_bmp_create(mode_info.XResolution, mode_info.YResolution, 
+                               mode_info.BitsPerPixel, 0);
       if (NULL == screen)
+      {
+         thin_printf("thinlib.vesa: failed creating software surface\n");
          return -1;
+      }
    }
 
    return 0;
@@ -315,43 +347,31 @@ void thin_vesa_shutdown(void)
 {
    __dpmi_regs regs;
 
+   /* set text mode */
    memset(&regs, 0, sizeof(regs));
    regs.x.ax = 0x0003;
    __dpmi_int(VBE_INT, &regs);
 
-   thin_bmp_destroy(&screen);
+   if (NULL != screen)
+      thin_bmp_destroy(&screen);
 
-   if (0 == thinlib_nearptr)
+   if (NULL != hardware)
       thin_bmp_destroy(&hardware);
 }
 
-
-int thin_vesa_setmode(int width, int height, int bpp)
+int thin_vesa_init(int width, int height, int bpp, int param)
 {
-   uint16 mode;
-
-   mode = vesa_findmode(&vesa_info, width, height, bpp);
-   if (0 == mode)
-      return -1;
-
-   return vesa_setmodenum(mode);
-}
-
-int thin_vesa_init(int width, int height, int bpp)
-{
-   memset(&vesa_info, 0, sizeof(vesa_info));
    screen = NULL;
    hardware = NULL;
    
-   if (vesa_detect(&vesa_info))
+   /* check to see if VESA card is present */
+   if (vesa_detect())
       return -1;
 
-   /* check to see if linear framebuffer is available */
-   if ((vesa_info.VESAVersion >> 8) < 2)
-   {
-      thin_printf("thin@vesa: no linear framebuffer available\n");
-      return -1;
-   }
+   if (thinlib_nearptr && (param & THIN_VIDEO_HWSURFACE))
+      vesa_hardware = true;
+   else
+      vesa_hardware = false;
 
    return thin_vesa_setmode(width, height, bpp);
 }
@@ -361,43 +381,21 @@ bitmap_t *thin_vesa_lockwrite(void)
    return screen;
 }
 
+
 void thin_vesa_freewrite(int num_dirties, rect_t *dirty_rects)
 {
    UNUSED(num_dirties);
    UNUSED(dirty_rects);
 
-   if (0 == thinlib_nearptr)
+   /* if we don't have a hardware surface, blat it out */
+   if (false == vesa_hardware)
    {
-      movedata(_my_ds(), (unsigned) screen->line[0],
+      _movedatal(_my_ds(), (unsigned) screen->line[0],
                vid_selector, (unsigned) hardware->line[0],
-               hardware->pitch * hardware->height);
+               hardware->pitch * hardware->height / 4);
    }
 }
 
 /*
-** $Log: tl_vesa.c,v $
-** Revision 1.8  2001/03/12 06:06:55  matt
-** better keyboard driver, support for bit depths other than 8bpp
-**
-** Revision 1.7  2001/02/01 06:28:26  matt
-** thinlib now works under NT/2000
-**
-** Revision 1.6  2001/01/15 05:25:52  matt
-** i hate near pointers
-**
-** Revision 1.5  2000/12/14 14:10:32  matt
-** cleaner initialization
-**
-** Revision 1.4  2000/11/25 20:28:34  matt
-** moved verboseness into correct places
-**
-** Revision 1.3  2000/11/06 02:22:33  matt
-** generalized video driver (tl_video.c)
-**
-** Revision 1.2  2000/11/05 16:32:36  matt
-** thinlib round 2
-**
-** Revision 1.1  2000/11/05 06:29:03  matt
-** initial revision
-**
+** $Log: $
 */

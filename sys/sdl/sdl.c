@@ -41,8 +41,7 @@ rcvar_t vid_exports[] =
 	RCV_VECTOR("vmode", &vmode, 3),
 	RCV_BOOL("yuv", &use_yuv),
 	RCV_BOOL("fullscreen", &fullscreen),
-	RCV_BOOL("sdl_fullscreen", &fullscreen),
-	RCV_BOOL("sdl_altenter", &use_altenter),
+	RCV_BOOL("altenter", &use_altenter),
 	RCV_END
 };
 

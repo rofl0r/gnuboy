@@ -3,9 +3,9 @@
 #
 # thinlib library makefile
 #
-# Copyright (C) 2000 Matthew Conte (matt@conte.com)
+# Copyright (C) 2001 Matthew Conte (matt@conte.com)
 #
-# $Id: Makefile,v 1.11 2001/03/12 06:06:55 matt Exp $
+# $Id: $
 
 ################################
 # Configuration
@@ -22,8 +22,7 @@ DBGASMFLAGS =  -g
 
 ################################
 
-WANT_DEBUG = TRUE
-# WANT_AALIB = TRUE
+# WANT_DEBUG = TRUE
 
 ################################
 
@@ -34,14 +33,11 @@ else
 	CFLAGS += $(OPTCFLAGS)
 endif
 
-ifneq "$(WANT_AALIB)" "TRUE"
-	CFLAGS += -DNO_AALIB
-endif
-
 ################################
 
-CFILES = tl_main tl_log tl_timer tl_key tl_mouse tl_joy \
-	tl_dpp tl_bmp tl_aa tl_vesa tl_vga tl_video tl_sb tl_sound
+CFILES = tl_main tl_log tl_timer tl_int tl_key tl_mouse tl_joy \
+	tl_dpp tl_bmp tl_vesa tl_vga tl_video tl_sb tl_sound \
+	tl_event tl_prof
 
 CSRCS = $(addsuffix .c, $(CFILES))
 OBJS = $(addsuffix .o, $(CFILES))
@@ -101,25 +97,4 @@ include _dep
 
 ################################
 
-# $Log: Makefile,v $
-# Revision 1.11  2001/03/12 06:06:55  matt
-# better keyboard driver, support for bit depths other than 8bpp
-#
-# Revision 1.10  2001/02/01 06:28:26  matt
-# thinlib now works under NT/2000
-#
-# Revision 1.9  2001/01/15 05:25:52  matt
-# i hate near pointers
-#
-# Revision 1.8  2000/12/16 17:38:25  matt
-# tl_sound
-#
-# Revision 1.7  2000/12/14 14:13:47  matt
-# test suite
-#
-# Revision 1.6  2000/12/13 14:14:27  matt
-# DJGPP_USE_NEARPTR -> THINLIB_NEARPTR
-#
-# Revision 1.5  2000/12/13 13:57:32  matt
-# self-sufficient makefile
-#
+# $Log: $

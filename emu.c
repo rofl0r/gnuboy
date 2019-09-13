@@ -83,8 +83,8 @@ void emu_run()
 		/* printf("%d\n", delay); */
 		sys_sleep(delay);
 		sys_elapsed(timer);
-		vid_begin();
 		doevents();
+		vid_begin();
 		if (framecount) { if (!--framecount) die("finished\n"); }
 		
 		if (!(R_LCDC & 0x80))

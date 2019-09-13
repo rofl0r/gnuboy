@@ -1,43 +1,30 @@
 /*
-** thinlib (c) 2000 Matthew Conte (matt@conte.com)
-**
-**
-** This program is free software; you can redistribute it and/or
-** modify it under the terms of version 2 of the GNU Library General 
-** Public License as published by the Free Software Foundation.
-**
-** This program is distributed in the hope that it will be useful, 
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-** Library General Public License for more details.  To obtain a 
-** copy of the GNU Library General Public License, write to the Free 
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** thinlib (c) 2001 Matthew Conte (matt@conte.com)
 **
 **
 ** tl_sound.c
 **
 ** sound driver
-** $Id: tl_sound.c,v 1.3 2001/03/12 06:06:55 matt Exp $
+**
+** $Id: $
 */
 
 #include "tl_types.h"
 #include "tl_sound.h"
 #include "tl_sb.h"
 #include "tl_log.h"
-/* TODO: make GuS driver... */
+
 
 typedef struct snddriver_s
 {
    const char *name;
    int  (*init)(int *sample_rate, int *frag_size, int *format);
    void (*shutdown)(void);
-   int  (*start)(audio_callback_t callback);
+   int  (*start)(audio_callback_t callback, void *user_data);
    void (*stop)(void);
    void (*setrate)(int sample_rate);
    audio_callback_t callback;
+   void *user_data;
 } snddriver_t;
 
 static snddriver_t sb =
@@ -48,27 +35,17 @@ static snddriver_t sb =
    thin_sb_start,
    thin_sb_stop,
    thin_sb_setrate,
+   NULL,
    NULL
 };
 
 static snddriver_t *driver_list[] =
 {
    &sb,
-   /* TODO: add more drivers here */
    NULL
 };
 
-static snddriver_t snddriver = 
-{
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-};
-
+static snddriver_t snddriver;
 
 int thin_sound_init(thinsound_t *sound_params)
 {
@@ -94,6 +71,7 @@ int thin_sound_init(thinsound_t *sound_params)
 
          /* and set the callback */
          snddriver.callback = sound_params->callback;
+         snddriver.user_data = sound_params->user_data;
 
          return 0;
       }
@@ -120,7 +98,7 @@ void thin_sound_start(void)
       return;
 
    THIN_ASSERT(snddriver.callback);
-   snddriver.start(snddriver.callback);
+   snddriver.start(snddriver.callback, snddriver.user_data);
 }
 
 void thin_sound_stop(void)
@@ -138,14 +116,5 @@ void thin_sound_setrate(int sample_rate)
 }
 
 /*
-** $Log: tl_sound.c,v $
-** Revision 1.3  2001/03/12 06:06:55  matt
-** better keyboard driver, support for bit depths other than 8bpp
-**
-** Revision 1.2  2001/02/19 02:55:36  matt
-** extern this, eh!
-**
-** Revision 1.1  2000/12/16 17:29:20  matt
-** initial revision
-**
+** $Log: $
 */

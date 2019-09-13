@@ -33,7 +33,7 @@ static byte *mmio;
 static int bes;
 static int base;
 static int use_yuv = -1;
-static int use_interp;
+static int use_interp = 1;
 
 static struct fb_fix_screeninfo fi;
 static struct fb_var_screeninfo vi, initial_vi;
@@ -83,22 +83,22 @@ static void overlay_switch()
 	wrio4(BESA2ORG, base);
 	wrio4(BESB1ORG, base);
 	wrio4(BESB2ORG, base);
-	wrio4(BESPITCH, 512);
+	wrio4(BESPITCH, 320);
 	
 	/* dest */
 	a = (vi.xres - vmode[0])>>1;
-	b = vi.xres - a;
+	b = vi.xres - a - 1;
 	wrio4(BESHCOORD,  (a << 16) | b - 1);
 	
 	/* scale horiz */
-	wrio4(BESHISCAL,   320*65536/(b-a) & 0x001ffffc);
+	wrio4(BESHISCAL,   320*131072/(b-a) & 0x001ffffc);
 	wrio4(BESHSRCST,   0 << 16);
 	wrio4(BESHSRCEND,  320 << 16);
 	wrio4(BESHSRCLST,  319 << 16);
 
 	/* dest */
 	a = (vi.yres - vmode[1])>>1;
-	b = vi.yres - a;
+	b = vi.yres - a - 1;
 	wrio4(BESVCOORD,  (a << 16) | b - 1);
 	
 	/* scale vert */
@@ -110,10 +110,10 @@ static void overlay_switch()
 	
 	/* turn on (enable, horizontal+vertical interpolation filters */
 	if (use_interp)
-		wrio4(BESCTL,     (1 << 0) | (1 << 10) | (1 << 11));
+		wrio4(BESCTL, 0x50c01);
 	else
 		wrio4(BESCTL, 1);
-	wrio4(BESGLOBCTL, 0);
+	wrio4(BESGLOBCTL, 0x83);
 }
 
 static void overlay_init()
@@ -134,7 +134,7 @@ static void overlay_init()
 	}
 	fb.w = 160;
 	fb.h = 144;
-	fb.pitch = 1024;
+	fb.pitch = 640;
 	fb.pelsize = 4;
 	fb.yuv = 1;
 	fb.cc[0].r = fb.cc[1].r = fb.cc[2].r = fb.cc[3].r = 0;

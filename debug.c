@@ -657,6 +657,7 @@ void debug_disassemble(addr a, int c)
 			R_IE, R_IF, R_LCDC, R_STAT, R_LY, R_LYC
 		);
 		printf("\n");
+		fflush(stdout);
 		c--;
 	}
 }
