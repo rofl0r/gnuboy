@@ -20,7 +20,7 @@
 ** tl_log.c
 **
 ** Error logging functions
-** $Id: tl_log.c,v 1.2 2000/11/06 02:21:45 matt Exp $
+** $Id: tl_log.c,v 1.3 2001/03/12 06:06:55 matt Exp $
 */
 
 #include <stdlib.h>
@@ -29,12 +29,14 @@
 #include "tl_types.h"
 #include "tl_log.h"
 
+#define  MAX_LOG_BUF_SIZE  1024
+
 static int (*log_func)(const char *format, ... ) = printf;
 
 void thin_printf(const char *format, ... )
 {
    /* don't allocate on stack every call */
-   static char buffer[1024 + 1];
+   static char buffer[MAX_LOG_BUF_SIZE + 1];
    va_list arg;
 
    va_start(arg, format);
@@ -59,15 +61,18 @@ void thin_assert(int expr, int line, const char *file, char *msg)
       return;
 
    if (NULL != msg)
-      thin_printf("ASSERT: line %d of %s, %s\n", line, file, msg);
+      thin_printf("THIN_ASSERT: line %d of %s, %s\n", line, file, msg);
    else
-      thin_printf("ASSERT: line %d of %s\n", line, file);
+      thin_printf("THIN_ASSERT: line %d of %s\n", line, file);
 
    exit(-1);
 }
 
 /*
 ** $Log: tl_log.c,v $
+** Revision 1.3  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.2  2000/11/06 02:21:45  matt
 ** logging functions now work
 **

@@ -20,7 +20,7 @@
 ** tl_vesa.c
 **
 ** VESA code.
-** $Id: tl_vesa.c,v 1.7 2001/02/01 06:28:26 matt Exp $
+** $Id: tl_vesa.c,v 1.8 2001/03/12 06:06:55 matt Exp $
 */
 
 #include <stdio.h>
@@ -132,16 +132,12 @@ typedef struct modeinfo_s
 
 #define  VBE_MAX_NUM_MODES    1024  /* liberal */
 
-/* this is NOT the right way to set the damn palette! */
-#define  VGA_PAL_READ         0x3C7 /* Palette read address                */
-#define  VGA_PAL_WRITE        0x3C8 /* Palette write address               */
-#define  VGA_PAL_DATA         0x3C9 /* Palette data register               */
-
 
 static struct
 {
    uint32 address;
    int width, height;
+   int bpp;
 } cur_mode;
 
 
@@ -155,7 +151,7 @@ static int vesa_detect(vesainfo_t *vesainfo)
    __dpmi_regs regs;
 
    /* Use DOS transfer buffer to hold VBE info */
-   ASSERT(sizeof(*vesainfo) < _go32_info_block.size_of_transfer_buffer);
+   THIN_ASSERT(sizeof(*vesainfo) < _go32_info_block.size_of_transfer_buffer);
    memset(&regs, 0, sizeof(regs));
 
    strncpy(vesainfo->VESASignature, "VBE2", 4);
@@ -180,7 +176,7 @@ static int vesa_getmodeinfo(uint16 mode, modeinfo_t *modeinfo)
 {
    __dpmi_regs regs;
 
-   ASSERT(sizeof(*modeinfo) < _go32_info_block.size_of_transfer_buffer);
+   THIN_ASSERT(sizeof(*modeinfo) < _go32_info_block.size_of_transfer_buffer);
 
    memset(&regs, 0, sizeof(regs));
    regs.x.ax = VBE_FUNC_GETMODEINFO; 
@@ -217,7 +213,7 @@ static uint16 vesa_findmode(vesainfo_t *vesainfo, int width, int height, int bpp
    }
 
    /* VESA card on steroids? */
-   ASSERT(mode_total < VBE_MAX_NUM_MODES);
+   THIN_ASSERT(mode_total < VBE_MAX_NUM_MODES);
 
    for (i = 0; i < mode_total; i++)
    {
@@ -257,6 +253,7 @@ static int vesa_setmodenum(uint16 mode)
       if (-1 == vid_selector)
          return -1;
 
+      /* paranoid */
       if (-1 == __dpmi_set_descriptor_access_rights(vid_selector, 0x40f3))
          return -1;
 
@@ -282,6 +279,7 @@ static int vesa_setmodenum(uint16 mode)
 
    cur_mode.width = mode_info.XResolution;
    cur_mode.height = mode_info.YResolution;
+   cur_mode.bpp = mode_info.BitsPerPixel;
 
    if (NULL != screen)
       thin_bmp_destroy(&screen);
@@ -289,7 +287,8 @@ static int vesa_setmodenum(uint16 mode)
    if (thinlib_nearptr)
    {
       screen = thin_bmp_createhw((uint8 *) THIN_PHYS_ADDR(cur_mode.address),
-                                 cur_mode.width, cur_mode.height, cur_mode.width);
+                                 cur_mode.width, cur_mode.height, cur_mode.bpp,
+                                 cur_mode.width);
       if (NULL == screen)
          return -1;
    }
@@ -299,11 +298,12 @@ static int vesa_setmodenum(uint16 mode)
          thin_bmp_destroy(&hardware);
 
       hardware = thin_bmp_createhw((uint8 *) cur_mode.address, 
-                                   cur_mode.width, cur_mode.height, cur_mode.width);
+                                   cur_mode.width, cur_mode.height, cur_mode.bpp,
+                                   cur_mode.width);
       if (NULL == hardware)
          return -1;
 
-      screen = thin_bmp_create(cur_mode.width, cur_mode.height, 0);
+      screen = thin_bmp_create(cur_mode.width, cur_mode.height, cur_mode.bpp, 0);
       if (NULL == screen)
          return -1;
    }
@@ -326,19 +326,18 @@ void thin_vesa_shutdown(void)
 }
 
 
-int thin_vesa_setmode(int width, int height)
+int thin_vesa_setmode(int width, int height, int bpp)
 {
    uint16 mode;
 
-   /* assume we always want 8bpp */
-   mode = vesa_findmode(&vesa_info, width, height, 8);
+   mode = vesa_findmode(&vesa_info, width, height, bpp);
    if (0 == mode)
       return -1;
 
    return vesa_setmodenum(mode);
 }
 
-int thin_vesa_init(int width, int height)
+int thin_vesa_init(int width, int height, int bpp)
 {
    memset(&vesa_info, 0, sizeof(vesa_info));
    screen = NULL;
@@ -354,7 +353,7 @@ int thin_vesa_init(int width, int height)
       return -1;
    }
 
-   return thin_vesa_setmode(width, height);
+   return thin_vesa_setmode(width, height, bpp);
 }
 
 bitmap_t *thin_vesa_lockwrite(void)
@@ -369,19 +368,17 @@ void thin_vesa_freewrite(int num_dirties, rect_t *dirty_rects)
 
    if (0 == thinlib_nearptr)
    {
-      int line;
-
-      for (line = 0; line < hardware->height; line++)
-      {         
-         movedata(_my_ds(), (unsigned) screen->line[line],
-                  vid_selector, (unsigned) hardware->line[line],
-                  hardware->pitch);
-      }
+      movedata(_my_ds(), (unsigned) screen->line[0],
+               vid_selector, (unsigned) hardware->line[0],
+               hardware->pitch * hardware->height);
    }
 }
 
 /*
 ** $Log: tl_vesa.c,v $
+** Revision 1.8  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.7  2001/02/01 06:28:26  matt
 ** thinlib now works under NT/2000
 **

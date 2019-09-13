@@ -5,32 +5,24 @@
 #
 # Copyright (C) 2000 Matthew Conte (matt@conte.com)
 #
-# $Id: Makefile,v 1.10 2001/02/01 06:28:26 matt Exp $
+# $Id: Makefile,v 1.11 2001/03/12 06:06:55 matt Exp $
 
 ################################
 # Configuration
 
-# compilers
-CC = gcc
-CXX = gxx
-CFLAGS =
-
-DBGCFLAGS = -W -Wall -Werror -ggdb -DTHINLIB_DEBUG
-OPTCFLAGS = -O3 -fomit-frame-pointer -ffast-math
+CFLAGS      =  -W -Wall -Werror
+DBGCFLAGS   =  -ggdb -DTHINLIB_DEBUG
+OPTCFLAGS   =  -O3 -fomit-frame-pointer -ffast-math
 
 # Assembler
 ASM = nasm
-ASMFLAGS = -f coff
+ASMFLAGS    =  -f coff
 
-DBGASMFLAGS = -g
-
-# must keep this undefined because of bug in djgpp make
-# Linker options
-#LDFLAGS =
+DBGASMFLAGS =  -g
 
 ################################
 
-# WANT_DEBUG = TRUE
+WANT_DEBUG = TRUE
 # WANT_AALIB = TRUE
 
 ################################
@@ -48,7 +40,7 @@ endif
 
 ################################
 
-CFILES = thinlib tl_log tl_timer tl_key tl_mouse tl_joy \
+CFILES = tl_main tl_log tl_timer tl_key tl_mouse tl_joy \
 	tl_dpp tl_bmp tl_aa tl_vesa tl_vga tl_video tl_sb tl_sound
 
 CSRCS = $(addsuffix .c, $(CFILES))
@@ -110,6 +102,9 @@ include _dep
 ################################
 
 # $Log: Makefile,v $
+# Revision 1.11  2001/03/12 06:06:55  matt
+# better keyboard driver, support for bit depths other than 8bpp
+#
 # Revision 1.10  2001/02/01 06:28:26  matt
 # thinlib now works under NT/2000
 #

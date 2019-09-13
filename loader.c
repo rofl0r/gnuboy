@@ -205,6 +205,7 @@ void state_load(int n)
 		vram_dirty();
 		pal_dirty();
 		sound_dirty();
+		mem_updatemap();
 	}
 	free(name);
 }

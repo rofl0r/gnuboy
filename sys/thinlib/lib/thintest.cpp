@@ -20,7 +20,7 @@
 ** thintest.cpp
 **
 ** thinlib test
-** $Id: thintest.cpp,v 1.2 2001/02/01 06:28:26 matt Exp $
+** $Id: thintest.cpp,v 1.3 2001/03/12 06:06:55 matt Exp $
 */
 
 #include <stdio.h>
@@ -28,29 +28,34 @@
 #include <math.h>
 #include "thinlib.h"
 
-#define SAMPLE_RATE 44100
-#define FRAGSIZE 1024
-#define VID_WIDTH 320
-#define VID_HEIGHT 240
-
 class test
 {
-private:
-
 public:
    test();
    ~test();
+   void  run();
+
+private:
+   enum
+   {
+      SAMPLE_RATE = 44100,
+      FRAGSIZE    = 1024,
+      VID_WIDTH   = 320,
+      VID_HEIGHT  = 240,
+      VID_BPP     = 8
+   };
 
    int testSound();
    int testVideo();
    int testTimer();
+   int testKeys();
 };
 
 test::test()
 {
    int ret = thin_init(THIN_KEY | THIN_MOUSE | THIN_TIMER
                        | THIN_VIDEO | THIN_SOUND);
-   ASSERT(-1 != ret);
+   THIN_ASSERT(-1 != ret);
 }
 
 test::~test()
@@ -82,6 +87,7 @@ int test::testSound()
    if (thin_sound_init(&params))
       return -1;
 
+   thin_sound_start();
    thin_sound_stop();
 
    return 0;
@@ -94,10 +100,10 @@ int test::testVideo()
    bitmap_t *buffer;
 
    /* set up video */
-   if (thin_vid_init(VID_WIDTH, VID_HEIGHT))
+   if (thin_vid_init(VID_WIDTH, VID_HEIGHT, VID_BPP))
       return -1;
 
-   buffer = thin_bmp_create(VID_WIDTH, VID_HEIGHT, 0);
+   buffer = thin_bmp_create(VID_WIDTH, VID_HEIGHT, VID_BPP, 0);
    if (NULL == buffer)
       return -1;
 
@@ -155,35 +161,48 @@ int test::testTimer()
       }
    }
 
-   thin_timer_setrate(1);
-   last_ticks = 0;
-   timer_ticks = 0;
-   while (timer_ticks <= 3)
-   {
-      if (last_ticks != timer_ticks)
-      {
-         last_ticks = timer_ticks;
-         thin_printf("%d seconds\n", last_ticks);
-      }
-   }
-
    thin_timer_shutdown();
 
    return 0;
+}
+
+int test::testKeys()
+{
+   keydata_t *pKey;
+
+   thin_printf("keytest: press ESC...");
+
+   do
+   {
+      pKey = thin_key_dequeue();
+   }
+   while (pKey == NULL || pKey->key != THIN_KEY_ESC);
+
+   thin_printf("\nhey, thanks!\n");
+
+   return 0;
+}
+
+void test::run()
+{
+   if (testSound())
+      return;
+
+   if (testVideo())
+      return;
+
+   if (testTimer())
+      return;
+
+   if (testKeys())
+      return;
 }
 
 int main(int argc, char *argv[])
 {
    test *t = new test;
 
-   if (t->testSound())
-      return -1;
-
-   if (t->testVideo())
-      return -1;
-
-   if (t->testTimer())
-      return -1;
+   t->run();
 
    delete t;
 
@@ -192,6 +211,9 @@ int main(int argc, char *argv[])
 
 /*
 ** $Log: thintest.cpp,v $
+** Revision 1.3  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.2  2001/02/01 06:28:26  matt
 ** thinlib now works under NT/2000
 **

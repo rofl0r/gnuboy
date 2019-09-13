@@ -6,6 +6,12 @@
 	.set pal2, scan+896
 	.set pal4, scan+1024
 
+	.set bg, scan
+	.set buf, scan+512
+	.set u, scan+1792+24
+	.set v, scan+1792+28
+	.set wx, scan+1792+32
+	
 	.data
 	.balign 4
 
@@ -321,9 +327,85 @@ blendcpy8:
 	popl %ebx
 	ret
 
+
+
+
+
+
+
+	.globl bg_scan_color
+bg_scan_color:
+	movb wx, %ch
+	cmpb $0, %ch
+	jb .Lbsc_done_nopop
+	pushl %ebx
+	pushl %ebp
+	pushl %esi
+	pushl %edi
+	movl v, %eax
+	movl $bg, %esi
+	movl $buf, %edi
+	leal patpix(,%eax,8), %ebp
+	movl (%esi), %eax
+	movl u, %ebx
+	shll $6, %eax
+	movb $-8, %cl
+	addl %ebx, %eax
+	addb %bl, %cl
+	movb 4(%esi), %bl
+	addl $8, %esi
+	addb %cl, %ch
+.Lbsc_preloop:	
+	movb (%ebp,%eax), %dl
+	incl %eax
+	orb %bl, %dl
+	movb %dl, (%edi)
+	incl %edi
+	incb %cl
+	jnz .Lbsc_preloop
+	cmpb $0, %ch
+	jb .Lbsc_done
+	subb $8, %ch
+.Lbsc_loop:	
+	movl (%esi), %eax
+	movl 4(%esi), %edx
+	shll $6, %eax
+	movb %dl, %dh
+	addl $8, %esi
+	movl %edx, %ebx
+	rorl $16, %edx
+	orl %edx, %ebx
+	movl (%ebp,%eax), %edx
+	orl %ebx, %edx
+	movl %edx, (%edi)
+	movl 4(%ebp,%eax), %edx
+	orl %ebx, %edx
+	movl %edx, 4(%edi)
+	addl $8, %edi
+	subb $8, %ch
+	jae .Lbsc_loop
+	addb $8, %ch
+	jz .Lbsc_done
+	movl (%esi), %eax
+	shll $6, %eax
+	movb 4(%esi), %bl
+.Lbsc_postloop:	
+	movb (%ebp,%eax), %dl
+	incl %eax
+	orb %bl, %dl
+	movb %dl, (%edi)
+	incl %edi
+	decb %ch
+	jnz .Lbsc_postloop
+.Lbsc_done:
+	popl %edi
+	popl %esi
+	popl %ebp
+	popl %ebx
+.Lbsc_done_nopop:
+	ret
+
 	
-
-
 
 
 

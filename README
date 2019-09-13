@@ -21,6 +21,7 @@ a wide range of host systems, and has been tested successfully on:
   DR-DOS
   MS-DOS
   Windows DOS box
+  Windows 9x/NT/2k
 
 Additionally, gnuboy should run on any other *nix variants that have
 ANSI C compilers and that are remotely POSIX compliant. As gnuboy is
@@ -284,11 +285,6 @@ appreciated.
 
 The main loop in emu_run is very sloppy and not quite right, but it
 works.
-
-With a few roms, things screw up after loading savestates. Try loading
-from a place more similar to where you saved and it might work better.
-This is a serious problem since it can potentially result in unusable
-saves, so we'll be looking into it as soon as we get a lead.
 
 Sound mixing is taking way too much cpu time. I have some ideas for
 fixing this, and I plan to write optimized assembly code for sound

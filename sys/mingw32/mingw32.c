@@ -11,16 +11,6 @@
 
 #include <SDL/SDL.h>
 
-int sys_msecs()
-{
-	return SDL_GetTicks();
-}
-
-int sys_realtime()
-{
-	return time(NULL);
-}
-
 void *sys_timer()
 {
 	Uint32 *tv;
@@ -35,7 +25,7 @@ int sys_elapsed(Uint32 *cl)
 	Uint32 now;
 	Uint32 usecs;
 
-	now = SDL_GetTicks();
+	now = SDL_GetTicks() * 1000;
 	usecs = now - *cl;
 	*cl = now;
 	return usecs;
@@ -46,7 +36,14 @@ void sys_sleep(int us)
 	/* dbk: for some reason 2000 works..
 	   maybe its just compensation for the time it takes for SDL_Delay to
 	   execute, or maybe sys_timer is too slow */
-    SDL_Delay(us/2000);
+	SDL_Delay(us/1000);
+}
+
+void sys_sanitize(char *s)
+{
+	int i;
+	for (i = 0; s[i]; i++)
+		if (s[i] == '\\') s[i] = '/';
 }
 
 void sys_initpath(char *exe)
@@ -54,6 +51,7 @@ void sys_initpath(char *exe)
 	char *buf, *home, *p;
 
 	home = strdup(exe);
+	sys_sanitize(home);
 	p = strrchr(home, '/');
 	if (p) *p = 0;
 	else
@@ -71,24 +69,8 @@ void sys_initpath(char *exe)
 	free(buf);
 }
 
-void sys_sanitize(char *s)
-{
-}
-
-static void cleanup()
-{
-	sram_save();
-	rtc_save();
-	/* IDEA - if error, write emergency savestate..? */
-}
-
-void shutdown(int err)
-{
-	cleanup();
-	vid_close();
-	pcm_close();
-}
-
 void sys_checkdir(char *path, int wr)
 {
 }
+
+

@@ -1,146 +1,280 @@
-/*
-** thinlib (c) 2000 Matthew Conte (matt@conte.com)
-**
-**
-** This program is free software; you can redistribute it and/or
-** modify it under the terms of version 2 of the GNU Library General 
-** Public License as published by the Free Software Foundation.
-**
-** This program is distributed in the hope that it will be useful, 
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-** Library General Public License for more details.  To obtain a 
-** copy of the GNU Library General Public License, write to the Free 
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
-**
-**
-** thinlib.c
-**
-** main library init / shutdown code
-** $Id: thinlib.c,v 1.7 2001/02/01 06:28:26 matt Exp $
-*/
-
-#include "tl_types.h"
+#include <stdlib.h>
+#include <string.h>
+#include "fb.h"
+#include "input.h"
+#include "rc.h"
+#include "pcm.h"
 #include "thinlib.h"
 
-#include "tl_key.h"
-#include "tl_timer.h"
-#include "tl_joy.h"
-#include "tl_dpp.h"
+struct pcm pcm;
 
-#include "tl_sound.h"
-#include "tl_video.h"
-#include "tl_djgpp.h"
+static byte *backbuf;
+static volatile int audio_int;
 
-#include <crt0.h>
+static int samplerate = 44100;
+static int sound = 1;
+static int stereo = 0;
 
-int _crt0_startup_flags = _CRT0_FLAG_NONMOVE_SBRK;
+struct fb fb;
 
-/* our global "near pointer" flag. */
-int thinlib_nearptr = 0;
+static bitmap_t *screen = NULL;
+static int vid_width = 320;
+static int vid_height = 200;
+static int vid_bpp = 8;
 
-/* Reduce size of djgpp executable */
-char **__crt0_glob_function(char *_argument) 
-{ 
-   UNUSED(_argument);
-   return (char **) 0;
-}
-
-void __crt0_load_environment_file(char *_app_name)
+rcvar_t vid_exports[] = 
 {
-   UNUSED(_app_name);
-}
+	RCV_INT("vid_width", &vid_width),
+	RCV_INT("vid_height", &vid_height),
+	RCV_INT("vid_bpp", &vid_bpp),
+	RCV_END
+};
 
-static int initialized_flags = 0;
-
-int thin_init(int devices)
+rcvar_t pcm_exports[] =
 {
-   int success = 0;
+	RCV_BOOL("sound", &sound),
+	RCV_INT("samplerate", &samplerate),
+	RCV_INT("stereo", &stereo),
+	RCV_END
+};
 
-   /* Try to enable near pointers through djgpp's default mechanism.
-   ** This allows us to manipulate memory-mapped devices (sound cards,
-   ** video cards, etc.) as if they were regular memory addresses, at
-   ** the cost of disabling memory protection.  Win NT and 2000 strictly
-   ** disallow near pointers, so we need to flag this.
-   */
-
-   if (0 == __djgpp_nearptr_enable())
-      thinlib_nearptr = 0;
-   else
-      thinlib_nearptr = 1;
-
-   if (devices & THIN_KEY)
-   {
-      if (thin_key_init())
-         return -1;
-      success |= THIN_KEY;
-   }
-
-   if (devices & THIN_JOY)
-   {
-      if (0 == thin_joy_init())
-         success |= THIN_JOY;
-   }
-
-   if (devices & THIN_DPP)
-   {
-      if (0 == thin_dpp_init())
-         success |= THIN_DPP;
-   }
-
-   /* THIN_SOUND, THIN_VIDEO, THIN_TIMER implicitly successful.. */
-
-   initialized_flags = success;
-
-   return success;
-}
-
-void thin_shutdown(void)
+/* hardware audio buffer fill */
+static void _audio_callback(void *buf, int len)
 {
-   /* not started from thin_init */
-   thin_sound_shutdown();
-   thin_timer_shutdown();
-   thin_vid_shutdown();
-
-   /* started from thin_init... */
-   if (initialized_flags & THIN_KEY)
-      thin_key_shutdown();
-
-   if (initialized_flags & THIN_JOY)
-      thin_joy_shutdown();
-
-   if (initialized_flags & THIN_DPP)
-      thin_dpp_shutdown();
-
-   /* back to memory protection, if need be */
-   if (thinlib_nearptr)
-      __djgpp_nearptr_disable();
+	memcpy(buf, backbuf, len);
+	audio_int = 1;
 }
 
-/*
-** $Log: thinlib.c,v $
-** Revision 1.7  2001/02/01 06:28:26  matt
-** thinlib now works under NT/2000
-**
-** Revision 1.6  2001/01/15 05:25:52  matt
-** i hate near pointers
-**
-** Revision 1.5  2000/12/16 17:39:57  matt
-** tl_sound
-**
-** Revision 1.4  2000/12/13 14:14:27  matt
-** DJGPP_USE_NEARPTR -> THINLIB_NEARPTR
-**
-** Revision 1.3  2000/11/06 02:22:33  matt
-** generalized video driver (tl_video.c)
-**
-** Revision 1.2  2000/11/05 22:22:00  matt
-** djgpp specifics rolled into thinlib.c from osd.c
-**
-** Revision 1.1  2000/11/05 16:32:15  matt
-** initial revision
-**
-*/
+void pcm_init()
+{
+	thinsound_t params;
+
+	if (!sound)
+	{
+		pcm.hz = 11025;
+		pcm.len = 4096;
+		pcm.buf = (byte *) malloc(pcm.len);
+		pcm.pos = 0;
+		pcm.stereo = stereo;
+		return;
+	}
+
+	params.sample_rate = samplerate;
+	params.frag_size = samplerate / 60;
+	params.format = THIN_SOUND_8BIT;
+	if (stereo)
+		params.format |= THIN_SOUND_STEREO;
+	else
+		params.format |= THIN_SOUND_MONO;
+	params.callback = _audio_callback;
+
+	if (thin_sound_init(&params))
+	{
+		sound = 0;
+		return;
+	}
+
+	pcm.hz = params.sample_rate;
+	pcm.len = params.frag_size;
+	pcm.stereo = (params.format & THIN_SOUND_STEREO) ? 1 : 0;
+	pcm.buf = (byte *) malloc(pcm.len);
+	if (!pcm.buf)
+		die("failed to allocate sound buffer\n");
+
+	memset(pcm.buf, 0, pcm.len);
+	pcm.pos = 0;
+
+	backbuf = (byte *) malloc(pcm.len);
+	if (!backbuf)
+		die("failed to allocate sound backbuffer\n");
+
+	memset(backbuf, 0, pcm.len);
+
+	thin_sound_start();
+}
+
+void pcm_close()
+{
+	if (sound)
+	{
+		thin_sound_stop();
+		thin_shutdown();
+	}
+
+	if (pcm.buf)
+		free(pcm.buf);
+	if (backbuf)
+		free(backbuf);
+	backbuf = 0;
+
+	memset(&pcm, 0, sizeof pcm);
+}
+
+int pcm_submit()
+{
+	if (!sound)
+	{
+		pcm.pos = 0;
+		return 0;
+	}
+
+	if (pcm.pos < pcm.len)
+		return 1;
+
+	while (!audio_int)
+		; /* spin */
+
+	memcpy(backbuf, pcm.buf, pcm.len);
+	audio_int = 0;
+	pcm.pos = 0;
+
+	return 1;
+}
+
+
+/* keyboard stuff... */
+
+/* keymap - mappings of the form { scancode, localcode } - from keymap.c */
+extern int keymap[][2];
+
+/* TODO: this is terrible. */
+static int mapscancode(int scan)
+{
+	int i;
+	for (i = 0; keymap[i][0]; i++)
+		if (keymap[i][0] == scan)
+			return keymap[i][1];
+	return 0;
+}
+
+
+void ev_poll()
+{
+	int i;
+	keydata_t *key;
+	event_t ev;
+	
+	key = thin_key_dequeue();
+	while (key)
+	{
+		ev.type = key->signal ? EV_PRESS : EV_RELEASE;
+		ev.code = mapscancode(key->key);
+		ev_postevent(&ev);
+
+		key = thin_key_dequeue();
+	}
+}
+
+void vid_preinit()
+{
+}
+
+void vid_init()
+{
+	int red_length, green_length, blue_length;
+	int red_offset, green_offset, blue_offset;
+
+	int gotmask = thin_init(THIN_VIDEO | THIN_SOUND | THIN_KEY);
+	if ((THIN_VIDEO | THIN_KEY) != (gotmask & (THIN_VIDEO | THIN_KEY)))
+		die("thinlib initialization failed.");
+	thin_key_set_repeat(false);
+
+	/* don't spam the graphics screen if we don't have soundcard */
+	thin_setlogfunc(NULL);
+
+	if (thin_vid_init(vid_width, vid_height, vid_bpp))
+		die("could not set video mode");
+
+	screen = thin_vid_lockwrite();
+	if (NULL == screen)
+		die("could not get ahold of video surface");
+
+	fb.w = screen->width;
+	fb.h = screen->height;
+	fb.pitch = screen->pitch;
+	fb.ptr = screen->data;
+
+	fb.pelsize = (screen->bpp + 7) / 8;
+	fb.indexed = (screen->bpp == 8) ? 1 : 0;
+
+	switch (screen->bpp)
+	{
+	case 8:
+		red_length = 0;
+		green_length = 0;
+		blue_length = 0;
+		red_offset = 0;
+		green_offset = 0;
+		blue_offset = 0;
+		break;
+
+	case 16:
+		red_length = 5;
+		green_length = 6;
+		blue_length = 5;
+		red_offset = 11;
+		green_offset = 5;
+		blue_offset = 0;
+		break;
+
+	case 32:
+		red_length = 8;
+		green_length = 8;
+		blue_length = 8;
+		red_offset = 16;
+		green_offset = 8;
+		blue_offset = 0;
+		break;
+
+	case 15:
+	case 24:
+	default:
+		die("i don't know what to do with %dbpp mode", screen->bpp);
+		break;
+	}
+
+	fb.cc[0].r = 8 - red_length;
+	fb.cc[1].r = 8 - green_length;
+	fb.cc[2].r = 8 - blue_length;
+	fb.cc[0].l = red_offset;
+	fb.cc[1].l = green_offset;
+	fb.cc[2].l = blue_offset;
+
+	fb.enabled = 1;
+	fb.dirty = 0;
+}
+
+void vid_close()
+{
+	fb.enabled = 0;
+	thin_shutdown();
+}
+
+void vid_settitle(char *title)
+{
+}
+
+void vid_setpal(int i, int r, int g, int b)
+{
+	rgb_t color;
+
+	color.r = r;
+	color.g = g;
+	color.b = b;
+	thin_vid_setpalette(&color, i, 1);
+}
+
+void vid_begin()
+{
+	screen = thin_vid_lockwrite();
+
+	fb.ptr = screen->data;
+	fb.pitch = screen->pitch;
+	fb.w = screen->width;
+	fb.h = screen->height;
+}
+
+void vid_end()
+{
+	thin_vid_freewrite(-1, NULL);
+}

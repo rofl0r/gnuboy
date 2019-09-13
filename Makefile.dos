@@ -10,21 +10,21 @@ ASFLAGS = -x assembler-with-cpp -Dcpu=_cpu -Dhw=_hw -Dram=_ram \
  -Dcpu_emulate=_cpu_emulate -Dcpu_step=_cpu_step \
  -Dlcdc_trans=_lcdc_trans -Ddebug_trace=_debug_trace \
  -Dpat_updatepix=_pat_updatepix -Ddebug_disassemble=_debug_disassemble \
+ -Dbg_scan_color=_bg_scan_color \
  -Drefresh_1=_refresh_1 -Drefresh_2=_refresh_2 -Drefresh_4=_refresh_4 \
  -Dmem_read=_mem_read -Dmem_write=_mem_write -Dcpu_idle=_cpu_idle \
  -Ddie=_die -Dprintf=_printf
 LDFLAGS = -s
 
-THIN_NAMES = thinlib tl_log tl_timer tl_key tl_mouse tl_joy \
+THIN_NAMES = tl_main tl_log tl_timer tl_key tl_mouse tl_joy \
 	tl_dpp tl_bmp tl_aa tl_vesa tl_vga tl_video tl_sb tl_sound
-THIN_OBJS = $(THIN_NAMES:%=sys/thinlib/%.o)
+THIN_OBJS = $(THIN_NAMES:%=sys/thinlib/lib/%.o)
 
 SYS_DEFS = -DIS_LITTLE_ENDIAN -DALLOW_UNALIGNED_IO -DALT_PATH_SEP -DUSE_ASM -DNO_AALIB
 
-SYS_INCS = -I./sys/dos -I./sys/thinlib
-SYS_OBJS = sys/dos/dos.o sys/dos/vga.o sys/dos/kb.o sys/pc/keymap.o \
-	sys/dos/snd_thin.o $(THIN_OBJS) sys/dummy/nojoy.o \
-	asm/i386/cpu.o asm/i386/lcd.o
+SYS_INCS = -I./sys/dos -I./sys/thinlib/lib
+SYS_OBJS = sys/dos/dos.o sys/thinlib/thinlib.o sys/thinlib/keymap.o $(THIN_OBJS) \
+	sys/dummy/nojoy.o asm/i386/cpu.o asm/i386/lcd.o
 
 all: gnuboy.exe
 
@@ -34,16 +34,5 @@ gnuboy.exe: $(OBJS) $(SYS_OBJS)
 	$(LD) $(CFLAGS) $(LDFLAGS) $(OBJS) $(SYS_OBJS) -o $@
 
 clean:
-	del gnuboy.exe gmon.out *.o sys\*.o sys\dos\*.o sys\pc\*.o asm\i386\*.o
-
-
-
-
-
-
-
-
-
-
-
-
+	rm -f gnuboy.exe gmon.out *.o sys/*.o sys/dos/*.o sys/pc/*.o asm/i386/*.o \
+	sys/thinlib/*.o sys/thinlib/*.exe sys/thinlib/*.o

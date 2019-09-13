@@ -20,7 +20,7 @@
 ** tl_bmp.h
 **
 ** Bitmap object defines / prototypes
-** $Id: tl_bmp.h,v 1.2 2000/12/13 13:58:20 matt Exp $
+** $Id: tl_bmp.h,v 1.3 2001/03/12 06:06:56 matt Exp $
 */
 
 #ifndef _TL_BMP_H_
@@ -43,20 +43,24 @@ typedef struct rgb_s
 typedef struct bitmap_s
 {
    int width, height, pitch;
+   int bpp;
    bool hardware;             /* is data a hardware region? */
    uint8 *data;               /* protected */
    uint8 *line[0];            /* will hold line pointers */
 } bitmap_t;
 
 extern void thin_bmp_clear(const bitmap_t *bitmap, uint8 color);
-extern bitmap_t *thin_bmp_create(int width, int height, int overdraw);
-extern bitmap_t *thin_bmp_createhw(uint8 *addr, int width, int height, int pitch);
+extern bitmap_t *thin_bmp_create(int width, int height, int bpp, int overdraw);
+extern bitmap_t *thin_bmp_createhw(uint8 *addr, int width, int height, int bpp, int pitch);
 extern void thin_bmp_destroy(bitmap_t **bitmap);
 
 #endif /* !_TL_BMP_H_ */
 
 /*
 ** $Log: tl_bmp.h,v $
+** Revision 1.3  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.2  2000/12/13 13:58:20  matt
 ** cosmetic fixes
 **

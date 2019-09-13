@@ -333,6 +333,7 @@ void wnd_scan_pri()
 	memset(dest, src[i]&128, cnt);
 }
 
+#ifndef ASM_BG_SCAN_COLOR
 void bg_scan_color()
 {
 	int cnt;
@@ -359,6 +360,7 @@ void bg_scan_color()
 	src = patpix[*(tile++)][V];
 	blendcpy(dest, src, *(tile++), cnt);
 }
+#endif
 
 void wnd_scan_color()
 {

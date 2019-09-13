@@ -20,7 +20,7 @@
 ** tl_timer.c
 **
 ** DOS timer routines
-** $Id: tl_timer.c,v 1.3 2000/12/16 21:18:11 matt Exp $
+** $Id: tl_timer.c,v 1.4 2001/03/12 06:06:56 matt Exp $
 */
 
 #include <go32.h>
@@ -114,6 +114,9 @@ void thin_timer_shutdown(void)
 
 /*
 ** $Log: tl_timer.c,v $
+** Revision 1.4  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.3  2000/12/16 21:18:11  matt
 ** thinlib cleanups
 **

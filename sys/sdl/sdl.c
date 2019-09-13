@@ -68,7 +68,7 @@ void vid_init()
 	int i;
 	int joy_count;
 	
-	int video_flags = SDL_HWSURFACE | SDL_HWPALETTE;
+	int video_flags = SDL_ANYFORMAT | SDL_HWPALETTE /* | SDL_HWSURFACE */;
 
 	if (fullscreen)
 		video_flags |= SDL_FULLSCREEN;
@@ -79,7 +79,7 @@ void vid_init()
 	if ((screen = SDL_SetVideoMode(160, 144, 16, video_flags)) == NULL)
 		die("SDL: can't set video mode: %s\n", SDL_GetError());
 
-	SDL_ShowCursor(SDL_DISABLE);
+	SDL_ShowCursor(0);
 
 	fb.w = screen->w;
 	fb.h = screen->h;
@@ -324,10 +324,12 @@ void vid_settitle(char *title)
 
 void vid_begin()
 {
+	/* SDL_LockSurface(screen); */
 }
 
 void vid_end()
 {
+	/* SDL_UnlockSurface(screen); */
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
@@ -385,11 +387,12 @@ void pcm_init()
 		return;
 	
 	pcm.hz = as.freq;
-	pcm.stereo = as.format - 1;
+	pcm.stereo = as.channels - 1;
 	pcm.len = as.size;
 	pcm.buf = malloc(pcm.len);
 	pcm.pos = 0;
-
+	memset(pcm.buf, 0, pcm.len);
+	
 	SDL_PauseAudio(0);
 }
 

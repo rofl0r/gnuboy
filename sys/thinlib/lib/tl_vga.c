@@ -20,7 +20,7 @@
 ** tl_vga.c
 **
 ** VGA-related thinlib functions
-** $Id: tl_vga.c,v 1.8 2001/02/01 06:28:26 matt Exp $
+** $Id: tl_vga.c,v 1.9 2001/03/12 06:06:55 matt Exp $
 */
 
 #include <stdio.h>
@@ -492,8 +492,11 @@ void thin_vga_scanlines(bool scanlines_on)
 }
 
 /* Set up VGA mode 13h, then tweak it appropriately */
-int thin_vga_setmode(int width, int height)
+int thin_vga_setmode(int width, int height, int bpp)
 {
+   if (8 != bpp)
+      return -1;
+
    vga_mode = vidmodes;
 
    /* Search for the video mode */
@@ -528,29 +531,32 @@ void thin_vga_shutdown(void)
 }
 
 /* Initialize VGA */
-int thin_vga_init(int width, int height)
+int thin_vga_init(int width, int height, int bpp)
 {
+   if (8 != bpp)
+      return -1;
+
    if (thinlib_nearptr)
    {
       screen = thin_bmp_createhw((uint8 *) THIN_PHYS_ADDR(0xA0000),
-                                 width, height, width);
+                                 width, height, bpp, width);
       if (NULL == screen)
          return -1;
    }
    else
    {
       hardware = thin_bmp_createhw((uint8 *) 0xA0000,
-                                   width, height, width);
+                                   width, height, bpp, width);
       if (NULL == hardware)
          return -1;
 
-      screen = thin_bmp_create(width, height, 0);
+      screen = thin_bmp_create(width, height, bpp, 0);
       if (NULL == screen)
          return -1;
    }
 
    /* Set the initial video mode, no scanlines */
-   if (thin_vga_setmode(width, height))
+   if (thin_vga_setmode(width, height, bpp))
    {
       thin_vga_shutdown();
       return -1;
@@ -560,7 +566,7 @@ int thin_vga_init(int width, int height)
 }
 
 /* cram an 8-bit, 256 entry rgb palette into 6-bit vga */
-void thin_vga_setpalette(rgb_t *palette)
+void thin_vga_setpalette(rgb_t *palette, int index, int length)
 {
    int i;
    
@@ -570,16 +576,16 @@ void thin_vga_setpalette(rgb_t *palette)
    int overscan_index = 0;
    rgb_t overscan = { 255, 255, 255 };
 
-   outportb(VGA_PAL_WRITE, 0);
+   outportb(VGA_PAL_WRITE, index);
 
-   for (i = 0; i < 256; i++)
+   for (i = 0; i < length; i++)
    {
       if (palette[i].r <= overscan.r
           && palette[i].g <= overscan.g
           && palette[i].b <= overscan.b)
       {
          overscan = palette[i];
-         overscan_index = i;
+         overscan_index = index + i;
       }
 
       outportb(VGA_PAL_DATA, palette[i].r >> 2);
@@ -609,18 +615,16 @@ void thin_vga_freewrite(int num_dirties, rect_t *dirty_rects)
 
    if (0 == thinlib_nearptr)
    {
-      int line;
-
-      for (line = 0; line < hardware->height; line++)
-      {
-         dosmemput(screen->line[line], hardware->pitch, 
-                   (int) hardware->line[line]);
-      }
+      dosmemput(screen->line[0], hardware->pitch * hardware->height,
+                (int) hardware->line[0]);
    }
 }
 
 /*
 ** $Log: tl_vga.c,v $
+** Revision 1.9  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.8  2001/02/01 06:28:26  matt
 ** thinlib now works under NT/2000
 **
