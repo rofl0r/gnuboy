@@ -13,17 +13,13 @@ ASFLAGS = -x assembler-with-cpp -Dcpu=_cpu -Dhw=_hw -Dram=_ram \
  -Drefresh_1=_refresh_1 -Drefresh_2=_refresh_2 -Drefresh_4=_refresh_4 \
  -Dmem_read=_mem_read -Dmem_write=_mem_write -Dcpu_idle=_cpu_idle \
  -Ddie=_die -Dprintf=_printf
-LDFLAGS = -s
+LDFLAGS = 
 
-THIN_NAMES = thinlib tl_log tl_timer tl_key tl_mouse tl_joy \
-	tl_dpp tl_bmp tl_aa tl_vesa tl_vga tl_video tl_sb tl_sound
-THIN_OBJS = $(THIN_NAMES:%=sys/thinlib/%.o)
+SYS_DEFS = -DIS_LITTLE_ENDIAN -DALLOW_UNALIGNED_IO -DALT_PATH_SEP -DUSE_ASM
 
-SYS_DEFS = -DIS_LITTLE_ENDIAN -DALLOW_UNALIGNED_IO -DALT_PATH_SEP -DUSE_ASM -DNO_AALIB
-
-SYS_INCS = -I./sys/dos -I./sys/thinlib
-SYS_OBJS = sys/dos/dos.o sys/dos/vga.o sys/dos/kb.o sys/pc/keymap.o \
-	sys/dos/snd_thin.o $(THIN_OBJS) sys/dummy/nojoy.o \
+SYS_INCS = -I./sys/dos
+SYS_OBJS = sys/dos/dos.o sys/dos/vga.o sys/dos/kb.s sys/pc/keymap.o \
+	sys/dos/sb.o sys/dos/sbio.o sys/dummy/nojoy.o \
 	asm/i386/cpu.o asm/i386/lcd.o
 
 all: gnuboy.exe

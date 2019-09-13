@@ -1,6 +1,36 @@
 
 
-0.9.5
+note: there seems to have been some confusion in the past about new
+features in releases, since some of the changes were listed under
+never-released versions numbers used only for internal testing and
+progress points. i am now labelling each version number as a release
+or internal version. i hope this helps clarify things for web sites
+explainining what's new and such. perhaps soon i'll switch to having
+two changelogs -- a formal detailed one like we have now, and a simple
+user-oriented "what's new" list...
+
+0.9.7 (release)
+added support for mono sound
+initial work on implementing sound blaster output on dos
+fixed envelope bug that made notes trail off (or amplify) too fast
+integrated dos sound support contributed by Matthew Conte using his thinlib
+added Matthew Conte to CREDITS
+tried to fix strange occasional keyboard misbehavior on dos
+build stripped binaries by default if debugging and profiling are off
+
+0.9.6 (internal)
+updated the INSTALL file
+fixed something stupid that broke building SDL joystick support on non-Linux
+added Mattias Wadman to the CREDITS
+fixed VBLANK timing slightly; now altered space and wizards & warriors work
+reverted change; it breaks other games
+new trick that might fix things...
+fixed bug in command line parsing that kept --savename=- from working
+fixed warning in oss.c
+fixed an old bug in HDMA/HBLANK that only recently became apparent
+vesa support on dos is now working!
+
+0.9.5 (release)
 added Ralf to the CREDITS, apologies for the prior omission
 show name from rom header in window title on X11 and SDL
 fixed bug that made highcolor screen flicker
@@ -30,14 +60,14 @@ fixed bug in new savestate code
 added David Lau to the CREDITS (SDL joystick support)
 GNU make should no longer be required to compile
 
-0.9.4
+0.9.4 (release)
 various changes to lots of the system interface organization
 separation of linux fb and keyboard handling code into two modules
 integrated linux joystick support contributed by Ralf Hoffmann
 dummy joystick code for systems without real support yet
 fixed HDMA; now DKC runs perfectly
 
-0.9.3
+0.9.3 (internal)
 explicit link of SDL target with -lpthread, tell me if this causes problems
 better cpu detection in configure script
 more big fixes in sweep, and now it's actually tested, so it SHOULD work (!)
@@ -45,7 +75,7 @@ implemented default wave ram pattern
 added linux fbcon display support - very functional
 fix to allow new custom palette to take effect after loading dmg savestates
 
-0.9.2
+0.9.2 (release)
 mbc3 rtc support, including save and resync across sessions
 updated README
 implemented sound channel 4
@@ -59,7 +89,7 @@ cleaned up sound code to minimize the amount of state data kept
 added sound and rtc status to savestates; this won't break old saves
 changed lots of lookup tables to const
 
-0.9.1
+0.9.1 (release)
 fixed yet another critical bug in sweep
 fixed STAT interrupt bug
 added support for changing more sound params while sound is active
@@ -70,11 +100,11 @@ made samplerate and sound (on/off) configurable rcvars
 changed command line parsing to make setting bools more intuitive
 added --showvars to list all available rcvars
 
-0.9.0
+0.9.0 (internal)
 fixed bugs in sweep and envelope functions
 added sound channel 3
 
-0.8.5
+0.8.5 (internal)
 various minor optimizations in the C code
 same in the i386 asm cpu core
 initial work on sound framework
@@ -82,7 +112,7 @@ oss sound output for use on *nix
 dummy sound output for use on systems without sound
 sound channels 1 and 2
 
-0.8.4
+0.8.4 (release)
 updated README to cover new features
 fixed off-by-one-line visual error introduced in 0.8.2
 gbspec.txt is wrong, ram size code 0 != no ram, big suprise... (!)
@@ -99,23 +129,23 @@ workaround for a bug that would never happen but could lock the emulator
 fixed another visual glitch introduced in 0.8.2
 optimized i386 cpu.s to keep PC in a register at all times
 
-0.8.3
+0.8.3 (internal)
 changed install dir from $prefix/games to $prefix/bin
 fixed major bug in ramsize lookup table (!)
 updated HACKING to note that it's outdated
 implemented saved states!
 
-0.8.2
+0.8.2 (release)
 rewrote lcdc state behavior completely, fixed lots of compat issues
 implemented serial io failure for roms that need it, fixed more compat
 now, mk1, sml2, and alleyway are all fixed!
 additions to input.h and keytable.c to allow future joystick support
 
-0.8.1
+0.8.1 (internal)
 fixed stupid timer interrupt bug in asm cpu core
 renamed screen to fb so as not to conflict with allegro symbol names
 
-0.8.0
+0.8.0 (release)
 initial release
 
 

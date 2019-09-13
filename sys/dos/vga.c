@@ -11,6 +11,7 @@
 #include <pc.h>
 #include <dpmi.h>
 #include <go32.h>
+#include <sys/farptr.h>
 #include <sys/movedata.h>
 #include "vesa.h"
 
@@ -24,6 +25,8 @@ struct fb fb;
 
 static byte static_fb[64000];
 static un32 vidaddr;
+static un32 vesa_addr;
+static un32 vesa_selector;
 
 static int vesa_mode, vesa_dims[3];
 
@@ -90,6 +93,7 @@ static void setvga()
 
 void setvesa(int mode) 
 {
+	int i;
 	__dpmi_regs r;
 	__dpmi_meminfo meminfo;
 	VBEINFO vbeinfo;
@@ -103,11 +107,8 @@ void setvesa(int mode)
 	__dpmi_int(0x10, &r);
 	dosmemget(__tb, sizeof(vbeinfo), &vbeinfo);
 	if ((vbeinfo.ver & 0xFF00) < 0x0200)
-	{
-		setvga();
-		return;
-	}
-
+		die("vesa 2.0 required for svga modes\n");
+	
 	r.x.ax = 0x4F01;
 	r.x.cx = mode & 0x0FFF;
 	r.x.di = __tb & 0x0F;
@@ -115,10 +116,8 @@ void setvesa(int mode)
 	__dpmi_int(0x10, &r);
 	dosmemget(__tb, sizeof(modeinfo), &modeinfo);
 	if (!modeinfo.xres || !modeinfo.yres)
-	{
-		setvga();
-		return;
-	}
+		die("bogus video dimensions!\n");
+
 	switch(modeinfo.bpp)
 	{
 	case 8:
@@ -150,6 +149,7 @@ void setvesa(int mode)
 	vh = modeinfo.yres;
 	vp = modeinfo.bytesperscanline;
 	vs = ((vh - 144)>>1)*vp;
+	vl = vp * 144;
 	
 	fb.pitch = vp;
 	fb.w = vw;
@@ -162,12 +162,22 @@ void setvesa(int mode)
 	fb.cc[1].l = modeinfo.greenfieldpos;
 	fb.cc[2].l = modeinfo.bluefieldpos;
 
-	fb.ptr = static_fb;
-	
-	meminfo.size = vp * vh;
+	fb.ptr = malloc(fb.pitch * fb.h);
+	memset(fb.ptr, 0, vl);
+
+	meminfo.handle = 0;
+	meminfo.size = vp * vh + 256;
 	meminfo.address = modeinfo.physbaseptr;
-	__dpmi_physical_address_mapping(&meminfo);
-	vidaddr = (un32)meminfo.address;
+	if (__dpmi_physical_address_mapping(&meminfo) < 0)
+		die("failed to map physical lfb address\n");
+	vesa_addr = (un32)meminfo.address;
+	__dpmi_lock_linear_region(&meminfo);
+
+	if ((vesa_selector = __dpmi_allocate_ldt_descriptors(1)) < 0)
+		die("failed to get selector for vesa\n");
+	if (__dpmi_set_segment_base_address(vesa_selector, vesa_addr) < 0)
+		die("failed to set vesa lfb base address\n");
+	__dpmi_set_segment_limit(vesa_selector, meminfo.size);
 	
 	r.x.ax = 0x4F02;
 	r.x.bx = mode | 0x4000;
@@ -199,10 +209,7 @@ int selectmode()
 	__dpmi_int(0x10, &r);
 	dosmemget(__tb, sizeof(vbeinfo), &vbeinfo);
 	if ((vbeinfo.ver & 0xFF00) < 0x0200)
-	{
-		setvga();
-		return;
-	}
+		die("vesa 2.0 required for svga modes\n");
 	for(i = 0x0100; i < 0x0200; i++)
 	{
 		r.x.ax = 0x4F01;
@@ -211,6 +218,7 @@ int selectmode()
 		r.x.es = (__tb >> 4) & 0xFFFF;
 		__dpmi_int(0x10, &r);
 		dosmemget(__tb, sizeof(modeinfo), &modeinfo);
+		/* printf("%d %d %d %d\n", i, modeinfo.xres, modeinfo.yres, modeinfo.bpp); */
 		if (modeinfo.xres == x && modeinfo.yres == y && modeinfo.bpp == bpp)
 		{
 			setvesa(i);
@@ -236,8 +244,8 @@ void vid_init()
 {
 	keyboard_init();
 	keyboard_chain(0);
-	/* selectmode(); */
-	setvga();
+	if (vesa_mode) setvesa(vesa_mode);
+	else selectmode();
 	fb.enabled = 1;
 	fb.dirty = 0;
 }
@@ -256,7 +264,7 @@ void vid_settitle(char *title)
 
 
 
-extern volatile byte keyboard_buffer[0x20];
+extern volatile byte keyboard_buffer[0x200];
 extern volatile int keyboard_buffer_pos;
 
 static ext_key_table[128] =
@@ -312,7 +320,11 @@ void vid_begin()
 
 void vid_end()
 {
-	_dosmemputl(static_fb, vl>>2, vidaddr + vs);
+	int i;
+	if (vesa_selector)
+		movedata(_my_ds(), (un32)fb.ptr, vesa_selector, vs, vl);
+	else
+		_dosmemputl(static_fb, vl>>2, vidaddr + vs);
 }
 
 

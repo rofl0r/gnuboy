@@ -242,9 +242,12 @@ void sound_mix()
 		if (r > 127) r = 127;
 		else if (r < -128) r = -128;
 
-		pcm.buf[pcm.pos] = l+128;
-		pcm.buf[pcm.pos+1] = r+128;
-		pcm.pos += 2;
+		if (pcm.stereo)
+		{
+			pcm.buf[pcm.pos++] = l+128;
+			pcm.buf[pcm.pos++] = r+128;
+		}
+		else pcm.buf[pcm.pos++] = ((l+r)>>1)+128;
 	}
 	R_NR52 = (R_NR52&0xf0) | S1.on | (S2.on<<1) | (S3.on<<2) | (S4.on<<3);
 }
@@ -264,7 +267,7 @@ void s1_init()
 	S1.envol = R_NR12 >> 4;
 	S1.endir = (R_NR12>>3) & 1;
 	S1.endir |= S1.endir - 1;
-	S1.enlen = (R_NR12 & 3) << 15;
+	S1.enlen = (R_NR12 & 7) << 15;
 	S1.on = 1;
 	S1.pos = 0;
 	S1.cnt = 0;
@@ -276,7 +279,7 @@ void s2_init()
 	S2.envol = R_NR22 >> 4;
 	S2.endir = (R_NR22>>3) & 1;
 	S2.endir |= S2.endir - 1;
-	S2.enlen = (R_NR22 & 3) << 15;
+	S2.enlen = (R_NR22 & 7) << 15;
 	S2.on = 1;
 	S2.pos = 0;
 	S2.cnt = 0;
@@ -295,7 +298,7 @@ void s4_init()
 	S4.envol = R_NR42 >> 4;
 	S4.endir = (R_NR42>>3) & 1;
 	S4.endir |= S4.endir - 1;
-	S4.enlen = (R_NR42 & 3) << 15;
+	S4.enlen = (R_NR42 & 7) << 15;
 	S4.on = 1;
 	S4.pos = 0;
 	S4.cnt = 0;
@@ -329,7 +332,7 @@ void sound_write(byte r, byte b)
 		S1.envol = R_NR12 >> 4;
 		S1.endir = (R_NR12>>3) & 1;
 		S1.endir |= S1.endir - 1;
-		S1.enlen = (R_NR12 & 3) << 15;
+		S1.enlen = (R_NR12 & 7) << 15;
 		break;
 	case RI_NR13:
 		R_NR13 = b;
@@ -349,7 +352,7 @@ void sound_write(byte r, byte b)
 		S2.envol = R_NR22 >> 4;
 		S2.endir = (R_NR22>>3) & 1;
 		S2.endir |= S2.endir - 1;
-		S2.enlen = (R_NR22 & 3) << 15;
+		S2.enlen = (R_NR22 & 7) << 15;
 		break;
 	case RI_NR23:
 		R_NR23 = b;
@@ -389,7 +392,7 @@ void sound_write(byte r, byte b)
 		S4.envol = R_NR42 >> 4;
 		S4.endir = (R_NR42>>3) & 1;
 		S4.endir |= S4.endir - 1;
-		S4.enlen = (R_NR42 & 3) << 15;
+		S4.enlen = (R_NR42 & 7) << 15;
 		break;
 	case RI_NR43:
 		R_NR43 = b;

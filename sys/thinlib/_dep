@@ -1,0 +1,19 @@
+# dep file
+thinlib.o: thinlib.c tl_types.h thinlib.h tl_log.h tl_djgpp.h \
+ tl_timer.h tl_key.h tl_mouse.h tl_joy.h tl_dpp.h tl_bmp.h tl_video.h \
+ tl_sound.h
+tl_log.o: tl_log.c tl_types.h tl_log.h
+tl_timer.o: tl_timer.c tl_types.h tl_djgpp.h tl_timer.h
+tl_key.o: tl_key.c tl_types.h tl_djgpp.h tl_key.h
+tl_mouse.o: tl_mouse.c tl_types.h tl_mouse.h
+tl_joy.o: tl_joy.c tl_types.h tl_djgpp.h tl_joy.h
+tl_dpp.o: tl_dpp.c tl_types.h tl_dpp.h
+tl_bmp.o: tl_bmp.c tl_types.h tl_bmp.h
+tl_aa.o: tl_aa.c tl_types.h tl_bmp.h tl_aa.h
+tl_vesa.o: tl_vesa.c tl_types.h tl_log.h tl_bmp.h tl_djgpp.h tl_vga.h \
+ tl_vesa.h
+tl_vga.o: tl_vga.c tl_types.h tl_bmp.h tl_vga.h tl_djgpp.h
+tl_video.o: tl_video.c tl_types.h tl_video.h tl_bmp.h tl_vesa.h \
+ tl_vga.h tl_aa.h tl_log.h
+tl_sb.o: tl_sb.c tl_types.h tl_djgpp.h tl_sb.h tl_log.h
+tl_sound.o: tl_sound.c tl_types.h tl_sound.h tl_sb.h
