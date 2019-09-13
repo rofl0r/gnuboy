@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "regs.h"
 #include "mem.h"
+#include "hw.h"
 #include "rtc.h"
 #include "rc.h"
 
@@ -54,7 +55,6 @@ static int ramsize_table[256] =
 };
 
 
-static char romname[16];
 static char *romfile;
 static char *sramfile;
 static char *rtcfile;
@@ -95,8 +95,10 @@ int rom_load()
 	memset(header, 0xff, 16384);
 	fread(header, 16384, 1, f);
 
-	strncpy(romname, header+0x0134, 14);
-	romname[14] = 0;
+	strncpy(rom.name, header+0x0134, 16);
+	if (rom.name[14] & 0x80) rom.name[14] = 0;
+	if (rom.name[15] & 0x80) rom.name[15] = 0;
+	rom.name[16] = 0;
 
 	c = header[0x0147];
 	mbc.type = mbc_table[c];
@@ -115,7 +117,7 @@ int rom_load()
 	if (!ram.loaded)  /* just in case... */
 		initmem(ram.sbank, 8192 * mbc.ramsize);
 	initmem(ram.ibank, 4096 * 8);
-	initmem(ram.stack, 128);
+	/* initmem(ram.hi, 256); */
 
 	mbc.rombank = 1;
 	mbc.rambank = 0;
@@ -262,10 +264,11 @@ void loader_init(char *s)
 
 	romfile = s;
 	rom_load();
+	vid_settitle(rom.name);
 	if (savename && *savename)
 	{
 		if (savename[0] == '-' && savename[1] == 0)
-			name = ldup(romname);
+			name = ldup(rom.name);
 		else name = strdup(savename);
 	}
 	else if (romfile && *base(romfile))
@@ -274,7 +277,7 @@ void loader_init(char *s)
 		p = strchr(name, '.');
 		if (p) *p = 0;
 	}
-	else name = ldup(romname);
+	else name = ldup(rom.name);
 	
 	saveprefix = malloc(strlen(savedir) + strlen(name) + 2);
 	sprintf(saveprefix, "%s/%s", savedir, name);

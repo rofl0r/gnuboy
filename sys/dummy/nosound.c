@@ -9,7 +9,7 @@
 
 struct pcm pcm;
 
-static buf[4096];
+static byte buf[4096];
 
 
 rcvar_t pcm_exports[] =

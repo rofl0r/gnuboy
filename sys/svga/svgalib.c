@@ -187,6 +187,10 @@ void vid_close()
 	vga_setmode(TEXT);
 }
 
+void vid_settitle(char *title)
+{
+}
+
 void vid_setpal(int i, int r, int g, int b)
 {
 	vga_setpalette(i, r>>2, g>>2, b>>2);

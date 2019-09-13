@@ -15,7 +15,6 @@ struct sndchan
 
 struct snd
 {
-	byte wave[16];
 	int rate;
 	struct sndchan ch[4];
 };

@@ -6,6 +6,7 @@
 #include "defs.h"
 #include "cpu.h"
 #include "mem.h"
+#include "fastmem.h"
 #include "regs.h"
 #include "rc.h"
 
@@ -577,7 +578,7 @@ void debug_disassemble(addr a, int c)
 	{
 		k = 0;
 		opaddr = a;
-		code = ops[k++] = READB(a); a++;
+		code = ops[k++] = readb(a); a++;
 		if (code != 0xCB)
 		{
 			pattern = mnemonic_table[code];
@@ -586,7 +587,7 @@ void debug_disassemble(addr a, int c)
 		}
 		else
 		{
-			code = ops[k++] = READB(a); a++;
+			code = ops[k++] = readb(a); a++;
 			pattern = cb_mnemonic_table[code];
 		}
 		i = j = 0;
@@ -598,21 +599,21 @@ void debug_disassemble(addr a, int c)
 				{
 				case 'B':
 				case 'b':
-					ops[k] = READB(a); a++;
+					ops[k] = readb(a); a++;
 					j += sprintf(mnemonic + j,
 						"%02Xh", ops[k++]);
 					break;
 				case 'W':
 				case 'w':
-					ops[k] = READB(a); a++;
-					ops[k+1] = READB(a); a++;
+					ops[k] = readb(a); a++;
+					ops[k+1] = readb(a); a++;
 					j += sprintf(mnemonic + j, "%04Xh",
 						((ops[k+1] << 8) | ops[k]));
 					k += 2;
 					break;
 				case 'O':
 				case 'o':
-					ops[k] = READB(a); a++;
+					ops[k] = readb(a); a++;
 					j += sprintf(mnemonic + j, "%+d",
 						(n8)(ops[k++]));
 					break;
@@ -641,10 +642,10 @@ void debug_disassemble(addr a, int c)
 		printf(
 			" SP=%04X.%04X BC=%04X.%02X.%02X DE=%04X.%02X "
 			"HL=%04X.%02X A=%02X F=%02X %c%c%c%c%c",
-			SP, READW(SP),
-			BC, READB(BC), READB(0xFF00 | C),
-			DE, READB(DE),
-			HL, READB(HL), A,
+			SP, readw(SP),
+			BC, readb(BC), readb(0xFF00 | C),
+			DE, readb(DE),
+			HL, readb(HL), A,
 			F, (IME ? 'I' : '-'),
 			((F & 0x80) ? 'Z' : '-'),
 			((F & 0x40) ? 'N' : '-'),

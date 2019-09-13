@@ -250,6 +250,9 @@ void vid_close()
 	keyboard_close();
 }
 
+void vid_settitle(char *title)
+{
+}
 
 
 

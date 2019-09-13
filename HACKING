@@ -21,7 +21,9 @@ doubt, read COPYING.
 * please stick to a coding and naming convention similar to the
 existing code. i can reformat contributions if i need to when
 integrating them, but it makes it much easier if that's already done
-by the coder.
+by the coder. in particular, indentions are a single tab (char 9), and
+all symbols are all lowercase, except for macros which are all
+uppercase.
 
 * all code must be completely deterministic and consistent across all
 platforms. this results in the two following rules...
@@ -283,7 +285,7 @@ involved in rendering a scanline:
 
 pat_updatepix() - updates tile pattern cache.
 
-lcd_tilebuf() - reads gb tile memory according to its complicated tile
+tilebuf() - reads gb tile memory according to its complicated tile
 addressing system which can be changed via the LCDC register, and
 outputs nice linear arrays of the actual tile indices used in the
 background and window on the present line.

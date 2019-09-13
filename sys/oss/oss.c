@@ -4,7 +4,21 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifdef IS_FBSD
+#include "machine/soundcard.h"
+#define DSP_DEVICE "/dev/dsp"
+#endif
+
+#ifdef IS_OBSD
+#include "soundcard.h"
+#define DSP_DEVICE "/dev/sound"
+#endif
+
+#ifdef IS_LINUX
 #include <sys/soundcard.h>
+#define DSP_DEVICE "/dev/dsp"
+#endif
 
 #include "defs.h"
 #include "pcm.h"
@@ -16,6 +30,7 @@
 struct pcm pcm;
 
 static int dsp;
+static char *dsp_device;
 static int samplerate = 44100;
 static int sound = 1;
 
@@ -23,6 +38,7 @@ rcvar_t pcm_exports[] =
 {
 	RCV_BOOL("sound", &sound),
 	RCV_INT("samplerate", &samplerate),
+	RCV_INT("oss_device", &dsp_device),
 	RCV_END
 };
 
@@ -40,10 +56,11 @@ void pcm_init()
 		dsp = -1;
 		return;
 	}
-	
-	dsp = open("/dev/dsp", O_WRONLY);
 
-	//n = 0x10000a;
+	if (!dsp_device) dsp_device = strdup(DSP_DEVICE);
+	dsp = open(dsp_device, O_WRONLY);
+
+	/* n = 0x10000a; */
 	n = 0x80008;
 	ioctl(dsp, SNDCTL_DSP_SETFRAGMENT, &n);
 	n = AFMT_U8;

@@ -442,6 +442,7 @@ void mem_write(int a, byte b)
 			if (a < 0xFEA0) lcd.oam.mem[a & 0xFF] = b;
 			break;
 		}
+		/* return writehi(a & 0xFF, b); */
 		if (a >= 0xFF10 && a <= 0xFF3F)
 		{
 			sound_write(a & 0xFF, b);
@@ -449,7 +450,7 @@ void mem_write(int a, byte b)
 		}
 		if ((a & 0xFF80) == 0xFF80 && a != 0xFFFF)
 		{
-			ram.stack[a & 0x7F] = b;
+			ram.hi[a & 0xFF] = b;
 			break;
 		}
 		ioreg_write(a & 0xFF, b);
@@ -499,11 +500,12 @@ byte mem_read(int a)
 			if (a < 0xFEA0) return lcd.oam.mem[a & 0xFF];
 			else return 0xFF;
 		}
+		/* return readhi(a & 0xFF); */
 		if (a == 0xFFFF) return REG(0xFF);
 		if (a >= 0xFF10 && a <= 0xFF3F)
 			return sound_read(a & 0xFF);
 		if ((a & 0xFF80) == 0xFF80)
-			return ram.stack[a & 0x7F];
+			return ram.hi[a & 0xFF];
 		/* printf("reg %02X = %02X\n", a & 0xff, REG(a&0xff)); */
 		return ioreg_read(a & 0xFF);
 	}
@@ -516,6 +518,7 @@ void mbc_reset()
 	mbc.enableram = 0;
 	mem_updatemap();
 }
+
 
 
 

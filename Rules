@@ -14,17 +14,10 @@ MYAS = $(AS) $(ASFLAGS) $(INCS) $(SYS_INCS) $(SYS_DEFS)
 
 main.o: Version
 
-render_1.o: render_n.c
-	$(MYCC) -DPELSIZE=1 -c $< -o $@
-render_2.o: render_n.c
-	$(MYCC) -DPELSIZE=2 -c $< -o $@
-render_4.o: render_n.c
-	$(MYCC) -DPELSIZE=4 -c $< -o $@
-
-%.o: %.c
+.c.o:
 	$(MYCC) -c $< -o $@
 
-%.o: %.s
+.s.o:
 	$(MYAS) -c $< -o $@
 
 

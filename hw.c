@@ -7,6 +7,7 @@
 #include "regs.h"
 #include "lcd.h"
 #include "mem.h"
+#include "fastmem.h"
 
 
 struct hw hw;
@@ -50,7 +51,7 @@ void hw_dma(byte b)
 
 	a = ((addr)b) << 8;
 	for (i = 0; i < 160; i++, a++)
-		lcd.oam.mem[i] = READB(a);
+		lcd.oam.mem[i] = readb(a);
 }
 
 
@@ -77,11 +78,7 @@ void hw_hdma_cmd(byte c)
 	/* FIXME - this should use cpu time! */
 	cnt <<= 4;
 	while (cnt--)
-	{
-		b = READB(sa);
-		WRITEB(da, b);
-		sa++; da++;
-	}
+		writeb(da++, readb(sa++));
 	R_HDMA1 = sa >> 8;
 	R_HDMA2 = sa & 0xF0;
 	R_HDMA3 = 0x1F & (da >> 8);
@@ -105,11 +102,7 @@ void hw_hdma()
 	cnt = 16;
 	/* cpu.stall += 102; */
 	while (cnt--)
-	{
-		b = READB(sa);
-		WRITEB(da, b);
-		sa++; da++;
-	}
+		writeb(da++, readb(sa++));
 	R_HDMA1 = sa >> 8;
 	R_HDMA2 = sa & 0xF0;
 	R_HDMA3 = 0x1F & (da >> 8);
@@ -174,7 +167,7 @@ void hw_reset()
 {
 	hw.ilines = hw.pad = 0;
 
-	memset(hw.regs, 0, sizeof hw.regs);
+	memset(ram.hi, 0, sizeof ram.hi);
 
 	R_P1 = 0xFF;
 	R_LCDC = 0x91;

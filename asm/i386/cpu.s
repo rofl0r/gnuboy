@@ -1,13 +1,13 @@
 
-	// i386 asm cpu core
-	// optimized for 486/pentium/k6
+	# i386 asm cpu core
+	# optimized for 486/pentium/k6
 	
-	// global register usage:
-	// %bl - flags
-	// %bh - A
-	// %bp - PC
-	// %esi - number of cycles we have left
-	// %edi - number of cycles used by current instruction
+	# global register usage:
+	# %bl - flags
+	# %bh - A
+	# %bp - PC
+	# %esi - number of cycles we have left
+	# %edi - number of cycles used by current instruction
 
 	.set PC, cpu
 	.set SP, cpu+4
@@ -35,32 +35,33 @@
 	.set lcdc, cpu+48
 	.set snd, cpu+52
 
-	.set regs, hw
+	.set regs, ram
 
 	.set rmap, mbc+32
 	.set wmap, mbc+96
 
-	.set DIV, hw+4
-	.set TIMA, hw+5
-	.set TMA, hw+6
-	.set TAC, hw+7
+	.set DIV, ram+4
+	.set TIMA, ram+5
+	.set TMA, ram+6
+	.set TAC, ram+7
 	
-	.set IF, hw+0x0f
-	.set IE, hw+0xff
-	.set KEY1, hw+0x4d
+	.set IF, ram+0x0f
+	.set IE, ram+0xff
+	.set KEY1, ram+0x4d
 
 
-	.section .rodata
+	.text
+	.p2align 5
 
 debug:
 	.string "debug:	0x%08X\n"
 invalid:
 	.string "invalid opcode 0x%02X\n"
 
-	// x86 flags   - 01=carry, 10=half, 40=zero
-	//                (bit 0)  (bit 4)  (bit 6)
-	// gbz80 flags - 10=carry, 20=half, 40=neg, 80=zero
-	//                (bit 4)  (bit 5)  (bit 6) (bit 7)
+	# x86 flags   - 01=carry, 10=half, 40=zero
+	#                (bit 0)  (bit 4)  (bit 6)
+	# gbz80 flags - 10=carry, 20=half, 40=neg, 80=zero
+	#                (bit 4)  (bit 5)  (bit 6) (bit 7)
 
 addflagtable:
 	.byte 0x00, 0x10, 0x00, 0x10, 0x00, 0x10, 0x00, 0x10
@@ -206,82 +207,82 @@ cb_cycles_table:
 	
 
 optable:
-	// 00
+	# 00
 	.long __NOP, __LD_BC_IMM, __LD_$BC_A, __INC_BC
 	.long __INC_B, __DEC_B, __LD_B_IMM, __RLCA
 	.long __LD_$IMM_SP, __ADD_BC, __LD_A_$BC, __DEC_BC
 	.long __INC_C, __DEC_C, __LD_C_IMM, __RRCA
-	// 10
+	# 10
 	.long __STOP, __LD_DE_IMM, __LD_$DE_A, __INC_DE
 	.long __INC_D, __DEC_D, __LD_D_IMM, __RLA
 	.long __JR, __ADD_DE, __LD_A_$DE, __DEC_DE
 	.long __INC_E, __DEC_E, __LD_E_IMM, __RRA
-	// 20
+	# 20
 	.long __JR_NZ, __LD_HL_IMM, __LDI_$HL_A, __INC_HL
 	.long __INC_H, __DEC_H, __LD_H_IMM, __DAA
 	.long __JR_Z, __ADD_HL, __LDI_A_$HL, __DEC_HL
 	.long __INC_L, __DEC_L, __LD_L_IMM, __CPL
-	// 30
+	# 30
 	.long __JR_NC, __LD_SP_IMM, __LDD_$HL_A, __INC_SP
 	.long __INC_$HL, __DEC_$HL, __LD_$HL_IMM, __SCF
 	.long __JR_C, __ADD_SP, __LDD_A_$HL, __DEC_SP
 	.long __INC_A, __DEC_A, __LD_A_IMM, __CCF
-	// 40
+	# 40
 	.long __LD_B_B, __LD_B_C, __LD_B_D, __LD_B_E
 	.long __LD_B_H, __LD_B_L, __LD_B_$HL, __LD_B_A
 	.long __LD_C_B, __LD_C_C, __LD_C_D, __LD_C_E
 	.long __LD_C_H, __LD_C_L, __LD_C_$HL, __LD_C_A
-	// 50
+	# 50
 	.long __LD_D_B, __LD_D_C, __LD_D_D, __LD_D_E
 	.long __LD_D_H, __LD_D_L, __LD_D_$HL, __LD_D_A
 	.long __LD_E_B, __LD_E_C, __LD_E_D, __LD_E_E
 	.long __LD_E_H, __LD_E_L, __LD_E_$HL, __LD_E_A
-	// 60
+	# 60
 	.long __LD_H_B, __LD_H_C, __LD_H_D, __LD_H_E
 	.long __LD_H_H, __LD_H_L, __LD_H_$HL, __LD_H_A
 	.long __LD_L_B, __LD_L_C, __LD_L_D, __LD_L_E
 	.long __LD_L_H, __LD_L_L, __LD_L_$HL, __LD_L_A
-	// 70
+	# 70
 	.long __LD_$HL_B, __LD_$HL_C, __LD_$HL_D, __LD_$HL_E
 	.long __LD_$HL_H, __LD_$HL_L, __HALT, __LD_$HL_A
 	.long __LD_A_B, __LD_A_C, __LD_A_D, __LD_A_E
 	.long __LD_A_H, __LD_A_L, __LD_A_$HL, __LD_A_A
-	// 80
+	# 80
 	.long __ADD_B, __ADD_C, __ADD_D, __ADD_E
 	.long __ADD_H, __ADD_L, __ADD_$HL, __ADD_A
 	.long __ADC_B, __ADC_C, __ADC_D, __ADC_E
 	.long __ADC_H, __ADC_L, __ADC_$HL, __ADC_A
-	// 90
+	# 90
 	.long __SUB_B, __SUB_C, __SUB_D, __SUB_E
 	.long __SUB_H, __SUB_L, __SUB_$HL, __SUB_A
 	.long __SBC_B, __SBC_C, __SBC_D, __SBC_E
 	.long __SBC_H, __SBC_L, __SBC_$HL, __SBC_A
-	// A0
+	# A0
 	.long __AND_B, __AND_C, __AND_D, __AND_E
 	.long __AND_H, __AND_L, __AND_$HL, __AND_A
 	.long __XOR_B, __XOR_C, __XOR_D, __XOR_E
 	.long __XOR_H, __XOR_L, __XOR_$HL, __XOR_A
-	// B0
+	# B0
 	.long __OR_B, __OR_C, __OR_D, __OR_E
 	.long __OR_H, __OR_L, __OR_$HL, __OR_A
 	.long __CP_B, __CP_C, __CP_D, __CP_E
 	.long __CP_H, __CP_L, __CP_$HL, __CP_A
-	// C0
+	# C0
 	.long __RET_NZ, __POP_BC, __JP_NZ, __JP
 	.long __CALL_NZ, __PUSH_BC, __ADD_IMM, __RST_00
 	.long __RET_Z, __RET, __JP_Z, __CB_OPS
 	.long __CALL_Z, __CALL, __ADC_IMM, __RST_08
-	// D0
+	# D0
 	.long __RET_NC, __POP_DE, __JP_NC, __INVALID
 	.long __CALL_NC, __PUSH_DE, __SUB_IMM, __RST_10
 	.long __RET_C, __RETI, __JP_C, __INVALID
 	.long __CALL_C, __INVALID, __SBC_IMM, __RST_18
-	// E0
+	# E0
 	.long __LDH_$IMM_A, __POP_HL, __LDH_$C_A, __INVALID
 	.long __INVALID, __PUSH_HL, __AND_IMM, __RST_20
 	.long __ADD_SP_IMM, __JP_HL, __LD_$IMM_A, __INVALID
 	.long __INVALID, __INVALID, __XOR_IMM, __RST_28
-	// F0
+	# F0
 	.long __LDH_A_$IMM, __POP_AF, __LDH_A_$C, __DI
 	.long __INVALID, __PUSH_AF, __OR_IMM, __RST_30
 	.long __LD_HL_SP_IMM, __LD_SP_HL, __LD_A_$IMM, __EI
@@ -562,11 +563,11 @@ int_vec_table:
 	.endm
 	
 
-	// all macros preserve %ebp, %ebx, %esi, and %edi
+	# all macros preserve %ebp, %ebx, %esi, and %edi
 	
 
-	// write to addr %eax, upper bytes must be zero
-	// source byte passed in %dl
+	# write to addr %eax, upper bytes must be zero
+	# source byte passed in %dl
 	.macro _writeb
 	movl %eax, %ecx
 	shrl $12, %eax
@@ -583,8 +584,8 @@ int_vec_table:
 .Lfinish\@:
 	.endm
 	
-	// read from addr %eax, upper bytes must be zero
-	// result in %al, upper bytes filled with 0 automagically
+	# read from addr %eax, upper bytes must be zero
+	# result in %al, upper bytes filled with 0 automagically
 	.macro _readb
 	movl %eax, %ecx
 	shrl $12, %eax
@@ -600,8 +601,8 @@ int_vec_table:
 .Lfinish\@:
 	.endm
 
-	// read signed byte from addr %eax, upper bytes must be zero
-	// result in %eax
+	# read signed byte from addr %eax, upper bytes must be zero
+	# result in %eax
 	.macro _readbs
 	movl %eax, %ecx
 	shrl $12, %eax
@@ -618,8 +619,8 @@ int_vec_table:
 .Lfinish\@:
 	.endm
 
-	// fetch from PC
-	// result in %al, upper bytes filled with 0 automagically
+	# fetch from PC
+	# result in %al, upper bytes filled with 0 automagically
 	.macro _fetch
 	movl %ebp, %eax
 	movl %ebp, %ecx
@@ -637,8 +638,8 @@ int_vec_table:
 .Lfinish\@:	
 	.endm
 
-	// fetch signed byte from PC
-	// result in %eax
+	# fetch signed byte from PC
+	# result in %eax
 	.macro _fetchs
 	movl %ebp, %eax
 	movl %ebp, %ecx
@@ -657,8 +658,8 @@ int_vec_table:
 .Lfinish\@:	
 	.endm
 
-	// fetch word from PC
-	// result in %ax, padded with zeros
+	# fetch word from PC
+	# result in %ax, padded with zeros
 	.macro _fetchw
 	movl %ebp, %eax
 	movl %ebp, %edx
@@ -691,8 +692,8 @@ int_vec_table:
 .Lfinish\@:
 	.endm
 
-	// read word from %eax, upper byte must be zero
-	// result in %ax, padded with zeros
+	# read word from %eax, upper byte must be zero
+	# result in %ax, padded with zeros
 	.macro _readw
 	movl %eax, %edx
 	shrl $12, %eax
@@ -723,8 +724,8 @@ int_vec_table:
 .Lfinish\@:
 	.endm
 
-	// write word to addr %eax, upper bytes must be zero
-	// source byte passed in %dx
+	# write word to addr %eax, upper bytes must be zero
+	# source byte passed in %dx
 	.macro _writew
 	movl %eax, %ecx
 	shrl $12, %eax
@@ -854,7 +855,7 @@ int_vec_table:
 	subl $3, %edi
 	.endm
 
-	// Use %dl to pass memory values to inc
+	# Use %dl to pass memory values to inc
 	.macro _INC reg=B, instr=incb, table=incflagtable
 	xorl %eax, %eax
 	\instr \reg
@@ -877,19 +878,12 @@ int_vec_table:
 	_end
 	.endm
 
-	.macro _ADD instr=addb, table=addflagtable, store=1
-	.if \store
+	.macro _ADD instr=addb, table=addflagtable
 	\instr %al, %bh
-	.else
-	movb %bh, %ah
-	\instr %al, %ah
-	.endif
 	lahf
 	xorl %ecx, %ecx
 	movb %ah, %cl
-	andb $0x0f, %bl
-	movb \table(%ecx), %ah
-	orb %ah, %bl
+	movb \table(%ecx), %bl
 	.endm
 
 	.macro _SUB
@@ -897,8 +891,7 @@ int_vec_table:
 	.endm
 
 	.macro _ADC instr=adcb, table=addflagtable
-	movb %bl, %dl
-	rolb $4, %dl
+	rolb $4, %bl
 	_ADD \instr, \table
 	.endm
 
@@ -907,7 +900,7 @@ int_vec_table:
 	.endm
 
 	.macro _CP
-	_ADD subb, subflagtable, 0
+	_ADD cmpb, subflagtable
 	.endm
 
 	.macro _ADDW
@@ -939,18 +932,16 @@ int_vec_table:
 	.endm
 
 	.macro _AND
-	andb $0x0f, %bl
-	orb $0x20, %bl
+	movb $0x20, %bl
 	andb %al, %bh
 	_endnz
 	orb $0x80, %bl
 	.endm
 
 	.macro _OR instr=orb
-	andb $0x0f, %bl
 	\instr %al, %bh
-	_endnz
-	orb $0x80, %bl
+	setzb %bl
+	rorb $1, %bl
 	.endm
 
 	.macro _XOR
@@ -960,11 +951,9 @@ int_vec_table:
 
 
 	.macro _RLCA instr=rolb
+	movb $0, %bl
 	\instr $1, %bh
-	sbbb %al, %al
-	andb $0x0f, %bl
-	andb $0x10, %al
-	orb %al, %bl
+	rcrb $4, %bl
 	.endm
 
 	.macro _RRCA
@@ -972,14 +961,10 @@ int_vec_table:
 	.endm
 
 	.macro _RLA instr=rclb
-	movb %bl, %al
-	andb $0x10, %al
-	addb $0xf0, %al
+	rolb $4, %bl
+	movb $0, %bl
 	\instr $1, %bh
-	sbbb %cl, %cl
-	andb $0x0f, %bl
-	andb $0x10, %cl
-	orb %cl, %bl
+	rcrb $4, %bl
 	.endm
 
 	.macro _RRA
@@ -989,31 +974,25 @@ int_vec_table:
 	.macro _RLC reg=B, instr=rolb
 	xorl %eax, %eax
 	movb \reg, %al
+	xorb %cl, %cl
 	\instr $1, %al
-	sbbb %cl, %cl
-	andb $0x0f, %bl
-	andb $0x10, %cl
+	rcrb $4, %bl
 	movb %al, \reg
-	orb %cl, %bl
 	orb zflag_table(%eax), %bl
 	.endm
-	
+
 	.macro _RRC reg=B
 	_RLC \reg, rorb
 	.endm
 	
 	.macro _RL reg=B, instr=rclb
 	xorl %eax, %eax
-	movb %bl, %cl
+	xorb %cl, %cl
 	movb \reg, %al
-	andb $0x10, %cl
-	addb $0xf0, %cl
+	rolb $4, %bl
 	\instr $1, %al
-	sbbb %cl, %cl
-	andb $0x0f, %bl
-	andb $0x10, %cl
+	rcrb $4, %bl
 	movb %al, \reg
-	orb %cl, %bl
 	orb zflag_table(%eax), %bl
 	.endm
 	
@@ -1022,14 +1001,11 @@ int_vec_table:
 	.endm
 
 	.macro _SLA reg=B instr=shlb
-	xorl %eax, %eax
-	movb \reg, %al
-	\instr $1, %al
-	sbbb %cl, %cl
-	andb $0x0f, %bl
-	orb zflag_table(%eax), %bl
-	andb $0x10, %cl
-	movb %al, \reg
+	movb $0, %cl
+	\instr $1, \reg
+	setz %bl
+	rcrb $4, %cl
+	rorb $1, %bl
 	orb %cl, %bl
 	.endm
 
@@ -2269,43 +2245,23 @@ cpu_emulate:
 .Lnext:
 	movl halt, %eax
 	andl IME, %eax
-	jz .Ldoop
-	pushl %esi
-	call cpu_idle
-	popl %ecx
-	testl %eax, %eax
-	jz .Ldoop
-	
-	subl %eax, %esi
-	jg .Lnext
-	jmp .Ldone
+	jnz .Lidle
 
 .Ldoop:
-	// check for pending interrupts
+	# check for pending interrupts
 	movl IME, %eax
-	movb IF, %cl
-	shlb $7, %al
-	movb IE, %ch
-	sarb $7, %al
-	andb %ch, %cl
-	andb %cl, %al
+	testl %eax, %eax
 	jz .Lnoint
-	
-	// throw an interrupt
-	movl $0, %edx
 	movb IF, %cl
-	movb int_mask_table(%eax), %ch
-	movl %edx, IMA
-	andb %ch, %cl
-	movb %cl, IF
-	movl int_vec_table(,%eax,4), %edx
-	movl %ebp, %eax
-	movl %edx, %ebp
-	_push
+	movb IE, %al
+	andb %cl, %al
+	jnz .Lint
+
 .Lnoint:
-	// update interrupt master enable
+	# update interrupt master enable
 	movl IMA, %eax
 	movl %eax, IME
+.Lendint:
 
 	_trace
 	
@@ -2328,35 +2284,50 @@ opdone:
 	xorb $1, %cl
 	shll %cl, %edi
 
-	// advance div
-	movl div, %eax
-	addl %edi, %eax
-	cmpl $128, %eax
-	jl .Lnodiv
-	movl %eax, %ecx
-	andl $0x7f, %eax
-	shrl $7, %ecx
-	addb %cl, DIV
-.Lnodiv:
-	movl %eax, div
+	# advance div
+	movl %edi, %ecx
+	movb div, %al
+	addl %ecx, %ecx
+	movb DIV, %ah
+	addl %ecx, %eax
+	movb %al, div
+	movb %ah, DIV
 
-	// advance timer
+	# advance timer
 	movb TAC, %cl
 	testb $0x04, %cl
 	jnz .Ltimer
 .Lendtimer:
 
-	// advance lcdc
+	# advance lcdc
 	subl %edi, lcdc
 	jg .Lnolcdc
 	call lcdc_trans
 .Lnolcdc:	
 
+	# increment sound cycle counter
 	addl %edi, snd
-	// count off cycles used
+	
+	# count off cycles used
 	subl %edi, %esi
 	jg .Lnext
 	jmp .Ldone
+
+
+.Lint:	
+	# throw an interrupt
+	xorl %edx, %edx
+	movb int_mask_table(%eax), %ch
+	movl %edx, IMA
+	andb %ch, %cl
+	movl %edx, IME
+	movb %cl, IF
+	movl int_vec_table(,%eax,4), %edx
+	movl %ebp, %eax
+	movl %edx, %ebp
+	_push
+	jmp .Lendint
+
 
 .Ltimer:
 	xorb $0xff, %cl
@@ -2409,6 +2380,18 @@ opdone:
 	ret
 
 
+.Lidle:	
+	pushl %esi
+	call cpu_idle
+	popl %ecx
+	testl %eax, %eax
+	jz .Ldoop
+	
+	subl %eax, %esi
+	jg .Lnext
+	jmp .Ldone
+
+
 
 
 cpu_step:
@@ -2437,4 +2420,3 @@ cpu_step:
 
 
 
-	

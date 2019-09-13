@@ -11,6 +11,7 @@ a wide range of host systems, and has been tested successfully on:
 
   GNU/Linux
   FreeBSD
+  Linux/390 (IBM S/390 Mainframe)
   SunOS/Sun Ultra60
   IRIX/SGI O2
   IRIX/SGI Indy
@@ -142,6 +143,10 @@ since 320x200 is a low as you're going to get. Information on hacking
 mode timings to create a true 160x144 mode for gameboy is beyond the
 scope of this document.
 
+If you have problems with gnuboy running too slowly on svgalib, turn
+off the svga_vsync option, i.e. set svga_vsync 0. Putting
+--no-svga-vsync on the command line works as well.
+
 Also, the OSS sound output module is configurable with the rc vars
 samplerate and sound, to set the output sampling rate and enable or
 disable sound, respectively.
@@ -167,9 +172,9 @@ bugs for the few cases where roms fails.
 
   SUPPORTED MEMORY BANK CONTROLLERS (MBCS)
 
-At this time, gnuboy supports MBC1, MBC2, MBC3, and MBC5 (including
-the version with rumble support, although that functionality is
-omitted). MBC3+RTC is not supported, but it should be in soon.
+At this time, gnuboy supports MBC1, MBC2, MBC3 (including realtime
+clock), and MBC5 (including the version with rumble support, although
+that functionality is omitted).
 
 
   GRAPHICS SUPPORT
@@ -202,22 +207,19 @@ fix as soon as possible.
 
   JOYSTICK AND GAMEPAD SUPPORT
 
-Sorry, none at this point. It shouldn't be hard at all to add, just
-poll the joystick in the system interface module and make it generate
-joystick "key" press and release events, then bind them as you would
-keyboard keys.
+At this time, the Linux joystick device is the only one supported.
+SDL joystick support will be in place very soon.
 
-In the mean time, i suggest just finding some comfortable keyboard
-keys to use, or getting a pad that emulates keypresses.
+Binding joystick controls works the same way as for the keyboard. Just
+use the key names joyup, joydown, joyright, joyleft, joy0, joy1, joy2,
+etc. Default bindings should probably be ok for most users, except
+that A/B might be backwards on some gamepads.
 
 
   PERFORMANCE
 
-Unfortunately, the assembly language core is having problems on DOS
-right now, so it's only available on i386 *nix targets. However, here
-are some performance estimates i've gathered (given in percent cpu
-utilization, running at full 60 fps), and I must say that for any but
-the slowest systems, the C code is a plenty fast...
+Here are some performance estimates i've gathered (given in percent
+cpu utilization, running at full 60 fps)...
 
                                  Optimized C        Assembly
   AMD K6-2/450                       12%               8%
@@ -225,9 +227,11 @@ the slowest systems, the C code is a plenty fast...
   SGI O2                             25%            (no asm)
   SGI Indy                           70%            (no asm)
   Sun Ultra60                       3-20%           (no asm)
+  IBM S/390                      about 0.3%         (no asm)
 
-If anyone's interested in trying to get the asm working on DOS, be my
-guest, but it didn't seem to be happening for me.
+Note that these figures were computed before sound was implemented.
+Until the sound code is further optimized, gnuboy will run somewhat
+slower than these numbers suggest.
 
 
   KNOWN BUGS
@@ -244,15 +248,17 @@ appreciated.
 The main loop in emu_run is very sloppy and not quite right, but it
 works.
 
-Loading a savestate while the LCD display is turned off does not turn
-it back on. If you experience this problem, just restart gnuboy and
-try loading the savestate again.
+With a few roms, things screw up after loading savestates. Try loading
+from a place more similar to where you saved and it might work better.
+This is a serious problem since it can potentially result in unusable
+saves, so we'll be looking into it as soon as we get a lead.
 
-There is no way to disable building the svgalib, fbcon, and SDL
-targets from the configure script. I don't see this as a real problem,
-but since there's --without-x to skip the X interface, there probably
-should be similar options for the others, just in case they cause
-problems on some systems.
+Sound mixing is way too slow. I have some ideas for fixing this, and I
+plan to write optimized assembly code for sound soon. If it's a
+problem try turning down the sample rate.
+
+Detecting X11 seems to be failing on some broken nonfree unices. I'll
+look into it sometime.
 
 
   REPORTING OR FIXING BUGS

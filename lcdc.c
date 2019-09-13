@@ -107,7 +107,7 @@ void lcdc_trans()
 			if (R_LY == 0)
 			{
 				lcd_begin();
-				lcd_refreshline();
+				/* lcd_refreshline(); */
 				stat_change(2);
 				C += 40;
 				break;
@@ -139,6 +139,7 @@ void lcdc_trans()
 			}
 			stat_change(0);
 			C += 102;
+			lcd_refreshline();
 			break;
 		case 0:
 			if (++R_LY >= 144)
@@ -147,7 +148,7 @@ void lcdc_trans()
 				C += 228;
 				break;
 			}
-			lcd_refreshline();
+			/* lcd_refreshline(); */
 			stat_change(2);
 			C += 40;
 			break;
