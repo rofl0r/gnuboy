@@ -29,7 +29,7 @@ struct cpu cpu;
 
 
 #define FETCH ( mbc.rmap[PC>>12] \
-? mbc.rmap[PC>>12][(PC++)&0xFFF] \
+? mbc.rmap[PC>>12][PC++] \
 : mem_read(PC++) )
 
 
@@ -235,7 +235,6 @@ label: op(b); break;
 
 
 
-#define OLD_INT(n) ( DI, (IF &= ~(1<<(n))), PUSH(PC), (PC = 0x40+((n)<<3)) )
 #define PRE_INT ( DI, PUSH(PC) )
 #define THROW_INT(n) ( (IF &= ~(1<<(n))), (PC = 0x40+((n)<<3)) )
 
@@ -246,6 +245,9 @@ void cpu_reset()
 {
 	cpu.speed = 0;
 	cpu.halt = 0;
+	cpu.div = 0;
+	cpu.tim = 0;
+	cpu.lcdc = 40;
 
 	IMA = 0;
 	IMA = 0;
@@ -295,10 +297,17 @@ void timer_advance(int cnt)
 	}
 }
 
+void lcdc_advance(int cnt)
+{
+	cpu.lcdc -= cnt;
+	if (cpu.lcdc <= 0) lcdc_trans();
+}
+
 void do_timers(int cnt)
 {
 	div_advance(cnt);
 	timer_advance(cnt);
+	lcdc_advance(cnt);
 }
 
 int cpu_idle(int max)
@@ -307,6 +316,10 @@ int cpu_idle(int max)
 
 	if (!(cpu.halt && IME)) return 0;
 
+	/* Make sure we don't miss lcdc status events! */
+	if ((R_IE & (IF_VBLANK | IF_STAT)) && (max > cpu.lcdc))
+		max = cpu.lcdc;
+	
 	/* If timer interrupt cannot happen, this is very simple! */
 	if (!((R_IE & IF_TIMER) && (R_TAC & 0x04)))
 	{
@@ -820,9 +833,9 @@ next:
 	}
 
 	clen <<= (1-cpu.speed);
-	/* do_timers(clen); doesn't get inlined... */
 	div_advance(clen);
 	timer_advance(clen);
+	lcdc_advance(clen);
 
 	i -= clen;
 	if (i > 0) goto next;

@@ -119,23 +119,12 @@ void vid_preinit()
 
 void vid_init()
 {
-	//int m = G320x200x256;
-	//int m = G512x384x256;
-	//int m = G1024x768x256;
-	//int m = G320x240x256;
-	//int m = G320x240x64K;
-	//int m = G320x240x16M;
-	//int m = 242;
-	//int m = 243;
 	int m;
 	vga_modeinfo *mi;
 
 	m = rc_getint("svga_mode");
 	if (!m) m = selectmode();
 	
-	keyboard_init();
-	keyboard_seteventhandler(kbhandler);
-
 	if (!vga_hasmode(m))
 		die("no such video mode: %d\n", m);
 
@@ -177,13 +166,16 @@ void vid_init()
 		fb.cc[2].l = 0;
 		break;
 	}
+	
+	keyboard_init();
+	keyboard_seteventhandler(kbhandler);
 }
 
 
 void vid_disable()
 {
 	if (!fb.ptr) return;
-	memset(fb.ptr, 0, sizeof fb);
+	memset(&fb, 0, sizeof fb);
 	keyboard_close();
 	vga_setmode(TEXT);
 }

@@ -1,6 +1,6 @@
 
 prefix = @prefix@
-bindir = $(prefix)/games
+bindir = @bindir@
 
 CC = @CC@
 LD = $(CC)
@@ -34,7 +34,7 @@ xgnuboy: $(OBJS) $(SYS_OBJS) $(X11_OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(X11_OBJS) -o $@ $(X11_LIBS)
 
 install: all
-	$(INSTALL) -m 755 $(TARGETS) $(bindir)
+	$(INSTALL) -m 755 $(TARGETS) $(prefix)$(bindir)
 
 clean:
 	rm -f ?gnuboy gmon.out *.o sys/*.o sys/*/*.o asm/*/*.o

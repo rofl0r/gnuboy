@@ -28,7 +28,6 @@ struct hw
 	byte regs[0x100];
 	byte ilines;
 	byte pad;
-	int hdma;
 	int cgb;	
 };
 

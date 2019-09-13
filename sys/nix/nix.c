@@ -37,11 +37,11 @@ void die(char *fmt, ...)
 {
 	va_list ap;
 	
-	shutdown();
 	vid_disable();
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
+	shutdown();
 	exit(1);
 }
 
@@ -85,11 +85,28 @@ int sys_elapsed(struct timeval *prev)
 	return 1000000 + usecs;
 }
 
+static void hardsleep(int us)
+{
+	struct timeval tv, start;
+	int secs, usecs;
+	
+	gettimeofday(&tv, NULL);
+	start = tv;
+	usecs = 0;
+	while(usecs < us)
+	{
+		gettimeofday(&tv, NULL);
+		secs = tv.tv_sec - start.tv_sec;
+		usecs = tv.tv_usec - start.tv_usec;
+		if (secs) usecs += 1000000;
+	}
+}
+
 void sys_sleep(int us)
 {
-	//printf("%d\n", us);
 	if (us <= 0) return;
 	usleep(us);
+	/* hardsleep(us); */
 }
 
 void sys_checkdir(char *path, int wr)

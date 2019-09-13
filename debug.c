@@ -637,7 +637,7 @@ void debug_disassemble(addr a, int c)
 			printf("%02X %02X %02X ", ops[0], ops[1], ops[2]);
 			break;
 		}
-		0 && printf(
+		0&&printf(
 			"%-16s IE=%02X IF=%02X LCDC=%02X STAT=%02X LY=%02X LYC=%02X\n",
 			mnemonic, R_IE, R_IF, R_LCDC, R_STAT, R_LY, R_LYC
 		);

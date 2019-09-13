@@ -1,6 +1,6 @@
 
 prefix = /usr/local
-bindir = $(prefix)/games
+bindir = $(prefix)/bin
 
 CC = gcc
 AS = $(CC)

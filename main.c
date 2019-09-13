@@ -26,6 +26,18 @@ static char *defaultconfig[] =
 	"bind ctrl +b",
 	"bind enter +start",
 	"bind space +select",
+	"bind 1 \"set saveslot 1\"",
+	"bind 2 \"set saveslot 2\"",
+	"bind 3 \"set saveslot 3\"",
+	"bind 4 \"set saveslot 4\"",
+	"bind 5 \"set saveslot 5\"",
+	"bind 6 \"set saveslot 6\"",
+	"bind 7 \"set saveslot 7\"",
+	"bind 8 \"set saveslot 8\"",
+	"bind 9 \"set saveslot 9\"",
+	"bind 0 \"set saveslot 0\"",
+	"bind ins savestate",
+	"bind del loadstate",
 	"source gnuboy.rc",
 	NULL
 };
@@ -51,7 +63,7 @@ static void copyright()
 {
 	banner();
 	fprintf(stderr,
-"Copyright (C) 2000-2001 the gnuboy team\n"
+"Copyright (C) 2000-2001 Laguna and Gilgamesh\n"
 "\n"
 "This program is free software; you can redistribute it and/or modify\n"
 "it under the terms of the GNU General Public License as published by\n"

@@ -61,12 +61,12 @@ byte mem_read(addr a);
 
 
 #define READB(a) ( mbc.rmap[(a)>>12] \
-? mbc.rmap[(a)>>12][(a)&0xFFF] \
+? mbc.rmap[(a)>>12][(a)] \
 : mem_read((a)) )
 #define READW(a) ( READB((a)) | ((word)READB((a)+1)<<8) )
 
 #define WRITEB(a, b) ( mbc.wmap[(a)>>12] \
-? ( mbc.wmap[(a)>>12][(a)&0xFFF] = (b) ) \
+? ( mbc.wmap[(a)>>12][(a)] = (b) ) \
 : ( mem_write((a), (b)), (b) ) )
 #define WRITEW(a, w) ( WRITEB((a), (w)&0xFF), WRITEB((a)+1, (w)>>8) )
 

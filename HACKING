@@ -99,6 +99,7 @@ debug.c - currently just cpu trace, eventually interactive debugging
 hw.c - interrupt generation, gamepad state, dma, etc.
 mem.c - memory mapper, read and write operations
 regs.h - macros for accessing hardware registers
+save.c - savestate handling
 
 [cpu subsystem]
 cpu.c - main cpu emulation
@@ -108,9 +109,10 @@ asm/i386/cpu.s - entire cpu core, rewritten in asm
 
 [graphics subsystem]
 fb.h - abstract framebuffer definition, extern from platform-specifics
-lcd.c - lcd controller functions, main control of refresh procedure
+lcd.c - main control of refresh procedure
 lcd.h - vram, palette, and internal structures for refresh
 asm/i386/lcd.s - asm versions of a few critical functions
+lcdc.c - lcdc phase transitioning
 
 [input subsystem]
 input.h - internal keycode definitions, etc.
@@ -138,70 +140,118 @@ turn will process the command line, call the system/video
 initialization routines, load the rom/sram, and pass control to the
 main loop in emu.c.
 
-Unlike some emulators, gnuboy's main loop is not based around the cpu,
-but rather around a glorified finite state machine, defined in
-state.c. The state is kept internally as four numbers, but it is
-determined fully by only two of those -- in fact, only one is used
-presently. This magic number is the cpu cycle count within the frame,
-P (position). Along with the internal table of state transitions, P
-determines Q (abstract quotient) and R (remainder). Q is an index into
-the transition table, used to identify when the next transition will
-occur, and what effect it will have on the emulated hardware. R is the
-count of cycles already used up on the way to the next transition.
+There have been significant changes to gnuboy's main loop since the
+original 0.8.0 release. The former state.c is no more, and the new
+code that takes its place, in lcdc.c, is now called from the cpu loop,
+which although slightly unfortunate for performance reasons, is
+necessary to specially handle some strange special cases.
 
-What are the transitions? Well take a look. Essentially, they're
-changes to the LCDC STAT register, changes of the LY register, events
-that can cause interrupts, signals to call the lcd refresh routine at
-the start of a scanline, and so on -- all video stuff. If you're
-curious, timer and DIV register updates, being of a much higher
-resolution and not sharing common divisors with LCDC events, are
-handled directly in the cpu loop.
+Still, unlike some emulators, gnuboy's main loop is not the cpu
+emulation loop. Instead, a main loop in emu.c which handles video
+refresh, polling events, sleeping between frames, etc. calls
+cpu_emulate passing it an idea number of cycles to run. The actual
+number of cycles for which the cpu runs will vary slightly depending
+on the length of the final instruction processed, but it should never
+be more than 8 or 9 beyond the ideal cycle count passed, and the
+actual number will be returned to the calling function in case it
+needs this information. The cpu code now takes care of all timer and
+lcdc events in its main loop, so the caller no longer needs to be
+aware of such things.
 
-Back to program flow: the main loop in emu.c calls state_step()
-repeatedly until the vblank state is reached, then takes care of input
-and output, delays for the appropriate amount of time so gnuboy
-doesn't run out of control at 400 fps, and then repeats the process.
+Note that all cycle counts are measured in CGB double speed *machine*
+cycles (2**21 Hz), not hardware clock cycles (2**23 Hz). This is
+necessary because the cpu speed can be switched between single and
+double speed during a single call to cpu_emulate.  When running in
+single speed or DMG mode, all instruction lengths are doubled.
 
-state_step() in turn calls cpu_emulate(), passing it the number of
-cycles remaining until the next transition. This causes the cpu to run
-for at least that many cycles, and possibly a few more if the last
-instruction executed runs over. Thus, cpu_emulate() returns the
-*actual* number of cycles run, which will be no less than the number
-passed to it. state_step() then passes cpu_emulate()'s return value to
-state_advance(), which increments the P and R appropriately, then
-calls state_divide().
+As for the LCDC state, things are much simpler now. No more huge
+glorious state table, no more P/Q/R, just a couple simple functions.
+Aside from the number of cycles left before the next state change, all
+the state information fits nicely in the locations the Game Boy itself
+provides for it -- the LCDC, STAT, and LY registers.
 
-The purpose of state_divide() is simple: carry out the "division"
+If the special cases for the last line of VBLANK look strange to you,
+good. There's some weird stuff going on here. According to documents
+I've found, LY changes from 153 to 0 early in the last line, then
+remains at 0 until the end of the first visible scanline. I don't
+recall finding any roms that rely on this behavior, but I implemented
+it anyway.
 
-  P = Q*STATETABLE + R
+That covers the basics. As for flow of execution, here's a simplified
+call tree that covers most of the significant function calls taking
+place in normal operation:
 
-to obtain a new value for Q, and call the appropriate transition
-functions if any transitions occur in the process. Of course, for
-purposes of performance, P is never even examined; R is simply
-decremented appropriately as Q is incremented. If Q and R must ever be
-regenerated from P (say when loading from a saved state),
-state_resync() must be called to carry out the full divide:
+  main                                                  sys/
+   \_ real_main                                         main.c
+       |_ sys_init                                      sys/
+       |_ vid_init                                      sys/
+       |_ loader_init                                   loader.c
+       |_ emu_reset                                     emu.c
+       \_ emu_run                                       emu.c
+           |_ cpu_emulate                               cpu.c
+           |   |_ div_advance                           cpu.c *
+           |   |_ timer_advance                         cpu.c *
+           |   \_ lcdc_advance                          cpu.c *
+           |       \_ lcdc_trans                        lcdc.c
+           |           |_ lcd_refreshline               lcd.c
+           |           |_ stat_change                   lcdc.c
+           |           |   \_ lcd_begin                 lcd.c
+           |           \_ stat_trigger                  lcdc.c
+           |_ vid_end                                   sys/
+           |_ sys_elapsed                               sys/
+           |_ sys_sleep                                 sys/
+           |_ vid_begin                                 sys/
+           \_ doevents                                  main.c
 
-  Q = 0;
-  R = P;
-  state_divide(0);
-
-That covers the basic flow of execution. To summarize:
-
-  main
-   \_ real_main
-       |_ (various init stuff)
-       |_ rom_load, etc
-       \_ emu_run (main loop)
-           |_ state_step 
-           |   |_ cpu_emulate
-           |   \_ state_advance
-           |       \_ state_divide
-           |           \_ state_trans
-           \_ (various io and timer stuff)
+  (* included in cpu.c so they can inline; also in cpu.s)
 
 
-  LCD CORE DESIGN
+  MEMORY READ/WRITE MAP
+
+Whenever possible, gnuboy avoids emulating memory reads and writes
+with a function call. To this end, two pointer tables are kept -- one
+for reading, the other for writing. They are indexed by bits 12-15 of
+the address in Game Boy memory space, and yield a base pointer from
+which the whole address can be used as an offset to access Game Boy
+memory with no function calls whatsoever. For regions that cannot be
+accessed without function calls, the pointer in the table is NULL.
+
+For example, reading from address addr can be accomplished by testing
+to make sure mbc.rmap[addr>>12] is not NULL, then simply reading
+mbc.rmap[addr>>12][addr].
+
+And for the disbelievers in this optimization, here are some numbers
+to compare. First, FFL2 with memory tables disabled:
+
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  us/call  us/call  name
+ 28.69      0.57     0.57                             refresh_2
+ 13.17      0.84     0.26  4307863     0.06     0.06  mem_read
+ 11.63      1.07     0.23                             cpu_emulate
+
+Now, with memory tables enabled:
+
+ 38.86      0.66     0.66                             refresh_2
+  8.42      0.80     0.14   156380     0.91     0.91  spr_enum
+  6.76      0.91     0.11   483134     0.24     1.31  lcdc_trans
+  6.16      1.02     0.10                             cpu_emulate
+     .
+     .
+     .
+  0.59      1.61     0.01   216497     0.05     0.05  mem_read
+
+As you can see, not only does mem_read take up (proportionally) 1/20
+as much time, since it is rarely called, but the main cpu loop in
+cpu_emulate also runs considerably faster with all the function call
+overhead and cache misses avoided.
+
+These tests were performed on K6-2/450 with the assembly cores
+enabled; your milage may vary. Regardless, however, I think it's clear
+that using the address mapping tables is quite a worthwhile
+optimization.
+
+
+  LCD RENDERING CORE DESIGN
 
 The LCD core presently used in gnuboy is very much a high-level one,
 performing the task of rasterizing scanlines as many independent steps
@@ -335,8 +385,8 @@ sure you unset IS_LITTLE_ENDIAN in the makefiles to enable the big
 endian default if the target system is big endian. if you do have
 problems building on certain cpus, however, let us know. eventually,
 we will also want asm cpu and graphics code for popular host cpus, but
-this should wait until we have a stabilized interface for integrating
-asm.
+this can wait, since the c code should be sufficiently fast on most
+platforms.
 
 the bulk of porting efforts will probably be spent on adding support
 for new operating systems, and on systems with multiple video (or

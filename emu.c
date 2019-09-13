@@ -41,7 +41,6 @@ void emu_init()
 void emu_reset()
 {
 	lcd_reset();
-	lcdc_reset();
 	cpu_reset();
 	hw_reset();
 	mbc_reset();
@@ -51,6 +50,10 @@ void emu_reset()
 
 
 
+void emu_step()
+{
+	cpu_emulate(cpu.lcdc);
+}
 
 
 
@@ -64,24 +67,27 @@ void emu_run()
 	static void *timer;
 	int delay;
 
-	lcd_begin();
 	for (;;)
 	{
-		while (R_LY < 144) // && ((R_LCDC & 0x80) || (R_STAT & 3)))
-			lcdc_step();
+		cpu_emulate(2280);
+		while (R_LY > 0 && R_LY < 144)
+			emu_step();
 		
 		vid_end();
 		if (!timer) timer = sys_timer();
 		delay = framelen - sys_elapsed(timer);
 		/* printf("%d\n", delay); */
 		sys_sleep(delay);
+		sys_elapsed(timer);
 		vid_begin();
 		doevents();
-		sys_elapsed(timer);
 		if (framecount) { if (!--framecount) die("finished\n"); }
 		
+		if (!(R_LCDC & 0x80))
+			cpu_emulate(32832);
+		
 		while (R_LY > 0) /* wait for next frame */
-			lcdc_step();
+			emu_step();
 	}
 }
 
