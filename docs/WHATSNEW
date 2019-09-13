@@ -8,6 +8,52 @@
 
 
 
+RELEASE 1.0.2
+
+A minor problem in the frequency sweep function on sound channel 1 was
+fixed, correcting the sound of the ice beam and metroid encounter
+sound in Metroid 2.
+
+Sound channel 3 waveform data is now trashed when the sound is
+played. This makes it more difficult for games and demos to detect
+that they are running on an emulator.
+
+The channel 3 waveform is now properly initialized in both DMG and CGB
+modes. Before it was incorrectly initialized to have frequency 16
+times too high, and the initial "random noise" pattern exhibited by
+DMG wasn't emulated. R-Type now sounds much better.
+
+The sound length register for channel 3 now works properly, fixing the
+title screen music in MegaMan 2. No thanks to gbspec.txt for having
+blatently wrong info about this matter.
+
+Major problems with sound quality on channel 4 (noise) have been
+fixed, and the pseudorandom sequence has been replaced to very closely
+resemble that of a real Gameboy, thanks to the hard work of Lord
+Nightmare. All these changes make a significant improvement in many
+games, notably Metroid 2, Final Fantasy Legend II and III, Camp
+Deadly, and Wario Land.
+
+Stereo channels are no longer backwards.
+
+The DMG STAT register write bug, which causes an interrupt if the STAT
+register is written while in HBLANK or VBLANK, is now emulated. This
+fixes Legend of Zerd and probably any other DMG game that will not run
+on a real Gameboy Color.
+
+A hack/potential fix for a problem that kept Konami Collection Vol 1
+from working has been put in place.
+
+A major interrupt bug that prevented Amazing Penguin from running has
+been fixed.
+
+Several bugs that could have resulted in crashes under strange
+circumstances have been fixed.
+
+Other minor sound issues have been tweaked or fixed.
+
+
+
 RELEASE 1.0.1
 
   BUGS FIXED

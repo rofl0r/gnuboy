@@ -10,6 +10,31 @@ GNUBOY CHANGES FILE -- detailed list of all changes made
   release, please refer to the file WHATSNEW.
 
 
+1.0.2 (2001-09-18)
+fixed bugs in rc_setvar calls in sys_initpath
+fixed multiple definition of cpu struct in cpu.h
+corrected behavior of ch1 sweep function when freq is written during sweep
+emulated wave pattern corruption to fool "emulator-detectors"
+updated savestate code to handle these changes, incremented minor version
+(this should not affect compatibility with old savestates)
+fixed major bugs in sound channel 4
+perfected channel 4 output sequence to sound like a real Gameboy
+(much thanks goes out to Lord Nightmare for all his hard work on this!)
+default channel 3 square wave is no longer 4 octaves too high
+make DI cancel pending HALT...is this correct? (fixes Konami Collection #1)
+fixed reversed stereo channels
+tweaked frequency cutoff points that prevent aliasing
+corrected default wave pattern (noise) when running in dmg mode
+fixed sound reset bug that messed up pitch after pausing in Bubble Ghost
+added new sample palettes
+fixed major interrupt/HALT bug that kept Amazing Penguin from running
+fixed sound channel 3 length regiser (info in gbspec.txt is bogus)
+tweaked volume of channel 4
+removed FFL3 tile glitch from the known bugs in the README
+(it was caused by a bad dump and/or hacked rom, not a bug in gnuboy)
+added emulation of DMG STAT register write bug (causes interrupt)
+(this fixes Legend of Zerd and perhaps one or two other games)
+
 1.0.1 (2001-07-09)
 fixed problem in "make install" if dest dir doesn't exist
 cleaned up some compiler warnings

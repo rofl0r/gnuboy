@@ -70,4 +70,12 @@ Doing so should fix problems with other SDL programs too. If it still
 doesn't work, let us know.
 
 
+Q: Why is sound pitch off by about 1% in gnuboy?
+
+A: You have a very good ear. It's a rounding issue that won't be
+outright fixed for a while. If you want a workaround, set the sample
+rate to a power of two (for example 32768 works well) on the command
+line or in your gnuboy.rc.
+
+
 

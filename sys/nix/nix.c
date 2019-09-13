@@ -82,8 +82,9 @@ void sys_initpath()
 	char *buf, *home = getenv("HOME");
 	if (!home)
 	{
-		rc_setvar("rcpath", ".");
-		rc_setvar("savedir", ".");
+		buf = ".";
+		rc_setvar("rcpath", 1, &buf);
+		rc_setvar("savedir", 1, &buf);
 		return;
 	}
 	buf = malloc(strlen(home) + strlen(DOTDIR) + 8);

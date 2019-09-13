@@ -27,7 +27,6 @@ static int use_altenter = 1;
 static int use_joy = 1, sdl_joy_num;
 static SDL_Joystick * sdl_joy = NULL;
 static const int joy_commit_range = 3276;
-static int xaxis_max, yaxis_max;
 static char Xstatus, Ystatus;
 
 static SDL_Surface *screen;
@@ -156,7 +155,6 @@ static void overlay_init()
 
 void vid_init()
 {
-	int i;
 	int flags;
 
 	if (!vmode[0] || !vmode[1])
@@ -494,9 +492,7 @@ int pcm_submit()
 	if (!pcm.buf) return 0;
 	if (pcm.pos < pcm.len) return 1;
 	while (!audio_done)
-	{
 		SDL_Delay(4);
-	}
 	audio_done = 0;
 	pcm.pos = 0;
 	return 1;

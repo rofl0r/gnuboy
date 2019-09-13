@@ -164,8 +164,7 @@ void ioreg_write(byte r, byte b)
 		lcdc_change(b);
 		break;
 	case RI_STAT:
-		REG(r) = (REG(r) & 0x07) | (b & 0x78);
-		stat_trigger();
+		stat_write(b);
 		break;
 	case RI_LYC:
 		REG(r) = b;
@@ -434,9 +433,9 @@ void mbc_write(int a, byte b)
 		}
 		break;
 	}
-	/* printf("%02X\n", mbc.rombank); */
 	mbc.rombank &= (mbc.romsize - 1);
 	mbc.rambank &= (mbc.ramsize - 1);
+	/* printf("%02X\n", mbc.rombank); */
 	mem_updatemap();
 }
 

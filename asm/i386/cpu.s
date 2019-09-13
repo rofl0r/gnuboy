@@ -1902,9 +1902,11 @@ __CPL:
 __EI:
 	movl $1, IMA
 	_end
-__DI:	
-	movl $0, IME
-	movl $0, IMA
+__DI:
+	xorl %eax,%eax
+	movl %eax, halt
+	movl %eax, IME
+	movl %eax, IMA
 	_end
 
 

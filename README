@@ -42,6 +42,7 @@ all of the following and much more:
   Sprite DMA, HDMA, and GDMA.
   All four sound channels including digital samples.
   MBC1, MBC2, MBC3 (including clock), and MBC5 mappers.
+  Wave pattern memory corruption when sound channel 3 is played.
   Pad, timer, divide counter, and other basic hardware registers.
   CGB double-speed CPU mode.
 
@@ -49,7 +50,6 @@ Aspects not emulated at this time include:
 
 * Serial IO (link cable).
   Undocumented 'extra' ram in OAM space on Gameboy Color.
-  Wave pattern memory corruption when sound channel 3 is played.
   All Super Gameboy extensions.
 * HuC1, HuC3, and other obscure mappers.
   Sorting sprites by X coordinate in DMG mode.
@@ -78,7 +78,7 @@ features:
   OR simulated 3/3/2 bits per channel in 256-color modes.
 
 For information on configuring and using these features, see the
-additional documentation in... (??)
+additional documentation in the "docs" directory.
 
 
   COMPATIBILITY
@@ -86,23 +86,25 @@ additional documentation in... (??)
 Out of over 300 results reported by testers, all games are known to
 work perfectly on gnuboy with the following exceptions:
 
-  Fighting Phoenix (Japanese) is expected not to work since it uses
-  the HuC1 memory controller, which is not implemented. There has been
-  no official report so far, however.
+  Fighting Phoenix (Japanese) may or may not work since it uses the
+  HuC1 memory controller, which is not implemented properly. There has
+  been no report either way so far.
+
+  Pocket Bomberman (Japanese version, which uses HuC1) runs, but can
+  be made to crash if the player jumps into the ceiling in the first
+  level. It's not clear whether this bug is MBC-related, something
+  else, or an actual bug in the original game.
 
   Robopon Star and Sun both require HuC3 which is not implemented.
   Both hang immediately after the first intro screen and are thus
   unplayable.
 
   Monster Go! Go! Go! (Japanese) is unplayable. The cause of the
-  problem is not known, but reports indicate that it might be a bad
-  dump.
+  problem is not fully known, but it's either a very bad dump or it's
+  using some sort of specialized MBC that's not documented.
 
-  Final Fantasy Legend III freezes momentarily when entering the
-  temple with the portal to the Talon, and the portal animation itself
-  appears incorrectly. All other emulators tested seem to have this
-  problem as well. Cause unknown, could be mapper-related. Does not
-  significantly affect gameplay.
+  Final Fantasy Adventure has visual problems with the fade between
+  screens. Does not affect gameplay.
 
   Bubble Bobble 2 has some minor tile glitches right before gameplay
   actually begins. Cause unknown. Does not affect gameplay.
@@ -110,12 +112,13 @@ work perfectly on gnuboy with the following exceptions:
   Alone in the Dark is reported to have minor visual glitches. I
   haven't seen it myself so I can't judge their severity.
 
-  Zelda: Oracle of Ages is reported to have a visual glitch at the
-  beginning of the game. I haven't seen it, but presumably it does not
-  affect gameplay significantly.
+  Both new Zelda games are reported to have a visual glitch at the
+  beginning of the game, and on certain other screens. I haven't seen
+  the problem myself, but supposedly it impacts gameplay to some
+  extent.
 
 Please report any other incompatibilities discovered directly to
-gnuboy@aerifal.cx, so that they can be documented and hopefully
+gnuboy@unix-fu.org, so that they can be documented and hopefully
 fixed.
 
 
