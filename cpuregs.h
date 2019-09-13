@@ -28,11 +28,16 @@
 #define DE W(cpu.de)
 #define HL W(cpu.hl)
 
-#define PCH HB(cpu.pc)
-#define PCL LB(cpu.pc)
-
 #define PC W(cpu.pc)
 #define SP W(cpu.sp)
+
+#define xAF DW(cpu.af)
+#define xBC DW(cpu.bc)
+#define xDE DW(cpu.de)
+#define xHL DW(cpu.hl)
+
+#define xPC DW(cpu.pc)
+#define xSP DW(cpu.sp)
 
 #define IMA cpu.ima
 #define IME cpu.ime

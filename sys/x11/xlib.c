@@ -415,7 +415,11 @@ void ev_poll()
 
 
 
-
+void vid_settitle(char *title)
+{
+	XStoreName(x_display, x_win, title);
+	XSetIconName(x_display, x_win, title);
+}
 
 void vid_setpal(int i, int r, int g, int b)
 {

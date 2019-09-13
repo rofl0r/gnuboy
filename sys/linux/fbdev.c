@@ -21,7 +21,7 @@ struct fb fb;
 static char *fb_mode;
 static int fb_depth;
 
-#define DEFAULT_DEVICE "/dev/fb0"
+#define FB_DEVICE "/dev/fb0"
 static char *fb_device;
 
 static int fbfd = -1;
@@ -52,11 +52,12 @@ void vid_init()
 	kb_init();
 	joy_init();
 
-	if (!fb_device) fb_device = strdup(DEFAULT_DEVICE);
+	if (!fb_device) fb_device = strdup(FB_DEVICE);
 	fbfd = open(fb_device, O_RDWR);
 	if (fbfd < 0) die("cannot open %s\n", fb_device);
 	
 	ioctl(fbfd, FBIOGET_VSCREENINFO, &initial_vi);
+	initial_vi.xoffset = initial_vi.yoffset = 0;
 
 	if (fb_mode)
 	{
@@ -96,7 +97,6 @@ void vid_init()
 	fb.enabled = 1;
 }
 
-
 void vid_close()
 {
 	fb.enabled = 0;
@@ -104,6 +104,10 @@ void vid_close()
 	kb_close();
 	ioctl(fbfd, FBIOPUT_VSCREENINFO, &initial_vi);
 	memset(fbmap, 0, maplen);
+}
+
+void vid_settitle(char *title)
+{
 }
 
 void vid_setpal(int i, int r, int g, int b)

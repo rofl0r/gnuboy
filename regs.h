@@ -3,7 +3,7 @@
 #define __REGS_H__
 
 
-#include "hw.h"
+#include "mem.h"
 
 /* General internal/io stuff */
 
@@ -87,7 +87,7 @@
 
 
 
-#define REG(n) hw.regs[(n)]
+#define REG(n) ram.hi[(n)]
 
 
 

@@ -524,24 +524,39 @@ void spr_scan()
 #ifndef ASM_REFRESH_1
 void refresh_1(byte *dest, byte *pal)
 {
-	int i; byte *src = BUF;
-	for (i = 160; i; i--) dest[i] = pal[src[i]];
+	int i; byte *src = BUF-1;
+	dest--; for (i = 160; i; i--) dest[i] = pal[src[i]];
 }
 #endif
 
 #ifndef ASM_REFRESH_2
 void refresh_2(un16 *dest, un16 *pal)
 {
+	int i; byte *src = BUF-1;
+	dest--; for (i = 160; i; i--) dest[i] = pal[src[i]];
+}
+#endif
+
+#ifndef ASM_REFRESH_3
+void refresh_3(byte *dest, un32 *pal)
+{
 	int i; byte *src = BUF;
-	for (i = 160; i; i--) dest[i] = pal[src[i]];
+	un32 color;
+	for (i = 160; i; i--)
+	{
+		color = pal[*(src++)];
+		*(dest++) = color;
+		*(dest++) = color>>8;
+		*(dest++) = color>>16;
+	}
 }
 #endif
 
 #ifndef ASM_REFRESH_4
 void refresh_4(un32 *dest, un32 *pal)
 {
-	int i; byte *src = BUF;
-	for (i = 160; i; i--) dest[i] = pal[src[i]];
+	int i; byte *src = BUF-1;
+	dest--; for (i = 160; i; i--) dest[i] = pal[src[i]];
 }
 #endif
 
@@ -618,6 +633,9 @@ void lcd_refreshline()
 			break;
 		case 2:
 			refresh_2((void*)vdest, PAL2);
+			break;
+		case 3:
+			refresh_3((void*)vdest, PAL4);
 			break;
 		case 4:
 			refresh_4((void*)vdest, PAL4);

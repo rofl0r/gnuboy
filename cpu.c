@@ -7,6 +7,7 @@
 #include "hw.h"
 #include "cpu.h"
 #include "mem.h"
+#include "fastmem.h"
 #include "debug.h"
 #include "cpuregs.h"
 #include "cpucore.h"
@@ -24,13 +25,15 @@ struct cpu cpu;
 #define ZFLAG(n) ( (n) ? 0 : FZ )
 
 
-#define PUSH(w) ( (SP -= 2), (WRITEW(SP, (w))) )
-#define POP(w) ( ((w) = READW(SP)), (SP += 2) )
+#define PUSH(w) ( (SP -= 2), (writew(xSP, (w))) )
+#define POP(w) ( ((w) = readw(xSP)), (SP += 2) )
 
 
-#define FETCH ( mbc.rmap[PC>>12] \
+#define FETCH_OLD ( mbc.rmap[PC>>12] \
 ? mbc.rmap[PC>>12][PC++] \
 : mem_read(PC++) )
+
+#define FETCH (readb(PC++))
 
 
 #define INC(r) { ((r)++); \
@@ -45,44 +48,40 @@ F = (F & (FL|FC)) | decflag_table[(r)]; }
 
 #define ADD(n) { \
 W(acc) = (un16)A + (un16)(n); \
-F = (F & FL) \
-| (ZFLAG(LB(acc))) \
+F = (ZFLAG(LB(acc))) \
 | (FH & ((A ^ (n) ^ LB(acc)) << 1)) \
 | (HB(acc) << 4); \
 A = LB(acc); }
 
 #define ADC(n) { \
 W(acc) = (un16)A + (un16)(n) + (un16)((F&FC)>>4); \
-F = (F & FL) \
-| (ZFLAG(LB(acc))) \
+F = (ZFLAG(LB(acc))) \
 | (FH & ((A ^ (n) ^ LB(acc)) << 1)) \
 | (HB(acc) << 4); \
 A = LB(acc); }
 
 #define ADDW(n) { \
 DW(acc) = (un32)HL + (un32)(n); \
-F = (F & (FL|FZ)) \
+F = (F & (FZ)) \
 | (FH & ((H ^ ((n)>>8) ^ HB(acc)) << 1)) \
 | (acc.b[HI][LO] << 4); \
 HL = W(acc); }
 
 #define ADDSP(n) { \
 DW(acc) = (un32)SP + (un32)(n8)(n); \
-F = (F & FL) \
-| (FH & (((SP>>8) ^ ((n)>>8) ^ HB(acc)) << 1)) \
+F = (FH & (((SP>>8) ^ ((n)>>8) ^ HB(acc)) << 1)) \
 | (acc.b[HI][LO] << 4); \
 SP = W(acc); }
 
 #define LDHLSP(n) { \
 DW(acc) = (un32)SP + (un32)(n8)(n); \
-F = (F & FL) \
-| (FH & (((SP>>8) ^ ((n)>>8) ^ HB(acc)) << 1)) \
+F = (FH & (((SP>>8) ^ ((n)>>8) ^ HB(acc)) << 1)) \
 | (acc.b[HI][LO] << 4); \
 HL = W(acc); }
 
 #define CP(n) { \
 W(acc) = (un16)A - (un16)(n); \
-F = (F & FL) | FN \
+F = FN \
 | (ZFLAG(LB(acc))) \
 | (FH & ((A ^ (n) ^ LB(acc)) << 1)) \
 | ((un8)(-(n8)HB(acc)) << 4); }
@@ -91,74 +90,74 @@ F = (F & FL) | FN \
 
 #define SBC(n) { \
 W(acc) = (un16)A - (un16)(n) - (un16)((F&FC)>>4); \
-F = (F & FL) | FN \
+F = FN \
 | (ZFLAG((n8)LB(acc))) \
 | (FH & ((A ^ (n) ^ LB(acc)) << 1)) \
 | ((un8)(-(n8)HB(acc)) << 4); \
 A = LB(acc); }
 
 #define AND(n) { A &= (n); \
-F = (F & FL) | ZFLAG(A) | FH; }
+F = ZFLAG(A) | FH; }
 
 #define XOR(n) { A ^= (n); \
-F = (F & FL) | ZFLAG(A); }
+F = ZFLAG(A); }
 
 #define OR(n) { A |= (n); \
-F = (F & FL) | ZFLAG(A); }
+F = ZFLAG(A); }
 
 #define RLCA(r) { (r) = ((r)>>7) | ((r)<<1); \
-F = (F & (FL)) | (((r)&0x01)<<4); }
+F = (((r)&0x01)<<4); }
 
 #define RRCA(r) { (r) = ((r)<<7) | ((r)>>1); \
-F = (F & (FL)) | (((r)&0x80)>>3); }
+F = (((r)&0x80)>>3); }
 
 #define RLA(r) { \
 LB(acc) = (((r)&0x80)>>3); \
 (r) = ((r)<<1) | ((F&FC)>>4); \
-F = (F & (FL)) | LB(acc); }
+F = LB(acc); }
 
 #define RRA(r) { \
 LB(acc) = (((r)&0x01)<<4); \
 (r) = ((r)>>1) | ((F&FC)<<3); \
-F = (F & (FL)) | LB(acc); }
+F = LB(acc); }
 
-#define RLC(r) { RLCA(r); F = (F&~FZ) | ZFLAG(r); }
-#define RRC(r) { RRCA(r); F = (F&~FZ) | ZFLAG(r); }
-#define RL(r) { RLA(r); F = (F&~FZ) | ZFLAG(r); }
-#define RR(r) { RRA(r); F = (F&~FZ) | ZFLAG(r); }
+#define RLC(r) { RLCA(r); F |= ZFLAG(r); }
+#define RRC(r) { RRCA(r); F |= ZFLAG(r); }
+#define RL(r) { RLA(r); F |= ZFLAG(r); }
+#define RR(r) { RRA(r); F |= ZFLAG(r); }
 
 #define SLA(r) { \
 LB(acc) = (((r)&0x80)>>3); \
 (r) <<= 1; \
-F = (F & FL) | ZFLAG((r)) | LB(acc); }
+F = ZFLAG((r)) | LB(acc); }
 
 #define SRA(r) { \
 LB(acc) = (((r)&0x01)<<4); \
 (r) = (un8)(((n8)(r))>>1); \
-F = (F & FL) | ZFLAG((r)) | LB(acc); }
+F = ZFLAG((r)) | LB(acc); }
 
 #define SRL(r) { \
 LB(acc) = (((r)&0x01)<<4); \
 (r) >>= 1; \
-F = (F & FL) | ZFLAG((r)) | LB(acc); }
+F = ZFLAG((r)) | LB(acc); }
 
 #define CPL(r) { \
 (r) = ~(r); \
 F |= (FH|FN); }
 
-#define SCF { F = (F & (FL|FZ)) | FC; }
+#define SCF { F = (F & (FZ)) | FC; }
 
-#define CCF { F = (F & (FL|FZ|FC)) ^ FC; }
+#define CCF { F = (F & (FZ|FC)) ^ FC; }
 
 #define DAA { \
 A += (LB(acc) = daa_table[((((int)F)&0x70)<<4) | A]); \
-F = (F & (FL|FN)) | ZFLAG(A) | daa_carry_table[LB(acc)>>2]; }
+F = (F & (FN)) | ZFLAG(A) | daa_carry_table[LB(acc)>>2]; }
 
 #define SWAP(r) { \
 (r) = swap_table[(r)]; \
-F = (F & FL) | ZFLAG((r)); }
+F = ZFLAG((r)); }
 
-#define BIT(n,r) { F = (F & (FL|FC)) | ZFLAG(((r) & (1 << (n)))) | FH; }
+#define BIT(n,r) { F = (F & FC) | ZFLAG(((r) & (1 << (n)))) | FH; }
 #define RES(n,r) { (r) &= ~(1 << (n)); }
 #define SET(n,r) { (r) |= (1 << (n)); }
 
@@ -205,7 +204,7 @@ case (base)+2: b = D; goto label; \
 case (base)+3: b = E; goto label; \
 case (base)+4: b = H; goto label; \
 case (base)+5: b = L; goto label; \
-case (base)+6: b = READB(HL); goto label; \
+case (base)+6: b = readb(HL); goto label; \
 case (base)+7: b = A; \
 label: op(b); break;
 
@@ -216,8 +215,8 @@ label: op(b); break;
 
 
 
-#define JR ( PC += 1+(n8)READB(PC) )
-#define JP ( PC = READW(PC) )
+#define JR ( PC += 1+(n8)readb(PC) )
+#define JP ( PC = readw(PC) )
 
 #define CALL ( PUSH(PC+2), JP )
 
@@ -265,11 +264,11 @@ void cpu_reset()
 
 void div_advance(int cnt)
 {
-	cpu.div += cnt;
-	if (cpu.div >= 128)
+	cpu.div += (cnt<<1);
+	if (cpu.div >= 256)
 	{
-		R_DIV += (cpu.div >> 7);
-		cpu.div &= 0x7f;
+		R_DIV += (cpu.div >> 8);
+		cpu.div &= 0xff;
 	}
 }
 
@@ -416,7 +415,7 @@ next:
 	case 0x45: /* LD B,L */
 		B = L; break;
 	case 0x46: /* LD B,(HL) */
-		B = READB(HL); break;
+		B = readb(xHL); break;
 	case 0x47: /* LD B,A */
 		B = A; break;
 
@@ -431,7 +430,7 @@ next:
 	case 0x4D: /* LD C,L */
 		C = L; break;
 	case 0x4E: /* LD C,(HL) */
-		C = READB(HL); break;
+		C = readb(xHL); break;
 	case 0x4F: /* LD C,A */
 		C = A; break;
 
@@ -446,7 +445,7 @@ next:
 	case 0x55: /* LD D,L */
 		D = L; break;
 	case 0x56: /* LD D,(HL) */
-		D = READB(HL); break;
+		D = readb(xHL); break;
 	case 0x57: /* LD D,A */
 		D = A; break;
 
@@ -461,7 +460,7 @@ next:
 	case 0x5D: /* LD E,L */
 		E = L; break;
 	case 0x5E: /* LD E,(HL) */
-		E = READB(HL); break;
+		E = readb(xHL); break;
 	case 0x5F: /* LD E,A */
 		E = A; break;
 
@@ -476,7 +475,7 @@ next:
 	case 0x65: /* LD H,L */
 		H = L; break;
 	case 0x66: /* LD H,(HL) */
-		H = READB(HL); break;
+		H = readb(xHL); break;
 	case 0x67: /* LD H,A */
 		H = A; break;
 			
@@ -491,7 +490,7 @@ next:
 	case 0x6C: /* LD L,H */
 		L = H; break;
 	case 0x6E: /* LD L,(HL) */
-		L = READB(HL); break;
+		L = readb(xHL); break;
 	case 0x6F: /* LD L,A */
 		L = A; break;
 			
@@ -510,7 +509,7 @@ next:
 	case 0x77: /* LD (HL),A */
 		b = A;
 	__LD_HL:
-		WRITEB(HL,b);
+		writeb(xHL,b);
 		break;
 			
 	case 0x78: /* LD A,B */
@@ -526,34 +525,34 @@ next:
 	case 0x7D: /* LD A,L */
 		A = L; break;
 	case 0x7E: /* LD A,(HL) */
-		A = READB(HL); break;
+		A = readb(xHL); break;
 
 	case 0x01: /* LD BC,imm */
-		BC = READW(PC); PC += 2; break;
+		BC = readw(xPC); PC += 2; break;
 	case 0x11: /* LD DE,imm */
-		DE = READW(PC); PC += 2; break;
+		DE = readw(xPC); PC += 2; break;
 	case 0x21: /* LD HL,imm */
-		HL = READW(PC); PC += 2; break;
+		HL = readw(xPC); PC += 2; break;
 	case 0x31: /* LD SP,imm */
-		SP = READW(PC); PC += 2; break;
+		SP = readw(xPC); PC += 2; break;
 
 	case 0x02: /* LD (BC),A */
-		WRITEB(BC, A); break;
+		writeb(xBC, A); break;
 	case 0x0A: /* LD A,(BC) */
-		A = READB(BC); break;
+		A = readb(xBC); break;
 	case 0x12: /* LD (DE),A */
-		WRITEB(DE, A); break;
+		writeb(xDE, A); break;
 	case 0x1A: /* LD A,(DE) */
-		A = READB(DE); break;
+		A = readb(xDE); break;
 
 	case 0x22: /* LDI (HL),A */
-		WRITEB(HL, A); HL++; break;
+		writeb(xHL, A); HL++; break;
 	case 0x2A: /* LDI A,(HL) */
-		A = READB(HL); HL++; break;
+		A = readb(xHL); HL++; break;
 	case 0x32: /* LDD (HL),A */
-		WRITEB(HL, A); HL--; break;
+		writeb(xHL, A); HL--; break;
 	case 0x3A: /* LDD A,(HL) */
-		A = READB(HL); HL--; break;
+		A = readb(xHL); HL--; break;
 
 	case 0x06: /* LD B,imm */
 		B = FETCH; break;
@@ -568,27 +567,23 @@ next:
 	case 0x2E: /* LD L,imm */
 		L = FETCH; break;
 	case 0x36: /* LD (HL),imm */
-		b = FETCH; WRITEB(HL, b); break;
+		b = FETCH; writeb(xHL, b); break;
 	case 0x3E: /* LD A,imm */
 		A = FETCH; break;
 
 	case 0x08: /* LD (imm),SP */
-		addr = READW(PC); PC += 2;
-		WRITEW(addr, SP); break;
+		writew(readw(xPC), SP); PC += 2; break;
 	case 0xEA: /* LD (imm),A */
-		addr = READW(PC); PC += 2;
-		WRITEB(addr, A); break;
+		writeb(readw(xPC), A); PC += 2; break;
 
 	case 0xE0: /* LDH (imm),A */
-		addr = READB(PC)|0xFF00; PC++;
-		WRITEB(addr, A); break;
+		writehi(FETCH, A); break;
 	case 0xE2: /* LDH (C),A */
-		WRITEB(C|0xFF00, A); break;
+		writehi(C, A); break;
 	case 0xF0: /* LDH A,(imm) */
-		addr = READB(PC)|0xFF00; PC++;
-		A = READB(addr); break;
+		A = readhi(FETCH); break;
 	case 0xF2: /* LDH A,(C) (undocumented) */
-		A = READB(C|0xFF00); break;
+		A = readhi(C); break;
 			
 
 	case 0xF8: /* LD HL,SP+imm */
@@ -596,8 +591,7 @@ next:
 	case 0xF9: /* LD SP,HL */
 		SP = HL; break;
 	case 0xFA: /* LD A,(imm) */
-		addr = READW(PC); PC += 2;
-		A = READB(addr); break;
+		A = readb(readw(xPC)); PC += 2; break;
 
 		ALU_CASES(0x80, 0xC6, ADD, __ADD)
 		ALU_CASES(0x88, 0xCE, ADC, __ADC)
@@ -633,9 +627,9 @@ next:
 	case 0x2C: /* INC L */
 		INC(L); break;
 	case 0x34: /* INC (HL) */
-		b = READB(HL);
+		b = readb(xHL);
 		INC(b);
-		WRITEB(HL, b);
+		writeb(xHL, b);
 		break;
 	case 0x3C: /* INC A */
 		INC(A); break;
@@ -662,9 +656,9 @@ next:
 	case 0x2D: /* DEC L */
 		DEC(L); break;
 	case 0x35: /* DEC (HL) */
-		b = READB(HL);
+		b = readb(xHL);
 		DEC(b);
-		WRITEB(HL, b);
+		writeb(xHL, b);
 		break;
 	case 0x3D: /* DEC A */
 		DEC(A); break;
@@ -820,13 +814,13 @@ next:
 			CB_REG_CASES(L, 5);
 			CB_REG_CASES(A, 7);
 		default:
-			b = READB(HL);
+			b = readb(xHL);
 			switch(cbop)
 			{
 				CB_REG_CASES(b, 6);
 			}
 			if ((cbop & 0xC0) != 0x40) /* exclude BIT */
-				WRITEB(HL, b);
+				writeb(xHL, b);
 			break;
 		}
 		break;

@@ -30,13 +30,14 @@ struct mbc
 struct rom
 {
 	byte (*bank)[16384];
+	char name[20];
 };
 
 struct ram
 {
+	byte hi[256];
 	byte ibank[8][4096];
 	byte (*sbank)[8192];
-	byte stack[128];
 	int loaded;
 };
 
@@ -56,7 +57,6 @@ void mem_write(int a, byte b);
 byte mem_read(int a);
 
 
-/* extern int forcedmg; */
 
 #define READB(a) ( mbc.rmap[(a)>>12] \
 ? mbc.rmap[(a)>>12][(a)] \
@@ -67,9 +67,6 @@ byte mem_read(int a);
 ? ( mbc.wmap[(a)>>12][(a)] = (b) ) \
 : ( mem_write((a), (b)), (b) ) )
 #define WRITEW(a, w) ( WRITEB((a), (w)&0xFF), WRITEB((a)+1, (w)>>8) )
-
-#define CGB_ROM (!forcedmg && rom.bank && (rom.bank[0][0x0143] == 0x80 \
-|| rom.bank[0][0x0143] == 0xC0))
 
 
 

@@ -24,6 +24,7 @@
 #define I2(s, p) { 2, (s), (p) }
 #define I4(s, p) { 4, (s), (p) }
 #define R(r) I1(#r, &R_##r)
+#define NOSAVE { -1, 0, 0 }
 #define END { 0, 0, 0 }
 
 struct svar
@@ -35,7 +36,7 @@ struct svar
 
 static int ver;
 static int sramblock, iramblock, vramblock;
-static int hramofs, palofs, oamofs, wavofs;
+static int hramofs, hiofs, palofs, oamofs, wavofs;
 
 static byte regmask[128];
 
@@ -104,12 +105,23 @@ struct svar svars[] =
 	I4("S4c ", &snd.ch[3].cnt),
 	I4("S4ec", &snd.ch[3].encnt),
 	
+	I4("hdma", &hw.hdma),
+	
 	I4("sram", &sramblock),
 	I4("iram", &iramblock),
 	I4("vram", &vramblock),
-	I4("hram", &hramofs),
+	I4("hi  ", &hiofs),
 	I4("pal ", &palofs),
 	I4("oam ", &oamofs),
+
+	/* NOSAVE is a special code to prevent the rest of the table
+	 * from being saved, used to support old stuff for backwards
+	 * compatibility... */
+	NOSAVE,
+
+	/* the following are obsolete as of 0x104 */
+	
+	I4("hram", &hramofs),
 	I4("wav ", &wavofs),
 	
 	R(P1), R(SB), R(SC),
@@ -134,68 +146,10 @@ struct svar svars[] =
 	I1("DMA3", &R_HDMA3),
 	I1("DMA4", &R_HDMA4),
 	I1("DMA5", &R_HDMA5),
-	I4("hdma", &hw.hdma),
 	
 	END
 };
 
-
-void savestate(FILE *f)
-{
-	int i;
-	byte buf[4096];
-	un32 (*header)[2] = (un32 (*)[2])buf;
-	un32 d;
-	int irl = hw.cgb ? 8 : 2;
-	int vrl = hw.cgb ? 4 : 2;
-	int srl = mbc.ramsize << 1;
-
-	ver = 0x103;
-	iramblock = 1;
-	vramblock = 1+irl;
-	sramblock = 1+irl+vrl;
-	hramofs = 4096 - 512;
-	palofs = 4096 - 384;
-	oamofs = 4096 - 256;
-	wavofs = 4096 - 96;
-	memset(buf, 0, sizeof buf);
-
-	for (i = 0; svars[i].ptr; i++)
-	{
-		header[i][0] = *(un32 *)svars[i].key;
-		switch (svars[i].len)
-		{
-		case 1:
-			d = *(byte *)svars[i].ptr;
-			break;
-		case 2:
-			d = *(un16 *)svars[i].ptr;
-			break;
-		case 4:
-			d = *(un32 *)svars[i].ptr;
-			break;
-		}
-		header[i][1] = LIL(d);
-	}
-	header[i][0] = header[i][1] = 0;
-
-	memcpy(buf+hramofs, ram.stack, sizeof ram.stack);
-	memcpy(buf+palofs, lcd.pal, sizeof lcd.pal);
-	memcpy(buf+oamofs, lcd.oam.mem, sizeof lcd.oam);
-	memcpy(buf+wavofs, snd.wave, sizeof snd.wave);
-
-	fseek(f, 0, SEEK_SET);
-	fwrite(buf, 4096, 1, f);
-	
-	fseek(f, iramblock<<12, SEEK_SET);
-	fwrite(ram.ibank, 4096, irl, f);
-	
-	fseek(f, vramblock<<12, SEEK_SET);
-	fwrite(lcd.vbank, 4096, vrl, f);
-	
-	fseek(f, sramblock<<12, SEEK_SET);
-	fwrite(ram.sbank, 4096, srl, f);
-}
 
 void loadstate(FILE *f)
 {
@@ -207,7 +161,7 @@ void loadstate(FILE *f)
 	int vrl = hw.cgb ? 4 : 2;
 	int srl = mbc.ramsize << 1;
 
-	hramofs = palofs = oamofs = wavofs = 0;
+	ver = hramofs = hiofs = palofs = oamofs = wavofs = 0;
 
 	fseek(f, 0, SEEK_SET);
 	fread(buf, 4096, 1, f);
@@ -231,13 +185,17 @@ void loadstate(FILE *f)
 				*(un32 *)svars[i].ptr = d;
 				break;
 			}
+			break;
 		}
 	}
 
-	if (hramofs) memcpy(ram.stack, buf+hramofs, sizeof ram.stack);
+	/* obsolete as of version 0x104 */
+	if (hramofs) memcpy(ram.hi+128, buf+hramofs, 127);
+	if (wavofs) memcpy(ram.hi+48, buf+wavofs, 16);
+	
+	if (hiofs) memcpy(ram.hi, buf+hiofs, sizeof ram.hi);
 	if (palofs) memcpy(lcd.pal, buf+palofs, sizeof lcd.pal);
 	if (oamofs) memcpy(lcd.oam.mem, buf+oamofs, sizeof lcd.oam);
-	if (wavofs) memcpy(snd.wave, buf+wavofs, sizeof snd.wave);
 
 	fseek(f, iramblock<<12, SEEK_SET);
 	fread(ram.ibank, 4096, irl, f);
@@ -247,6 +205,61 @@ void loadstate(FILE *f)
 	
 	fseek(f, sramblock<<12, SEEK_SET);
 	fread(ram.sbank, 4096, srl, f);
+}
+
+void savestate(FILE *f)
+{
+	int i;
+	byte buf[4096];
+	un32 (*header)[2] = (un32 (*)[2])buf;
+	un32 d;
+	int irl = hw.cgb ? 8 : 2;
+	int vrl = hw.cgb ? 4 : 2;
+	int srl = mbc.ramsize << 1;
+
+	ver = 0x104;
+	iramblock = 1;
+	vramblock = 1+irl;
+	sramblock = 1+irl+vrl;
+	hiofs = 4096 - 768;
+	palofs = 4096 - 512;
+	oamofs = 4096 - 256;
+	memset(buf, 0, sizeof buf);
+
+	for (i = 0; svars[i].len > 0; i++)
+	{
+		header[i][0] = *(un32 *)svars[i].key;
+		switch (svars[i].len)
+		{
+		case 1:
+			d = *(byte *)svars[i].ptr;
+			break;
+		case 2:
+			d = *(un16 *)svars[i].ptr;
+			break;
+		case 4:
+			d = *(un32 *)svars[i].ptr;
+			break;
+		}
+		header[i][1] = LIL(d);
+	}
+	header[i][0] = header[i][1] = 0;
+
+	memcpy(buf+hiofs, ram.hi, sizeof ram.hi);
+	memcpy(buf+palofs, lcd.pal, sizeof lcd.pal);
+	memcpy(buf+oamofs, lcd.oam.mem, sizeof lcd.oam);
+
+	fseek(f, 0, SEEK_SET);
+	fwrite(buf, 4096, 1, f);
+	
+	fseek(f, iramblock<<12, SEEK_SET);
+	fwrite(ram.ibank, 4096, irl, f);
+	
+	fseek(f, vramblock<<12, SEEK_SET);
+	fwrite(lcd.vbank, 4096, vrl, f);
+	
+	fseek(f, sramblock<<12, SEEK_SET);
+	fwrite(ram.sbank, 4096, srl, f);
 }
 
 

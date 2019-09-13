@@ -38,7 +38,7 @@ struct lcd
 	byte vbank[2][8192];
 	union
 	{
-		byte mem[160];
+		byte mem[256];
 		struct obj obj[40];
 	} oam;
 	byte pal[128];

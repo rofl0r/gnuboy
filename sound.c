@@ -34,7 +34,7 @@ const static int freqtab[8] =
 struct snd snd;
 
 #define RATE (snd.rate)
-#define WAVE (snd.wave)
+#define WAVE (ram.hi+0x30)
 #define S1 (snd.ch[0])
 #define S2 (snd.ch[1])
 #define S3 (snd.ch[2])
@@ -67,8 +67,8 @@ static void s2_freq()
 static void s3_freq()
 {
 	int d = 2048 - (((R_NR34&7)<<8) + R_NR33);
-	if (RATE > (d<<4)) S3.freq = 0;
-	S3.freq = (RATE << 21)/d;
+	if (RATE > d) S3.freq = 0;
+	else S3.freq = (RATE << 21)/d;
 }
 
 static void s4_freq()
@@ -307,12 +307,13 @@ void sound_write(byte r, byte b)
 {
 	if (!(R_NR52 & 128) && r != RI_NR52) return;
 	/* printf("write %02X: %02X\n", r, b); */
-	sound_mix();
 	if ((r & 0xF0) == 0x30)
 	{
+		if (S3.on) sound_mix();
 		if (!S3.on) WAVE[r - 0x30] = b;
 		return;
 	}
+	sound_mix();
 	switch (r)
 	{
 	case RI_NR10:

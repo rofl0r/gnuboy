@@ -1,5 +1,35 @@
 
 
+0.9.5
+added Ralf to the CREDITS, apologies for the prior omission
+show name from rom header in window title on X11 and SDL
+fixed bug that made highcolor screen flicker
+(this used to glitch sfalpha, but for some reason its ok now)
+updated README
+fixed cap on sound 3 frequency to eliminate bogus beeps
+began work on optimizing memory io in the C code
+updated HACKING slightly
+got new fast memory io functions integrated!
+moved all of high memory (registers, wave pattern, stack) to one array
+(eventually this will make memory io faster)
+changed savestate format, but old saves should still load fine
+(hopefully new format makes more sense)
+began implementing fast access to high memory
+discovered that low bits of the flags register don't exist
+optimized instruction emulation accordingly
+a few optimizations to the outer asm cpu loop
+fixed off-by-one error in C graphics code that made far right column blank
+added slow, experimental 24bpp (packed, unaligned) video support
+improved the configure script, now --without-* works
+use sdl-config instead of explicit -lpthread to support more systems
+removed stupid section directives from the asm
+got the asm cores working on dos!
+oss sound support *might* work on freebsd and openbsd now
+SDL joystick code has been integrated, but I haven't tested it
+fixed bug in new savestate code
+added David Lau to the CREDITS (SDL joystick support)
+GNU make should no longer be required to compile
+
 0.9.4
 various changes to lots of the system interface organization
 separation of linux fb and keyboard handling code into two modules
