@@ -134,6 +134,7 @@ struct svar svars[] =
 	I1("DMA3", &R_HDMA3),
 	I1("DMA4", &R_HDMA4),
 	I1("DMA5", &R_HDMA5),
+	I4("hdma", &hw.hdma),
 	
 	END
 };

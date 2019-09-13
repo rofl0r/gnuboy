@@ -26,6 +26,14 @@ static char *defaultconfig[] =
 	"bind ctrl +b",
 	"bind enter +start",
 	"bind space +select",
+	"bind joyup +up",
+	"bind joydown +down",
+	"bind joyleft +left",
+	"bind joyright +right",
+	"bind joy0 +b",
+	"bind joy1 +a",
+	"bind joy2 +select",
+	"bind joy3 +start",
 	"bind 1 \"set saveslot 1\"",
 	"bind 2 \"set saveslot 2\"",
 	"bind 3 \"set saveslot 3\"",
@@ -114,7 +122,8 @@ void doevents()
 	event_t ev;
 	int st;
 
-	ev_refresh();
+	//ev_refresh();
+	ev_poll();
 	while (ev_getevent(&ev))
 	{
 		if (ev.type != EV_PRESS && ev.type != EV_RELEASE)
@@ -195,6 +204,7 @@ int real_main(int argc, char *argv[])
 		else if (!strncmp(argv[i], "--no-", 5))
 		{
 			opt = strdup(argv[i]+5);
+			while ((s = strchr(opt, '-'))) *s = '_';
 			cmd = malloc(strlen(opt) + 7);
 			sprintf(cmd, "set %s 0", opt);
 			rc_command(cmd);
@@ -204,6 +214,7 @@ int real_main(int argc, char *argv[])
 		else if (argv[i][0] == '-' && argv[i][1] == '-')
 		{
 			opt = strdup(argv[i]+2);
+			while ((s = strchr(opt, '-'))) *s = '_';
 			if ((s = strchr(opt, '=')))
 			{
 				*s = 0;

@@ -129,7 +129,7 @@ void lcdc_trans()
 			C += 86;
 			break;
 		case 3:
-			if (R_HDMA5 & 0x80)
+			if (hw.hdma & 0x80)
 			{
 				stat_change(0);
 				hw_hdma();

@@ -1,7 +1,7 @@
 /*
- * svgalib.c
+ * vga.c
  *
- * svgalib interface.
+ * dos vga hardware interface
  */
 
 
@@ -37,15 +37,15 @@ rcvar_t vid_exports[] =
 };
 
 
-/* pckeymap - mappings of the form { scancode, localcode } - from pckeymap.c */
-extern int pckeymap[][2];
+/* keymap - mappings of the form { scancode, localcode } - from keymap.c */
+extern int keymap[][2];
 
 static int mapscancode(int scan)
 {
 	int i;
-	for (i = 0; pckeymap[i][0]; i++)
-		if (pckeymap[i][0] == scan)
-			return pckeymap[i][1];
+	for (i = 0; keymap[i][0]; i++)
+		if (keymap[i][0] == scan)
+			return keymap[i][1];
 	return 0;
 }
 
@@ -238,11 +238,14 @@ void vid_init()
 	keyboard_chain(0);
 	/* selectmode(); */
 	setvga();
+	fb.enabled = 1;
+	fb.dirty = 0;
 }
 
 
-void vid_disable()
+void vid_close()
 {
+	fb.enabled = 0;
 	settext();
 	keyboard_close();
 }
@@ -263,7 +266,7 @@ static ext_key_table[128] =
 	108, 109, 110, 111, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-void ev_refresh()
+void ev_poll()
 {
 	int i;
 	int scan, state;
@@ -286,11 +289,6 @@ void ev_refresh()
 		kbhandler(scan, state);
 	}
 	keyboard_buffer_pos = 0;
-}
-
-void ev_wait()
-{
-	ev_refresh();
 }
 
 

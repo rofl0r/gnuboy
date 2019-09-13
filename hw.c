@@ -63,9 +63,10 @@ void hw_hdma_cmd(byte c)
 	byte b;
 
 	/* Begin or cancel HDMA */
-	if ((R_HDMA5|c) & 0x80)
+	if ((hw.hdma|c) & 0x80)
 	{
-		R_HDMA5 = c;
+		hw.hdma = c;
+		R_HDMA5 = c & 0x7f;
 		return;
 	}
 	
@@ -85,7 +86,7 @@ void hw_hdma_cmd(byte c)
 	R_HDMA2 = sa & 0xF0;
 	R_HDMA3 = 0x1F & (da >> 8);
 	R_HDMA4 = da & 0xF0;
-	R_HDMA5 = 0;
+	R_HDMA5 = 0xFF;
 }
 
 
@@ -114,6 +115,7 @@ void hw_hdma()
 	R_HDMA3 = 0x1F & (da >> 8);
 	R_HDMA4 = da & 0xF0;
 	R_HDMA5--;
+	hw.hdma--;
 }
 
 

@@ -9,7 +9,7 @@
 #include <SDL/SDL_keysym.h>
 #include "input.h"
 
-int sdlkeymap[][2] = {
+int keymap[][2] = {
 	{ SDLK_LSHIFT, K_SHIFT },
 	{ SDLK_RSHIFT, K_SHIFT },
 	{ SDLK_LCTRL, K_CTRL },

@@ -7,7 +7,7 @@
 #include <X11/keysym.h>
 #include "input.h"
 
-int xkeymap[][2] =
+int keymap[][2] =
 {
 	{ XK_Shift_L, K_SHIFT },
 	{ XK_Shift_R, K_SHIFT },

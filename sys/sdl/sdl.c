@@ -27,8 +27,8 @@ rcvar_t vid_exports[] =
            RCV_END
 };
 
-/* sdlkeymap - mappings of the form { scancode, localcode } - from sdlkeymap.c */
-extern int sdlkeymap[][2];
+/* keymap - mappings of the form { scancode, localcode } - from sdl/keymap.c */
+extern int keymap[][2];
 
 static int mapscancode(SDLKey sym)
 {
@@ -36,15 +36,16 @@ static int mapscancode(SDLKey sym)
 	/*  build keymap as int keymap[256], then ``return keymap[sym]'' */
 
 	int i;
-	for (i = 0; sdlkeymap[i][0]; i++)
-		if (sdlkeymap[i][0] == sym)
-			return sdlkeymap[i][1];
+	for (i = 0; keymap[i][0]; i++)
+		if (keymap[i][0] == sym)
+			return keymap[i][1];
+	if (sym >= 'a' && sym <= 'z')
+		return sym;
 	return 0;
 }
 
 void vid_init()
 {
-
 	int video_flags = SDL_HWSURFACE | SDL_HWPALETTE;
 
 	if (SDL_Init(SDL_INIT_VIDEO)) {
@@ -65,15 +66,16 @@ void vid_init()
 	fb.pitch = 160*2;
 	fb.indexed = 0;
 	fb.cc[0].l = 11; fb.cc[0].r = 3;
-	fb.cc[1].l = 5;  fb.cc[0].r = 2;
-	fb.cc[2].l = 0;  fb.cc[0].r = 3;
+	fb.cc[1].l = 5;  fb.cc[1].r = 2;
+	fb.cc[2].l = 0;  fb.cc[2].r = 3;
 
+	fb.enabled = 1;
+	fb.dirty = 0;
 }
 
 
-void ev_refresh()
+void ev_poll()
 {
-
 	event_t ev;
 	SDL_Event event;
 
@@ -94,11 +96,6 @@ void ev_refresh()
 	}
 }
 
-void ev_wait()
-{
-	ev_refresh();
-}
-
 void vid_setpal(int i, int r, int g, int b)
 {
 	SDL_Color col;
@@ -112,8 +109,9 @@ void vid_preinit()
 {
 }
 
-void vid_disable()
+void vid_close()
 {
+	fb.enabled = 0;
 }
 
 void vid_begin()

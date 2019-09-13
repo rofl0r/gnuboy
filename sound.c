@@ -64,6 +64,18 @@ static void s2_freq()
 	else S2.freq = (RATE << 17)/d;
 }
 
+static void s3_freq()
+{
+	int d = 2048 - (((R_NR34&7)<<8) + R_NR33);
+	if (RATE > (d<<4)) S3.freq = 0;
+	S3.freq = (RATE << 21)/d;
+}
+
+static void s4_freq()
+{
+	S4.freq = (freqtab[R_NR43&7] >> (R_NR43 >> 4)) * RATE;
+}
+
 void sound_dirty()
 {
 	S1.swlen = ((R_NR10>>4) & 7) << 14;
@@ -80,17 +92,19 @@ void sound_dirty()
 	S2.enlen = (R_NR22 & 3) << 15;
 	s2_freq();
 	S3.len = (256-R_NR31) << 20;
-	S3.freq = 32 * 65536 / (2048 - (((R_NR34&7)<<8)+R_NR33)) * RATE;
+	s3_freq();
 	S4.len = (64-(R_NR41&63)) << 13;
 	S4.envol = R_NR42 >> 4;
 	S4.endir = (R_NR42>>3) & 1;
 	S4.endir |= S4.endir - 1;
 	S4.enlen = (R_NR42 & 3) << 15;
-	S4.freq = (freqtab[R_NR43&7] >> (R_NR43 >> 4)) * RATE;
+	s4_freq();
 }
 
 void sound_reset()
 {
+	int i;
+	memset(&snd, 0, sizeof snd);
 	if (pcm.hz) snd.rate = (1<<21) / pcm.hz;
 	else snd.rate = 0;
 	R_NR10 = 0x80;
@@ -111,6 +125,8 @@ void sound_reset()
 	R_NR50 = 0x77;
 	R_NR51 = 0xF3;
 	R_NR52 = 0xF1;
+	for (i = 0; i < 16; i++) WAVE[i] = -(i&1);
+	sound_dirty();
 }
 
 
@@ -144,7 +160,7 @@ void sound_mix()
 			{
 				S1.swcnt -= S1.swlen;
 				f = ((R_NR14 & 7) << 8) + R_NR13;
-				n = (R_NR11 & 7);
+				n = (R_NR10 & 7);
 				if (R_NR10 & 8) f -= (f >> n);
 				else f += (f >> n);
 				if (f > 2047)
@@ -152,7 +168,7 @@ void sound_mix()
 				else
 				{
 					R_NR13 = f;
-					R_NR14 = (R_NR14 & 0xFC) | (f>>8);
+					R_NR14 = (R_NR14 & 0xF8) | (f>>8);
 					s1_freq_d(2048 - f);
 				}
 			}
@@ -231,7 +247,6 @@ void sound_mix()
 		pcm.pos += 2;
 	}
 	R_NR52 = (R_NR52&0xf0) | S1.on | (S2.on<<1) | (S3.on<<2) | (S4.on<<3);
-	R_NR30 = S3.on << 7;
 }
 
 
@@ -272,7 +287,7 @@ void s3_init()
 {
 	S3.pos = 0;
 	S3.cnt = 0;
-	S3.on = 1;
+	S3.on = R_NR30 >> 7;
 }
 
 void s4_init()
@@ -357,11 +372,11 @@ void sound_write(byte r, byte b)
 		break;
 	case RI_NR33:
 		R_NR33 = b;
-		S3.freq = 32 * 65536 / (2048 - (((R_NR34&7)<<8)+R_NR33)) * RATE;
+		s3_freq();
 		break;
 	case RI_NR34:
 		R_NR34 = b;
-		S3.freq = 32 * 65536 / (2048 - (((R_NR34&7)<<8)+R_NR33)) * RATE;
+		s3_freq();
 		if (b & 128) s3_init();
 		break;
 	case RI_NR41:
@@ -377,7 +392,7 @@ void sound_write(byte r, byte b)
 		break;
 	case RI_NR43:
 		R_NR43 = b;
-		S4.freq = (freqtab[R_NR43&7] >> (R_NR43 >> 4)) * RATE;
+		s4_freq();
 		break;
 	case RI_NR44:
 		R_NR44 = b;
@@ -392,7 +407,7 @@ void sound_write(byte r, byte b)
 	case RI_NR52:
 		R_NR52 = b;
 		if (!(R_NR52 & 128))
-			S1.on = S2.on = S3.on = S4.on = 0;
+			sound_reset();
 		break;
 	default:
 		return;

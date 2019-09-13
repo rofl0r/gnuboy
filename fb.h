@@ -19,6 +19,8 @@ struct fb
 	{
 		int l, r;
 	} cc[3];
+	int enabled;
+	int dirty;
 };
 
 

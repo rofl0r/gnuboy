@@ -17,7 +17,7 @@ LDFLAGS =
 SYS_DEFS = -DIS_LITTLE_ENDIAN -DALLOW_UNALIGNED_IO -DALT_PATH_SEP
 
 SYS_INCS = -I./sys/dos
-SYS_OBJS = sys/dos/dos.o sys/dos/vga.o sys/dos/kb.s sys/pc/keymap.o sys/dummy/nosound.o
+SYS_OBJS = sys/dos/dos.o sys/dos/vga.o sys/dos/kb.s sys/pc/keymap.o sys/dummy/nosound.o sys/dummy/nojoy.o
 
 all: gnuboy.exe
 

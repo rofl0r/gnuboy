@@ -562,17 +562,11 @@ void lcd_begin()
 	WY = R_WY;
 }
 
-void lcd_reset()
-{
-	memset(&lcd, 0, sizeof lcd);
-	lcd_begin();
-}
-
 void lcd_refreshline()
 {
 	if (!(R_LCDC & 0x80))
 	{
-		memset(vdest, 0, fb.pitch);
+		if (fb.enabled) memset(vdest, 0, fb.pitch);
 		vdest += fb.pitch;
 		return;
 	}
@@ -613,17 +607,22 @@ void lcd_refreshline()
 	}
 	spr_scan();
 
-	switch (fb.pelsize)
+	if (fb.enabled)
 	{
-	case 1:
-		refresh_1(vdest, PAL1);
-		break;
-	case 2:
-		refresh_2((void*)vdest, PAL2);
-		break;
-	case 4:
-		refresh_4((void*)vdest, PAL4);
-		break;
+		if (fb.dirty) memset(fb.ptr, 0, fb.pitch * fb.h);
+		fb.dirty = 0;
+		switch (fb.pelsize)
+		{
+		case 1:
+			refresh_1(vdest, PAL1);
+			break;
+		case 2:
+			refresh_2((void*)vdest, PAL2);
+			break;
+		case 4:
+			refresh_4((void*)vdest, PAL4);
+			break;
+		}
 	}
 	
 	vdest += fb.pitch;
@@ -706,10 +705,25 @@ void vram_dirty()
 void pal_dirty()
 {
 	int i;
-	for (i = 0; i < 64; i++)
-		updatepalette(i);
+	if (hw.cgb)
+		for (i = 0; i < 64; i++)
+			updatepalette(i);
+	else
+	{
+		pal_write_dmg(0, 0, R_BGP);
+		pal_write_dmg(8, 1, R_BGP);
+		pal_write_dmg(64, 2, R_OBP0);
+		pal_write_dmg(72, 3, R_OBP1);
+	}
 }
 
+void lcd_reset()
+{
+	memset(&lcd, 0, sizeof lcd);
+	lcd_begin();
+	vram_dirty();
+	pal_dirty();
+}
 
 
 
