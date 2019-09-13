@@ -1,0 +1,58 @@
+
+GNUBOY INSTALLATION
+
+
+  *NIX SYSTEMS
+
+The easiest way to build gnuboy for *nix is with the configure script:
+
+  ./configure
+  make
+  make install
+
+GNU make is required to build. If the above process fails, the first
+thing you should try is running "gmake" instead of "make". Perhaps
+this will change in the future.
+
+By default, heavy optimization and asm cpu and graphics cores will be
+used if available on your platform. For information on compiletime
+options related to performance and debugging, type:
+
+  ./configure --help
+
+Alternatively, if you don't like the GNU configure script, you may
+copy the Makefile.nix to Makefile and edit it by hand to work with
+your system. Make sure you uncomment -DIS_LITTLE_ENDIAN if your cpu is
+little endian, and sgnuboy if you want the svgalib target to be built.
+You're on your own picking compiler flags for optimization if you do
+it this way.
+
+Running make should produce the binaries xgnuboy and/or sgnuboy,
+depending on the availability of X11 and svgalib on your host.
+The install target will install these to /usr/local/games; if you
+prefer another location, copy them yourself.
+
+
+  WINDOWS
+
+If you want it, port it. See HACKING for help.
+
+
+  DOS
+
+You'll need djgpp to use the included Makefile. Theoretically it
+shouldn't be hard to port the dos-specific modules to work with other
+compilers, but I see no reason why it should be necessary.
+
+Since all DOS systems are basically alike, just copy Makefile.dos to
+Makefile and type "make" to compile gnuboy. No configuration should be
+necessary. If you do have build problems, let us know.
+
+After compiling, place gnuboy.exe wherever you want.
+
+Binaries are also available for DOS; check the site from which you
+obtained gnuboy to see if it provides copies.
+
+
+
+

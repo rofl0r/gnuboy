@@ -1,0 +1,270 @@
+
+GNUBOY README
+
+
+  INTRO
+
+Welcome to gnuboy, one of the few pieces of Free Software to emulate
+the Game Boy handheld game console. Written in ANSI C with a few
+optional assembler optimizations for particular cpus, gnuboy supports
+a wide range of host systems, and has been tested successfully on:
+
+  GNU/Linux
+  FreeBSD
+  SunOS/Sun Ultra60
+  IRIX/SGI O2
+  IRIX/SGI Indy
+  AIX/Unknown
+  DR-DOS
+  MS-DOS
+  Windows DOS box
+
+Additionally, gnuboy should run on any other *nix variants that have
+ANSI C compilers and that are remotely POSIX compliant. As gnuboy is
+Free Software, you're welcome to fix any problems you encounter
+building it for a particular system, or to port it to entirely new
+systems.
+
+For build instructions, see the file INSTALL. For information on the
+structure of the source tree, program flow, design decisions and
+guidelines, porting, and so on, read HACKING.
+
+
+  GENERAL USAGE
+
+Just pass the name of the rom to load on the command line. Default
+keybindings are as follows:
+
+  esc         - exit
+  arrow keys  - d-pad
+  alt         - a
+  ctrl        - b
+  space       - select
+  enter       - start
+
+If you want to change these or other options, you should create a
+gnuboy.rc file. See the system-specific info below for where to put
+it.
+
+The rc subsystem is very similar to Quake's console in many
+respects. You have commands and variables. First, the commands:
+
+  quit        - exit gnuboy (saving sram)
+  reset       - reset to powerup state
+  source      - process another rc file
+  set         - set a variable's value
+  bind        - bind keys
+  unbind      - remove a keybinding
+  unbindall   - remove all keybindings
+
+Additionally, each gameboy pad button has two commands, one to press
+it, and another to release it -- for example, +start and -start. When
+a key is bound to one of these commands that starts with a +, it will
+perform the corresponding - command when it's released, as expected.
+
+Here's a list of the + commands, though they should be obvious:
+
+  +start  +select  +a  +b  +up  +down  +left  +right
+
+Now for the variables. To set any of the rc variables, just put the
+command of the form "set variable value" in your gnuboy.rc or other rc
+file. Some of the more interesting variables are:
+
+  rcpath      - search path for loading extra rc files
+  savedir     - the directory where save files will be stored
+  forcedmg    - set to 1/true/yes to force color roms to play mono
+  framelen    - delay in microseconds between frames
+
+  dmg_bgp     - specify 4 custom colors to be used for mono background
+  dmg_wndp    - same thing, but for the window layer
+  dmg_obp0    - and for sprite palette 0
+  dmg_obp1    - and sprite palette 1
+
+  trace       - output a complete cpu trace to stdout
+                (not supported with asm cpu core by default)
+  sprdebug    - display bars indicating sprite count per line
+
+There are a few others which may or not be useful. Also, certain
+system and display targets have their own variables, which will be
+described in the relevant sections below. For more info on how the
+variables work, read the source.
+
+For sample rc files, look in the etc/ directory.
+
+Finally, to display help, version, or copying information, use the
+--help, --version, or --copying options respectively on the gnuboy
+command line.
+
+
+  USAGE - *NIX SYSTEMS
+
+The file gnuboy.rc should be placed in ~/.gnuboy/. If it is not found
+in this location, the current working directory will be
+searched. The following defaults will be used:
+
+  rcpath      - ~/.gnuboy:.
+  savedir     - ~/.gnuboy/saves
+
+If you don't like these, override them with gnuboy.rc.
+
+There are presently two *nix targets supported, X11 and Linux svgalib.
+The latter will also work with libraries that wrap/emulate svgalib, in
+case you want to use a framebuffer console or something. If there's
+sufficient interest, direct support for popular framebuffer devices
+(Linux, Sun, etc.) might be added.
+
+Unlike the other display targets, the svgalib one allows you to choose
+a video mode from among the available modes on your system. Simply set
+svga_dims with the desired width, height, and color depth, and the
+next closest available mode will be chosen. Alternatively, if you know
+the svgalib mode numbers, you can choose a particular mode number with
+the svga_mode variable. Keep in mind that only linear packed pixel
+modes are supported, so you may experience troubles if you try to use
+a mode-x or banked modes. Essentially, unless you customize svgalib or
+use a wrapper library, there's probably no point in changing the mode,
+since 320x200 is a low as you're going to get. Information on hacking
+mode timings to create a true 160x144 mode for gameboy is beyond the
+scope of this document.
+
+
+  USAGE - DOS
+
+Place your gnuboy.rc in the same directory as gnuboy.exe. You need to
+specify a save directory in it; otherwise the working directory will
+be used, which is probably not what you want. For example, if you've
+installed gnuboy.exe in c:/gnuboy, and you want your saves to be
+stored in c:/gnuboy/saves, place the following in a plain text file
+called gnuboy.rc in c:/gnuboy.
+
+  set savedir c:/gnuboy/saves
+
+
+  COMPATIBILITY
+
+(FIXME - Fill in compat rate info.)
+
+
+  SUPPORTED MEMORY BANK CONTROLLERS (MBCS)
+
+At this time, gnuboy supports MBC1, MBC2, MBC3, and MBC5 (including
+the version with rumble support, although that functionality is
+omitted). MBC3+RTC is not supported, as we have not been able to find
+any good documentation, particularly in regard to the new model that
+supports 128k SRAM. As usual, info would be appreciated.
+
+
+  GRAPHICS SUPPORT
+
+(At present there are a few missing features in the color gameboy
+background priority behavior, due to a recent rewrite of the lcd
+core. These should be fixed by release time.)
+
+Color Gameboy roms are supported completely, including so-called
+"highcolor" tricks. Yes, even in 256-color mode, although in games
+that use too many colors on one screen, the later ones will only be
+approximated. *nix users can just use 16 bpp display modes to overcome
+such problems; DOS users will have to wait for VESA support or a
+Windows port.
+
+Much care has been put into ensuring that the lcd timings and
+interrupts behave as closely to the real hardware as possible. A few
+features remain unimplemented, such as reduced length HBLANK depending
+on the number of sprites visible on the scanline, but the vast
+majority of display tricks used in current roms work fine.
+
+We do, however, lack information on proper HDMA/GDMA timings, which
+could explain gnuboy's display failures in a few select color roms. If
+anyone could provide us with accurate information, it would be much
+appreciated.
+
+
+  SOUND SUPPORT
+
+No, there is presently no sound support whatsoever. We do have plans
+to implement sound before long, and depending on how quickly things
+go, we might have the first emulator to successfully play the various
+digital voice demos floating around.
+
+
+  JOYSTICK AND GAMEPAD SUPPORT
+
+Sorry, none at this point. It shouldn't be hard at all to add, just
+poll the joystick in the system interface module and make it generate
+joystick "key" press and release events, then bind them as you would
+keyboard keys.
+
+In the mean time, i suggest just finding some comfortable keyboard
+keys to use, or getting a pad that emulates keypresses.
+
+
+  PERFORMANCE
+
+Unfortunately, the assembly language core is having problems on DOS
+right now, so it's only available on i386 *nix targets. However, here
+are some performance estimates i've gathered (given in percent cpu
+utilization, running at full 60 fps), and I must say that for any but
+the slowest systems, the C code is a plenty fast...
+
+                                 Optimized C        Assembly
+  AMD K6-2/450                       12%               8%
+  Pentium/75                     (too slow)           70%
+  SGI O2                             25%            (no asm)
+  SGI Indy                           70%            (no asm)
+  Sun Ultra60                       3-20%           (no asm)
+
+If anyone's interested in trying to get the asm working on DOS, be my
+guest, but it didn't seem to be happening for me.
+
+
+  KNOWN BUGS
+
+MK1 hangs on one of the intro screens.
+
+Alleyway's controls are completely messed up.
+
+DKC and a few other CGB roms have major tile glitches.
+
+SML2 has all kinds of problems.
+
+The state in which LCD display is disabled is not handled at all
+correctly, but most games work fine. Most of the above problems are
+expected to be caused by this bug, however. We have found no
+documentation on how display disable is supposed to work, so advice
+would be appreciated, especially if you can support your theory with
+evidence.
+
+The portal between the temple and the Talon in FFL3 is glitched and
+the game freezes for a second or two building the incorrect animation
+when entering those screens. This seems unrelated to the former bugs.
+
+The MBC3 realtime clock is not implemented.
+
+Things might run a little too fast on DOS and maybe slightly too slow
+on *nix. The timing code isn't quite perfect yet. Perhaps once there's
+sound we'll let sound regulate timing.
+
+
+  REPORTING OR FIXING BUGS
+
+Found a bug not mentioned above, or better yet, fixed one? Send bug
+reports or patches to gnuboy@starfox.org. Please be aware that
+distribution of any code based on gnuboy must follow the provisions of
+the GPL, so if you don't agree to this, don't send code to us or
+anyone else. Let us know if you wish to be included in the credits.
+
+For guidelines regarding code contributions, see the file HACKING.
+
+
+  EPILOGUE
+
+OK, that looks like about it. More to come, stick around...
+
+
+
+  -Laguna
+
+
+
+
+
+

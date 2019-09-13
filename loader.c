@@ -1,0 +1,237 @@
+
+
+#include "defs.h"
+#include "regs.h"
+#include "mem.h"
+#include "rc.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+static int mbc_table[256] =
+{
+	0, 1, 1, 1, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3,
+	3, 3, 3, 3, 0, 0, 0, 0, 0, 5, 5, 5, MBC_RUMBLE, MBC_RUMBLE, MBC_RUMBLE,
+	0
+};
+
+static int batt_table[256] =
+{
+	0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1,
+	1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+	0
+};
+
+static int romsize_table[256] =
+{
+	2, 4, 8, 16, 32, 64, 128, 256, 512,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 128, 128, 128
+	/* 0, 0, 72, 80, 96  -- actual values but bad to use these! */
+};
+
+static int ramsize_table[256] =
+{
+	1, 1, 4, 16
+};
+
+
+static char romname[16];
+static char *romfile;
+static char *sramfile;
+static char *saveprefix;
+
+static char *savename;
+static char *savedir;
+
+static int forcebatt, nobatt;
+static int forcedmg;
+
+static int memfill = -1, memrand = -1;
+
+
+static void initmem(void *mem, int size)
+{
+	if (memrand >= 0)
+	{
+		srand(memrand ? memrand : sys_msecs());
+		while(size--) *(((char *)mem)++) = rand();
+	}
+	else if (memfill >= 0)
+		memset(mem, memfill, size);
+}
+
+
+int rom_load()
+{
+	FILE *f;
+	static byte c, header[16384];
+
+	f = fopen(romfile, "rb");
+	if (!f) die("cannot open rom file: %s\n", romfile);
+
+	memset(header, 0xff, 16384);
+	fread(header, 16384, 1, f);
+
+	strncpy(romname, header+0x0134, 14);
+	romname[14] = 0;
+
+	c = header[0x0147];
+	mbc.type = mbc_table[c];
+	mbc.batt = (batt_table[c] && !nobatt) || forcebatt;
+	mbc.romsize = romsize_table[header[0x0148]];
+	mbc.ramsize = ramsize_table[header[0x0149]];
+
+	rom.bank = malloc(16384 * mbc.romsize);
+	memset(rom.bank, 0xff, 16384 * mbc.romsize);
+	memcpy(rom.bank, header, 16384);
+	fread(rom.bank+1, 16384, mbc.romsize-1, f);
+	
+	ram.sbank = malloc(8192 * mbc.ramsize);
+
+	if (!ram.loaded)  /* just in case... */
+		initmem(ram.sbank, 8192 * mbc.ramsize);
+	initmem(ram.ibank, 4096 * 8);
+	initmem(ram.stack, 128);
+
+	mbc.rombank = 1;
+	mbc.rambank = 0;
+
+	c = header[0x0143];
+	hw.cgb = ((c == 0x80) || (c == 0xc0)) && !forcedmg;
+
+	fclose(f);
+
+	return 0;
+}
+
+int sram_load()
+{
+	FILE *f;
+
+	if (!mbc.batt || !sramfile || !*sramfile) return -1;
+
+	/* Consider sram loaded at this point, even if file doesn't exist */
+	ram.loaded = 1;
+
+	f = fopen(sramfile, "rb");
+	if (!f) return -1;
+	fread(ram.sbank, 8192, mbc.ramsize, f);
+	fclose(f);
+	
+	return 0;
+}
+
+
+int sram_save()
+{
+	FILE *f;
+
+	/* If we crash before we ever loaded sram, DO NOT SAVE! */
+	if (!mbc.batt || !sramfile || !ram.loaded || !mbc.ramsize)
+		return -1;
+	
+	f = fopen(sramfile, "wb");
+	if (!f) return -1;
+	fwrite(ram.sbank, 8192, mbc.ramsize, f);
+	fclose(f);
+	
+	return 0;
+}
+
+static void unload()
+{
+	sram_save();
+	if (romfile) free(romfile);
+	if (sramfile) free(sramfile);
+	if (saveprefix) free(saveprefix);
+	if (rom.bank) free(rom.bank);
+	if (ram.sbank) free(ram.sbank);
+	romfile = sramfile = saveprefix = 0;
+	rom.bank = 0;
+	ram.sbank = 0;
+	mbc.type = mbc.romsize = mbc.ramsize = mbc.batt = 0;
+}
+
+static char *base(char *s)
+{
+	char *p;
+	p = strrchr(s, '/');
+	if (p) return p+1;
+	return s;
+}
+
+static char *ldup(char *s)
+{
+	int i;
+	char *n, *p;
+	p = n = malloc(strlen(s));
+	for (i = 0; s[i]; i++) if (isalnum(s[i])) *(p++) = tolower(s[i]);
+	*p = 0;
+	return n;
+}
+
+void loader_init(char *s)
+{
+	char *name, *p;
+
+	sys_checkdir(savedir);
+
+	romfile = s;
+	rom_load();
+	if (savename && *savename)
+	{
+		if (savename[0] == '-' && savename[1] == 0)
+			name = ldup(romname);
+		else name = strdup(savename);
+	}
+	else if (romfile && *base(romfile))
+	{
+		name = strdup(base(romfile));
+		p = strchr(name, '.');
+		if (p) *p = 0;
+	}
+	else name = ldup(romname);
+	
+	saveprefix = malloc(strlen(savedir) + strlen(name) + 2);
+	sprintf(saveprefix, "%s/%s", savedir, name);
+
+	sramfile = malloc(strlen(saveprefix) + 5);
+	strcpy(sramfile, saveprefix);
+	strcat(sramfile, ".sav");
+	
+	sram_load();
+}
+
+
+
+rcvar_t loader_exports[] =
+{
+	RCV_STRING("savedir", &savedir),
+	RCV_STRING("savename", &savename),
+	RCV_BOOL("forcebatt", &forcebatt),
+	RCV_BOOL("nobatt", &nobatt),
+	RCV_BOOL("forcedmg", &forcedmg),
+	RCV_INT("memfill", &memfill),
+	RCV_INT("memrand", &memrand),
+	RCV_END
+};
+
+
+
+
+
+
+
+
+

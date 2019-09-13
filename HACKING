@@ -1,0 +1,393 @@
+
+HACKING ON THE GNUBOY SOURCE TREE
+
+
+  BASIC INFO
+
+in preparation for the first release, i'm putting together a simple
+document to aid anyone interested in playing around with or improving
+the gnuboy source. first of all, before working on anything, you
+should know my policies as maintainer. i'm happy to accept contributed
+code, but there are a few guidelines:
+
+* obviously, all code must be able to be distributed under the gnu
+gpl. this means that your terms of use for the code must be equivalent
+to or weaker than those of the gpl. public domain and mit-style
+licenses are perfectly fine for new code that doesn't incorporate
+existing parts of gnuboy, e.g. libraries, but anything derived from or
+built upon the gpl'd code can only be distributed under gpl. when in
+doubt, read COPYING.
+
+* please stick to a coding and naming convention similar to the
+existing code. i can reformat contributions if i need to when
+integrating them, but it makes it much easier if that's already done
+by the coder.
+
+* all code must be completely deterministic and consistent across all
+platforms. this results in the two following rules...
+
+* no floating point code whatsoever. use fixed point or better yet
+exact analytical integer methods as opposed to any approximation.
+
+* no threads. emulation with threads is a poor approximation if done
+sloppily, and it's slow anyway even if done right since things must be
+kept synchronous. also, threads are not portable. just say no to
+threads.
+
+* all non-portable code belongs in the sys/ or asm/ trees. #ifdef
+should be avoided except for general conditionally-compiled code, as
+opposed to little special cases for one particular cpu or operating
+system. (i.e. #ifdef USE_ASM is ok, #ifdef __i386__ is NOT!)
+
+* that goes for *nix code too. gnuboy is written in ansi c, and i'm
+not going to go adding k&r function declarations or #ifdef's to make
+sure the standard library is functional. if your system is THAT
+broken, fix the system, don't "fix" the emulator.
+
+* please no feature-creep. if something can be done through an
+external utility or front-end, or through clever use of the rc
+subsystem, don't add extra code to the main program.
+
+* on that note, the modules in the sys/ tree serve the singular
+purpose of implementing calls necessary to get input and display
+graphics (and eventually sound). unlike in poorly-designed emulators,
+they are not there to give every different target platform its own gui
+and different set of key bindings.
+
+* furthermore, the main loop is not in the platform-specific code, and
+it will never be. windows people, put your code that would normally go
+in a message loop in ev_refresh and/or sys_sleep!
+
+* commented code is welcome but not required.
+
+* i prefer asm in at&t syntax (the style used by *nix assemblers and
+likewise djgpp) as opposed to intel/nasm/etc style. if you really must
+use a different style, i can convert it, but i don't want to add extra
+dependencies on nonstandard assemblers to the build process. also,
+portable c versions of all code should be available.
+
+* have fun with it. if my demands stifle your creativity, feel free to
+fork your own projects. i can always adapt and merge code later if
+your rouge ideas are good enough. :)
+
+ok, enough of that. now for the fun part...
+
+
+  THE SOURCE TREE STRUCTURE
+
+[documentation]
+README - general information related to using gnuboy
+INSTALL - compiling and installation instructions
+HACKING - this file, obviously
+COPYING - the gnu gpl, grants freedom under condition of preseving it
+
+[build files]
+Rules - generic build rules to be included by makefiles
+Makefile.* - system-specific makefiles
+configure* - script for generating *nix makefiles
+
+[non-portable code]
+sys/*/* - hardware and software platform-specific code
+asm/*/* - optimized asm versions of some code, not used yet
+
+[main emulator stuff]
+main.c - entry point, event handler...basically a mess
+loader.c - handles file io for rom and ram
+emu.c - another mess, basically the frame loop that calls state.c
+debug.c - currently just cpu trace, eventually interactive debugging
+hw.c - interrupt generation, gamepad state, dma, etc.
+mem.c - memory mapper, read and write operations
+regs.h - macros for accessing hardware registers
+
+[cpu subsystem]
+cpu.c - main cpu emulation
+cpuregs.h - macros for cpu registers and flags
+cpucore.h - data tables for cpu emulation
+asm/i386/cpu.s - entire cpu core, rewritten in asm
+
+[graphics subsystem]
+screen.h - abstract screen definition, extern from platform-specifics
+lcd.c - lcd controller functions, main control of refresh procedure
+lcd.h - vram, palette, and internal structures for refresh
+asm/i386/lcd.s - asm versions of a few critical functions
+
+[input subsystem]
+input.h - internal keycode definitions, etc.
+keytables.c - translations between key names and internal keycodes
+events.c - event queue
+
+[resource/config subsystem]
+rc.h - structure defs
+rccmds.c - command parser/processor
+rcvars.c - variable exports and command to set rcvars
+rckeys.c - keybindingds
+
+[misc code]
+lib/alloca.c - implementation of alloca for systems missing it
+lib/fopenp* - messy fopen that handles search paths
+lib/getargs.c - general purpose code to build argv array from a string
+lib/getopt* - gnu getopt implementation, for use on some systems
+
+
+  OVERVIEW OF PROGRAM FLOW
+
+The initial entry point main() is in the appropriate part of the sys/
+tree. This is intended to handle strange systems with special startup
+needs, not to provide a place for bloat. main() should call
+real_main(), which is in main.c, as soon as possible, and which in
+turn will process the command line, call the system/video
+initialization routines, load the rom/sram, and pass control to the
+main loop in emu.c.
+
+Unlike some emulators, gnuboy's main loop is not based around the cpu,
+but rather around a glorified finite state machine, defined in
+state.c. The state is kept internally as four numbers, but it is
+determined fully by only two of those -- in fact, only one is used
+presently. This magic number is the cpu cycle count within the frame,
+P (position). Along with the internal table of state transitions, P
+determines Q (abstract quotient) and R (remainder). Q is an index into
+the transition table, used to identify when the next transition will
+occur, and what effect it will have on the emulated hardware. R is the
+count of cycles already used up on the way to the next transition.
+
+What are the transitions? Well take a look. Essentially, they're
+changes to the LCDC STAT register, changes of the LY register, events
+that can cause interrupts, signals to call the lcd refresh routine at
+the start of a scanline, and so on -- all video stuff. If you're
+curious, timer and DIV register updates, being of a much higher
+resolution and not sharing common divisors with LCDC events, are
+handled directly in the cpu loop.
+
+Back to program flow: the main loop in emu.c calls state_step()
+repeatedly until the vblank state is reached, then takes care of input
+and output, delays for the appropriate amount of time so gnuboy
+doesn't run out of control at 400 fps, and then repeats the process.
+
+state_step() in turn calls cpu_emulate(), passing it the number of
+cycles remaining until the next transition. This causes the cpu to run
+for at least that many cycles, and possibly a few more if the last
+instruction executed runs over. Thus, cpu_emulate() returns the
+*actual* number of cycles run, which will be no less than the number
+passed to it. state_step() then passes cpu_emulate()'s return value to
+state_advance(), which increments the P and R appropriately, then
+calls state_divide().
+
+The purpose of state_divide() is simple: carry out the "division"
+
+  P = Q*STATETABLE + R
+
+to obtain a new value for Q, and call the appropriate transition
+functions if any transitions occur in the process. Of course, for
+purposes of performance, P is never even examined; R is simply
+decremented appropriately as Q is incremented. If Q and R must ever be
+regenerated from P (say when loading from a saved state),
+state_resync() must be called to carry out the full divide:
+
+  Q = 0;
+  R = P;
+  state_divide(0);
+
+That covers the basic flow of execution. To summarize:
+
+  main
+   \_ real_main
+       |_ (various init stuff)
+       |_ rom_load, etc
+       \_ emu_run (main loop)
+           |_ state_step 
+           |   |_ cpu_emulate
+           |   \_ state_advance
+           |       \_ state_divide
+           |           \_ state_trans
+           \_ (various io and timer stuff)
+
+
+  LCD CORE DESIGN
+
+The LCD core presently used in gnuboy is very much a high-level one,
+performing the task of rasterizing scanlines as many independent steps
+rather than one big loop, as is often seen in other emulators and the
+original gnuboy LCD core. In some ways, this is a bit of a tradeoff --
+there's a good deal of overhead in rebuilding the tile pattern cache
+for roms that change their tile patterns frequently, such as full
+motion video demos. Even still, I consider the method we're presently
+using far superior to generating the output display directly from the
+gameboy tiledata -- in the vast majority of roms, tiles are changed so
+infrequently that the overhead is irrelevant. Even if the tiles are
+changed rapidly, the only chance for overhead beyond what would be
+present in a monolithic rendering loop lies in (host cpu) cache misses
+and the possibility that we might (tile pattern) cache a tile that has
+changed but that will never actually be used, or that will only be
+used in one orientation (horizontally and vertically flipped versions
+of all tiles are cached as well -- this decision may be a mistake).
+Such tile caching issues could be addressed in the long term if they
+cause a problem, but I don't see it hurting performance too
+significantly at the present. As for host cpu cache miss issues, I
+find that putting multiple data decoding and rendering steps together
+in a single loop harms performance much more significantly than
+building a 256k (pattern) cache table, on account of interfering with
+branch prediction, register allocation, and so on.
+
+Well, with those justifications given, let's proceed to the steps
+involved in rendering a scanline:
+
+pat_updatepix() - updates tile pattern cache.
+
+lcd_tilebuf() - reads gb tile memory according to its complicated tile
+addressing system which can be changed via the LCDC register, and
+outputs nice linear arrays of the actual tile indices used in the
+background and window on the present line.
+
+Before continuing, let me explain the output format used by the
+following functions. There is a byte array scan.buf, accessible by
+macro as BUF, which is the output buffer for the line. The structure
+of this array is simple: it is composed of 6 bpp gameboy color
+numbers, where the bits 0-1 are the color number from the tile, bits
+2-4 are the (cgb or dmg) palette index, and bit 5 is 0 for background
+or window, 1 for sprite.
+
+What is the justification for using a strange format like this, rather
+than raw host color numbers for output? Well, believe it or not, it
+improves performance. It's already necessary to have the gameboy color
+numbers available for use in sprite priority. And, when running in
+mono gb mode, building this output data is VERY fast -- it's just a
+matter of doing 64 bit copies from the tile pattern cache to the
+output buffer.
+
+Furthermore, using a unified output format like this eliminates the
+need to have separate rendering functions for each host color depth or
+mode. We just call a one-line function to apply a palette to the
+output buffer as we copy it to the video display, and we're done. And,
+if you're not convinced about performance, just do some profiling.
+You'll see that the vast majority of the graphics time is spent in the
+one-line copy function (render_[124] depending on bytes per pixel),
+even when using the fast asm versions of those routines. That is to
+say, any overhead in the following functions is for all intents and
+purposes irrelevant to performance. With that said, here they are:
+
+bg_scan() - expands the background layer to the output buffer.
+
+wnd_scan() - expands the window layer.
+
+spr_scan() - expands the sprites. Note that this requires spr_enum()
+to have been called already to build a list of which sprites are
+visible on the current scanline and sort them by priority.
+
+It should be noted that the background and window functions also have
+color counterparts, which are considerably slower due to merging of
+palette data. At this point, they're staying down around 8% time
+according to the profiler, so I don't see a major need to rewrite them
+anytime soon. It should be considered, however, that a different
+intermediate format could be used for gbc, or that asm versions of
+these two routines could be written, in the long term.
+
+Finally, some notes on palettes. You may be wondering why the 6 bpp
+intermediate output can't be used directly on 256-color display
+targets. After all, that would give a huge performance boost. The
+problem, however, is that the gameboy palette can change midscreen,
+whereas none of the presently targetted host systems can handle such a
+thing, much less do it portably. For color roms, using our own
+internal color mappings in addition to the host system palette is
+essential. For details on how this is accomplished, read palette.c.
+
+Now, in the long term, it MAY be possible to use the 6 bpp color
+"almost" directly for mono roms. Note that I say almost. The idea is
+this. Using the color number as an index into a table is slow. It
+takes an extra read and causes various pipeline stalls depending on
+the host cpu architecture. But, since there are relatively few
+possible mono palettes, it may actually be possible to set up the host
+palette in a clever way so as to cover all the possibilities, then use
+some fancy arithmetic or bit-twiddling to convert without a lookup
+table -- and this could presumably be done 4 pixels at a time with
+32bit operations. This area remains to be explored, but if it works,
+it might end up being the last hurdle to getting realtime emulation
+working on very low-end systems like i486.
+
+
+  OPTIMIZED ASSEMBLY CODE
+
+A lot can be said on this matter. Nothing has been said yet.
+
+
+  INTERACTIVE DEBUGGER
+
+Apologies, there is no interactive debugger in gnuboy at present. I'm
+still working out the design for it. In the long run, it should be
+integrated with the rc subsystem, kinda like a cross between gdb and
+Quake's ever-famous console. Whether it will require a terminal device
+or support the graphical display remains to be determined.
+
+In the mean time, you can use the debug trace code already
+implemented. Just "set trace 1" from your gnuboy.rc or the command
+line. Read debug.c for info on how to interpret the output, which is
+condensed as much as possible and not quite self-explanatory.
+
+
+  PORTING
+
+on all systems on which it is available, the gnu compiler should
+probably be used. writing code specific to non-free compilers makes it
+impossible for free software users to actively contribute. on the
+other hand, compiler-specific code should always be kept to a minimum,
+to make porting to or from non-gnu compilers easier.
+
+porting to new cpu architectures should not be necessary. just make
+sure you unset IS_LITTLE_ENDIAN in the makefiles to enable the big
+endian default if the target system is big endian. if you do have
+problems building on certain cpus, however, let us know. eventually,
+we will also want asm cpu and graphics code for popular host cpus, but
+this should wait until we have a stabilized interface for integrating
+asm.
+
+the bulk of porting efforts will probably be spent on adding support
+for new operating systems, and on systems with multiple video (or
+sound, once that's implemented) architectures, new interfaces for
+those. in general, the operating system interface code goes in a
+directory under sys/ named for the os (e.g. sys/nix/ for *nix
+systems), and display interfaces likewise go in their respective
+directories under sys/ (e.g. sys/x11/ for the x window system
+interface). presently this rule isn't strictly followed for dos, on
+which we only have plain vga support at this point, but eventually
+there'll be separate directories for raw pc vga/keyboard handling and
+for the new allegro code, planned to be introduced at a later time.
+
+for guidelines in writing new system and display interface modules, i
+recommend reading the files in the sys/dos/, sys/svga/, and sys/nix/
+directories. these are some of the simpler versions (aside from the
+tricky dos keyboard handling), as opposed to all the mess needed for
+x11 support.
+
+also, please be aware that the existing system and display interface
+modules are very primitive; they are designed to be as quick and
+sloppy as possible while still functioning properly. eventually they
+will be greatly improved or replaced.
+
+finally, remember your obligations under the GNU GPL. if you produce
+any binaries that are compiled strictly from the source you received,
+and you intend to release those, you *must* also release the exact
+sources you used to produce those binaries. this is not pseudo-free
+software like snes9x where binaries usually appear before the latest
+source, and where the source only compiles on one or two platforms;
+this is true free software, and the source to all binaries always
+needs to be available at the same time or sooner than the
+corresponding binaries, if binaries are to be released at all. this of
+course applies to all releases, not just new ports, but from
+experience i find that ports people usually need the most reminding.
+
+
+  EPILOGUE
+
+that's it for now. more info will eventually follow. happy hacking.
+
+
+
+
+
+
+
+
+
+
+
+
+
