@@ -129,20 +129,24 @@ void lcdc_trans()
 			C += 86;
 			break;
 		case 3:
+			lcd_refreshline();
 			if (hw.hdma & 0x80)
 			{
 				stat_change(0);
 				hw_hdma();
-				stat_change(2);
-				C += 40;
 				break;
 			}
 			stat_change(0);
 			C += 102;
-			lcd_refreshline();
 			break;
 		case 0:
-			if (++R_LY >= 144)
+			if (++R_LY == 144)
+			{
+				stat_change(0);
+				C += 228;
+				break;
+			}
+			if (R_LY == 145)
 			{
 				stat_change(1);
 				C += 228;

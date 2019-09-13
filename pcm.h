@@ -8,6 +8,7 @@
 struct pcm
 {
 	int hz, len;
+	int stereo;
 	byte *buf;
 	int pos;
 };

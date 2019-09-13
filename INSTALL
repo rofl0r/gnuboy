@@ -10,9 +10,7 @@ The easiest way to build gnuboy for *nix is with the configure script:
   make
   make install
 
-GNU make is required to build. If the above process fails, the first
-thing you should try is running "gmake" instead of "make". Perhaps
-this will change in the future.
+GNU make should no longer be required to build, but it can't hurt.
 
 By default, heavy optimization and asm cpu and graphics cores will be
 used if available on your platform. For information on compiletime
@@ -27,10 +25,11 @@ little endian, and sgnuboy if you want the svgalib target to be built.
 You're on your own picking compiler flags for optimization if you do
 it this way.
 
-Running make should produce the binaries xgnuboy and/or sgnuboy,
-depending on the availability of X11 and svgalib on your host.
-The install target will install these to $(prefix)/bin, where prefix
-is specified to configure in the usual way.
+Running make should produce the binaries xgnuboy, fbgnuboy, sgnuboy
+and/or sdlgnuboy, depending on the availability of the various
+interface libraries on your host.  The install target will install
+these to $(prefix)/bin, where prefix is specified to configure in the
+usual way. The default prefix is of course /usr/local/.
 
 
   WINDOWS

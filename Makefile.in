@@ -14,19 +14,20 @@ ASFLAGS = $(CFLAGS)
 TARGETS = @TARGETS@
 
 SYS_DEFS = @DEFS@ @ENDIAN@ @ASM@ @SYS_DEFS@
-SYS_OBJS = sys/nix/nix.o @ASM_OBJS@ @SOUND@ @JOY@
+SYS_OBJS = sys/nix/nix.o @ASM_OBJS@ @SOUND@
 SYS_INCS = -I/usr/local/include @XINCS@ -I./sys/nix
 
-FB_OBJS = @FB_OBJS@
+FB_OBJS = @FB_OBJS@ @JOY@
 FB_LIBS = 
 
-SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o
+SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o @JOY@
 SVGA_LIBS = -L/usr/local/lib -lvga
 
 SDL_OBJS = sys/sdl/sdl.o sys/sdl/keymap.o
 SDL_LIBS = @SDL_LIBS@
+SDL_CFLAGS = @SDL_CFLAGS@
 
-X11_OBJS = sys/x11/xlib.o sys/x11/keymap.o
+X11_OBJS = sys/x11/xlib.o sys/x11/keymap.o @JOY@
 X11_LIBS = @XLIBS@ -lX11 -lXext
 
 all: $(TARGETS)
@@ -41,6 +42,12 @@ sgnuboy: $(OBJS) $(SYS_OBJS) $(SVGA_OBJS)
 
 sdlgnuboy: $(OBJS) $(SYS_OBJS) $(SDL_OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(SDL_OBJS) -o $@ $(SDL_LIBS)
+
+sys/sdl/sdl.o: sys/sdl/sdl.c
+	$(MYCC) $(SDL_CFLAGS) -c $< -o $@
+
+sys/sdl/keymap.o: sys/sdl/keymap.c
+	$(MYCC) $(SDL_CFLAGS) -c $< -o $@
 
 xgnuboy: $(OBJS) $(SYS_OBJS) $(X11_OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(X11_OBJS) -o $@ $(X11_LIBS)

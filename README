@@ -163,6 +163,43 @@ called gnuboy.rc in c:/gnuboy.
 
   set savedir c:/gnuboy/saves
 
+The DOS port now supports VESA 2.0 video modes. To make use of this
+feature, you can use one of two options: vesa_mode or vesa_dims.
+
+  set vesa_mode 0x101
+  set vesa_dims 640 480 8
+
+Both of these specify that you want 640x480, 8 bpp. The first just
+uses the VESA mode number, which you have to know in advance, while
+the second will automatically search for a mode the size you want.
+The recommended mode for best image size, color quality, and
+performance is:
+
+  set vesa_dims 320 240 16
+
+but this mode is not supported on all hardware.
+
+The DOS port also now supports sound, using Matthew Conte's thinlib, a
+simple efficient library for hardware access on DOS. Eventually we
+hope to move the DOS port entirely over to using thinlib, but for now
+it's only being used for sound. By default stereo sound is disabled
+since it doesn't work right on some of the systems we've tested; to
+enable it, add the following line to your gnuboy.rc:
+
+  set stereo 1
+
+Sample rate is configurable as well, but not all rates are available
+on all cards. For example, use
+
+  set samplerate 11025
+
+if you want to lower sound quality to boost performance. You can also
+turn off sound entirely with
+
+  set sound 0
+
+or of course --no-sound on the command line.
+
 
   COMPATIBILITY
 
@@ -182,9 +219,8 @@ that functionality is omitted).
 Color Gameboy roms are supported completely, including so-called
 "highcolor" tricks. Yes, even in 256-color mode, although in games
 that use too many colors on one screen, the later ones will only be
-approximated. *nix users can just use 16 bpp display modes to overcome
-such problems; DOS users will have to wait for VESA support or a
-Windows port.
+approximated. Use a 16 bpp (or higher) display mode if this is a
+problem.
 
 Much care has been put into ensuring that the lcd timings and
 interrupts behave as closely to the real hardware as possible. A few
@@ -193,8 +229,8 @@ on the number of sprites visible on the scanline, but the vast
 majority of display tricks used in current roms work fine.
 
 We do, however, lack information on proper HDMA/GDMA timings, which
-could explain gnuboy's display failures in a few select color roms. If
-you can provide us with accurate information, please do!
+could theoretically cause problems for some rosm. If you can provide
+us with accurate information, please do!
 
 
   SOUND SUPPORT
@@ -207,8 +243,8 @@ fix as soon as possible.
 
   JOYSTICK AND GAMEPAD SUPPORT
 
-At this time, the Linux joystick device is the only one supported.
-SDL joystick support will be in place very soon.
+At this time, the Linux and SDL joystick devices are the only ones
+supported. We hope to have DOS joystick support soon.
 
 Binding joystick controls works the same way as for the keyboard. Just
 use the key names joyup, joydown, joyright, joyleft, joy0, joy1, joy2,
@@ -270,6 +306,10 @@ the GPL, so if you don't agree to this, don't send code to us or
 anyone else. Let us know if you wish to be included in the credits.
 
 For guidelines regarding code contributions, see the file HACKING.
+
+Please be aware that evaluating contributed code and figuring out if
+or how to work it in can take time. If we haven't done anything with
+your code yet, please be patient.
 
 
   THANKS

@@ -32,6 +32,11 @@ rcvar_t vid_exports[] =
            RCV_END
 };
 
+rcvar_t joy_exports[] =
+{
+           RCV_END
+};
+
 /* keymap - mappings of the form { scancode, localcode } - from sdl/keymap.c */
 extern int keymap[][2];
 

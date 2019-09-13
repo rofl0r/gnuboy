@@ -61,6 +61,7 @@ static void copyright()
 	banner();
 	fprintf(stderr,
 "Copyright (C) 2000-2001 Laguna and Gilgamesh\n"
+"Portions contributed by other authors; see CREDITS for details.\n"
 "\n"
 "This program is free software; you can redistribute it and/or modify\n"
 "it under the terms of the GNU General Public License as published by\n"
@@ -213,13 +214,13 @@ int real_main(int argc, char *argv[])
 		else if (argv[i][0] == '-' && argv[i][1] == '-')
 		{
 			opt = strdup(argv[i]+2);
-			while ((s = strchr(opt, '-'))) *s = '_';
 			if ((s = strchr(opt, '=')))
 			{
 				*s = 0;
 				arg = s+1;
 			}
 			else arg = "1";
+			while ((s = strchr(opt, '-'))) *s = '_';
 			
 			cmd = malloc(strlen(opt) + strlen(arg) + 6);
 			sprintf(cmd, "set %s %s", opt, arg);
