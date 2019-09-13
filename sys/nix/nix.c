@@ -33,15 +33,21 @@ static void usleep(unsigned long us)
 }
 #endif
 
+void sys_shutdown(int err)
+{
+	cleanup(err);
+	vid_disable();
+	pcm_close();
+}
+
 void die(char *fmt, ...)
 {
 	va_list ap;
-	
-	vid_disable();
+
+	sys_shutdown(1);
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
-	shutdown();
 	exit(1);
 }
 
@@ -61,6 +67,13 @@ int sys_msecs()
 	secs = tv.tv_sec - tv_init.tv_sec;
 	usecs = tv.tv_usec - tv_init.tv_usec;
 	return secs*1000 + usecs/1000;
+}
+
+int sys_realtime()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec;
 }
 
 void *sys_timer()
@@ -185,10 +198,6 @@ void sys_init()
 	signal(SIGSEGV, fatalsignal);
 	signal(SIGPIPE, fatalsignal);
 	signal(SIGFPE, fatalsignal);
-}
-
-void sys_shutdown()
-{
 }
 
 void sys_dropperms()

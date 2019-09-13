@@ -27,7 +27,6 @@ struct mbc
 	byte *rmap[0x10], *wmap[0x10];
 };
 
-
 struct rom
 {
 	byte (*bank)[16384];
@@ -40,8 +39,6 @@ struct ram
 	byte stack[128];
 	int loaded;
 };
-
-
 
 
 extern struct mbc mbc;

@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "regs.h"
 #include "mem.h"
+#include "rtc.h"
 #include "rc.h"
 
 #include <stdio.h>
@@ -17,9 +18,16 @@ static int mbc_table[256] =
 	0
 };
 
+static int rtc_table[256] =
+{
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0
+};
+
 static int batt_table[256] =
 {
-	0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1,
+	0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0,
 	1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
 	0
 };
@@ -49,6 +57,7 @@ static int ramsize_table[256] =
 static char romname[16];
 static char *romfile;
 static char *sramfile;
+static char *rtcfile;
 static char *saveprefix;
 
 static char *savename;
@@ -92,6 +101,7 @@ int rom_load()
 	c = header[0x0147];
 	mbc.type = mbc_table[c];
 	mbc.batt = (batt_table[c] && !nobatt) || forcebatt;
+	rtc.batt = rtc_table[c];
 	mbc.romsize = romsize_table[header[0x0148]];
 	mbc.ramsize = ramsize_table[header[0x0149]];
 
@@ -188,8 +198,27 @@ void state_load(int n)
 		fclose(f);
 		vram_dirty();
 		pal_dirty();
+		sound_dirty();
 	}
 	free(name);
+}
+
+void rtc_save()
+{
+	FILE *f;
+	if (!rtc.batt) return;
+	if (!(f = fopen(rtcfile, "wb"))) return;
+	rtc_save_internal(f);
+	fclose(f);
+}
+
+void rtc_load()
+{
+	FILE *f;
+	if (!rtc.batt) return;
+	if (!(f = fopen(rtcfile, "r"))) return;
+	rtc_load_internal(f);
+	fclose(f);
 }
 
 
@@ -253,11 +282,21 @@ void loader_init(char *s)
 	sramfile = malloc(strlen(saveprefix) + 5);
 	strcpy(sramfile, saveprefix);
 	strcat(sramfile, ".sav");
+
+	rtcfile = malloc(strlen(saveprefix) + 5);
+	strcpy(rtcfile, saveprefix);
+	strcat(rtcfile, ".rtc");
 	
 	sram_load();
+	rtc_load();
 }
 
-
+void cleanup(int err)
+{
+	sram_save();
+	rtc_save();
+	/* IDEA - if error, write savestate..? */
+}
 
 rcvar_t loader_exports[] =
 {

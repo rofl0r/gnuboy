@@ -38,6 +38,13 @@ int sys_msecs()
 	return secs*1000 + usecs/1000;
 }
 
+int sys_realtime()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec;
+}
+
 void *sys_timer()
 {
 	uclock_t *cl;
@@ -98,15 +105,21 @@ void sys_sanitize(char *s)
 		if (s[i] == '\\') s[i] = '/';
 }
 
+void sys_shutdown(int err)
+{
+	cleanup(err);
+	vid_disable();
+	pcm_close();
+}
+
 void die(char *fmt, ...)
 {
 	va_list ap;
 	
-	vid_disable();
+	sys_shutdown(1);
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
-	shutdown();
 	exit(1);
 }
 
@@ -149,10 +162,6 @@ void sys_init()
 	signal(SIGSEGV, fatalsignal);
 	signal(SIGPIPE, fatalsignal);
 	signal(SIGFPE, fatalsignal);
-}
-
-void sys_shutdown()
-{
 }
 
 void sys_dropperms()

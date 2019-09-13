@@ -1,5 +1,19 @@
 
 
+0.9.2
+mbc3 rtc support, including save and resync across sessions
+updated README
+implemented sound channel 4
+fixed yet another bug in sweep (!!)
+fixed nasty aliasing when sound frequency was higher than sample rate permits
+finally, all sound registers can be adjusted while sound is being produced
+made it so the proper shutdown functions actually get called on exit
+added SDL port by Damian M Gryski, should be auto-detected by configure
+added Damian to the CREDITS file
+cleaned up sound code to minimize the amount of state data kept
+added sound and rtc status to savestates; this won't break old saves
+changed lots of lookup tables to const
+
 0.9.1
 fixed yet another critical bug in sweep
 fixed STAT interrupt bug

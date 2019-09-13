@@ -32,6 +32,15 @@ HAVE_VGA=
 
 test "$HAVE_VGA" && TARGETS="$TARGETS sgnuboy"
 
+HAVE_SDL=yes
+AC_CHECK_LIB(SDL, SDL_Init, [
+AC_CHECK_HEADERS(SDL/SDL.h, ,[
+AC_MSG_WARN(SDL found but headers are missing!!)
+HAVE_SDL=
+])], [HAVE_SDL=])
+
+test "$HAVE_SDL" && TARGETS="$TARGETS sdlgnuboy"
+
 AC_PATH_X
 
 if test "$no_x" != "yes" ; then
