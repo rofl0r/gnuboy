@@ -7,8 +7,7 @@
 #include "mem.h"
 #include "lcd.h"
 #include "rc.h"
-#include "state.h"
-#include "screen.h"
+#include "fb.h"
 #ifdef USE_ASM
 #include "asm.h"
 #endif
@@ -273,7 +272,7 @@ void blendcpy(byte *dest, byte *src, byte b, int cnt)
 static int priused(void *attr)
 {
 	un32 *a = attr;
-	return ((a[0]|a[1]|a[2]|a[3]|a[4]|a[5]|a[6]|a[7])&0x80808080) ? 1 : 0;
+	return (int)((a[0]|a[1]|a[2]|a[3]|a[4]|a[5]|a[6]|a[7])&0x80808080);
 }
 
 void bg_scan_pri()
@@ -391,7 +390,7 @@ void spr_count()
 	int i;
 	struct obj *o;
 	
-	state.s = NS = 0;
+	NS = 0;
 	if (!(R_LCDC & 0x02)) return;
 	
 	for (i = 40; i; i--, o++)
@@ -402,7 +401,6 @@ void spr_count()
 			continue;
 		if (++NS == 10) break;
 	}
-	state.s = NS;
 }
 
 void spr_enum()
@@ -412,7 +410,7 @@ void spr_enum()
 	struct vissprite ts;
 	int v, pat;
 
-	state.s = NS = 0;
+	NS = 0;
 	if (!(R_LCDC & 0x02)) return;
 
 	o = lcd.oam.obj;
@@ -450,7 +448,6 @@ void spr_enum()
 		VS[NS].buf = patpix[pat][v];
 		if (++NS == 10) break;
 	}
-	state.s = NS;
 	return; /* ignore this waste of time for now */
 	if (hw.cgb) return;
 	for (i = 0; i < NS; i++)
@@ -470,17 +467,17 @@ void spr_enum()
 void spr_scan()
 {
 	int i, x;
-	byte pal, b;
+	byte pal, b, ns = NS;
 	byte *src, *dest, *bg, *pri;
 	struct vissprite *vs;
 	static byte bgdup[256];
 
-	if (!NS) return;
+	if (!ns) return;
 
 	memcpy(bgdup, BUF, 256);
-	vs = &VS[NS-1];
+	vs = &VS[ns-1];
 	
-	for (; NS; NS--, vs--)
+	for (; ns; ns--, vs--)
 	{
 		x = vs->x;
 		if (x > 160) continue;
@@ -521,7 +518,7 @@ void spr_scan()
 		}
 		else while (i--) if (src[i]) dest[i] = pal|src[i];
 	}
-	if (sprdebug) for (i = 0; i < state.s; i++) BUF[i<<1] = 36;
+	if (sprdebug) for (i = 0; i < NS; i++) BUF[i<<1] = 36;
 }
 
 #ifndef ASM_REFRESH_1
@@ -558,10 +555,10 @@ void refresh_4(un32 *dest, un32 *pal)
 
 void lcd_begin()
 {
-	if (screen.indexed) pal_expire();
-	vdest = screen.fb + ((screen.w*screen.pelsize)>>1)
-		- (80*screen.pelsize)
-		+ ((screen.h>>1) - 72) * screen.pitch;
+	if (fb.indexed) pal_expire();
+	vdest = fb.ptr + ((fb.w*fb.pelsize)>>1)
+		- (80*fb.pelsize)
+		+ ((fb.h>>1) - 72) * fb.pitch;
 	WY = R_WY;
 }
 
@@ -575,9 +572,8 @@ void lcd_refreshline()
 {
 	if (!(R_LCDC & 0x80))
 	{
-		memset(vdest, 0, screen.pitch);
-		vdest += screen.pitch;
-		state.s = 0;
+		memset(vdest, 0, fb.pitch);
+		vdest += fb.pitch;
 		return;
 	}
 	
@@ -617,7 +613,7 @@ void lcd_refreshline()
 	}
 	spr_scan();
 
-	switch (screen.pelsize)
+	switch (fb.pelsize)
 	{
 	case 1:
 		refresh_1(vdest, PAL1);
@@ -630,7 +626,7 @@ void lcd_refreshline()
 		break;
 	}
 	
-	vdest += screen.pitch;
+	vdest += fb.pitch;
 }
 
 
@@ -651,16 +647,16 @@ static void updatepalette(int i)
 	g |= (g >> 5);
 	b |= (b >> 5);
 	
-	if (screen.indexed)
+	if (fb.indexed)
 	{
 		pal_release(PAL1[i]);
 		PAL1[i] = pal_getcolor(c, r, g, b);
 		return;
 	}
 
-	r = (r >> screen.cc[0].r) << screen.cc[0].l;
-	g = (g >> screen.cc[1].r) << screen.cc[1].l;
-	b = (b >> screen.cc[2].r) << screen.cc[2].l;
+	r = (r >> fb.cc[0].r) << fb.cc[0].l;
+	g = (g >> fb.cc[1].r) << fb.cc[1].l;
+	b = (b >> fb.cc[2].r) << fb.cc[2].l;
 	c = r|g|b;
 	PAL1[i] = PAL2[i] = PAL4[i] = c;
 }

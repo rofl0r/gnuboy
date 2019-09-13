@@ -27,7 +27,7 @@ gnuboy.exe: $(OBJS) $(SYS_OBJS)
 	$(LD) $(CFLAGS) $(LDFLAGS) $(OBJS) $(SYS_OBJS) -o $@
 
 clean:
-	del gnuboy.exe gmon.out *.o sys\*.o sys\dos\*.o sys\pc\*.o asm\i386\*.o lib\*.o
+	del gnuboy.exe gmon.out *.o sys\*.o sys\dos\*.o sys\pc\*.o asm\i386\*.o
 
 
 

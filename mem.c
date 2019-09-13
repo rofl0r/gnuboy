@@ -117,7 +117,6 @@ void ioreg_write(byte r, byte b)
 	case RI_TIMA:
 	case RI_TMA:
 	case RI_TAC:
-	case RI_LCDC:
 	case RI_SCY:
 	case RI_SCX:
 	case RI_WY:
@@ -148,8 +147,21 @@ void ioreg_write(byte r, byte b)
 		REG(r) = b;
 		pad_refresh();
 		break;
+	case RI_SC:
+		/* FIXME - this is a hack for stupid roms that probe serial */
+		if (b & 0x81 == 0x81)
+		{
+			R_SB = 0xff;
+			hw_interrupt(IF_SERIAL, IF_SERIAL);
+			hw_interrupt(0, IF_SERIAL);
+		}
+		R_SC = b & 0x7f;
+		break;
 	case RI_DIV:
 		REG(r) = 0;
+		break;
+	case RI_LCDC:
+		lcdc_change(b);
 		break;
 	case RI_STAT:
 		REG(r) = (REG(r) & 0x07) | (b & 0x78);
@@ -219,6 +231,8 @@ byte ioreg_read(byte r)
 	case RI_P1:
 		//printf("read P1\n");
 		//return REG(r);
+	case RI_SB:
+	case RI_SC:
 	case RI_DIV:
 	case RI_TIMA:
 	case RI_TMA:

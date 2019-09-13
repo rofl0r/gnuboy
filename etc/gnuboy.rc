@@ -13,6 +13,10 @@ bind r reset
 bind d +a
 bind s +b
 
+# Normal speed/fast forward
+bind - "set framelen 16743"
+bind + "set framelen 0"
+
 
 # Path settings for DOS port - uncomment to use them!
 

@@ -89,6 +89,7 @@ configure* - script for generating *nix makefiles
 [non-portable code]
 sys/*/* - hardware and software platform-specific code
 asm/*/* - optimized asm versions of some code, not used yet
+asm/*/asm.h - header specifying which functions are replaced by asm
 
 [main emulator stuff]
 main.c - entry point, event handler...basically a mess
@@ -106,7 +107,7 @@ cpucore.h - data tables for cpu emulation
 asm/i386/cpu.s - entire cpu core, rewritten in asm
 
 [graphics subsystem]
-screen.h - abstract screen definition, extern from platform-specifics
+fb.h - abstract framebuffer definition, extern from platform-specifics
 lcd.c - lcd controller functions, main control of refresh procedure
 lcd.h - vram, palette, and internal structures for refresh
 asm/i386/lcd.s - asm versions of a few critical functions
@@ -123,10 +124,8 @@ rcvars.c - variable exports and command to set rcvars
 rckeys.c - keybindingds
 
 [misc code]
-lib/alloca.c - implementation of alloca for systems missing it
-lib/fopenp* - messy fopen that handles search paths
-lib/getargs.c - general purpose code to build argv array from a string
-lib/getopt* - gnu getopt implementation, for use on some systems
+path.c - path searching
+split.c - general purpose code to split strings into argv-style arrays
 
 
   OVERVIEW OF PROGRAM FLOW

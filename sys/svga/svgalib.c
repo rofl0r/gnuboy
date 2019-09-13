@@ -12,17 +12,16 @@
 #include <vgakeyboard.h>
 #include <vgamouse.h>
 
-#include "screen.h"
+#include "fb.h"
 #include "input.h"
 #include "rc.h"
 
 
 
-screen_t screen;
+struct fb fb;
 
 
 
-static byte *fb;
 
 static int svga_mode, svga_dims[3];
 
@@ -142,40 +141,40 @@ void vid_init()
 
 	vga_setmode(m);
 	mi = vga_getmodeinfo(m);
-	screen.w = mi->width;
-	screen.h = mi->height;
-	screen.pelsize = mi->bytesperpixel;
-	screen.pitch = mi->linewidth;
-	screen.fb = fb = vga_getgraphmem();
+	fb.w = mi->width;
+	fb.h = mi->height;
+	fb.pelsize = mi->bytesperpixel;
+	fb.pitch = mi->linewidth;
+	fb.ptr = vga_getgraphmem();
 
 	switch (mi->colors)
 	{
 	case 256:
-		screen.indexed = 1;
-		screen.cc[0].r = screen.cc[1].r = screen.cc[2].r = 8;
-		screen.cc[0].l = screen.cc[1].l = screen.cc[2].l = 0;
+		fb.indexed = 1;
+		fb.cc[0].r = fb.cc[1].r = fb.cc[2].r = 8;
+		fb.cc[0].l = fb.cc[1].l = fb.cc[2].l = 0;
 		break;
 	case 32768:
-		screen.indexed = 0;
-		screen.cc[0].r = screen.cc[1].r = screen.cc[2].r = 3;
-		screen.cc[0].l = 10;
-		screen.cc[1].l = 5;
-		screen.cc[2].l = 0;
+		fb.indexed = 0;
+		fb.cc[0].r = fb.cc[1].r = fb.cc[2].r = 3;
+		fb.cc[0].l = 10;
+		fb.cc[1].l = 5;
+		fb.cc[2].l = 0;
 		break;
 	case 65536:
-		screen.indexed = 0;
-		screen.cc[0].r = screen.cc[2].r = 3;
-		screen.cc[1].r = 2;
-		screen.cc[0].l = 11;
-		screen.cc[1].l = 5;
-		screen.cc[2].l = 0;
+		fb.indexed = 0;
+		fb.cc[0].r = fb.cc[2].r = 3;
+		fb.cc[1].r = 2;
+		fb.cc[0].l = 11;
+		fb.cc[1].l = 5;
+		fb.cc[2].l = 0;
 		break;
 	case 16384*1024:
-		screen.indexed = 0;
-		screen.cc[0].r = screen.cc[1].r = screen.cc[2].r = 0;
-		screen.cc[0].l = 16;
-		screen.cc[1].l = 8;
-		screen.cc[2].l = 0;
+		fb.indexed = 0;
+		fb.cc[0].r = fb.cc[1].r = fb.cc[2].r = 0;
+		fb.cc[0].l = 16;
+		fb.cc[1].l = 8;
+		fb.cc[2].l = 0;
 		break;
 	}
 }
@@ -183,8 +182,8 @@ void vid_init()
 
 void vid_disable()
 {
-	if (!fb) return;
-	memset(screen.fb, 0, sizeof screen);
+	if (!fb.ptr) return;
+	memset(fb.ptr, 0, sizeof fb);
 	keyboard_close();
 	vga_setmode(TEXT);
 }

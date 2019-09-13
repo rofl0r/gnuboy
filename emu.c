@@ -7,7 +7,6 @@
 #include "cpu.h"
 #include "mem.h"
 #include "lcd.h"
-#include "state.h"
 #include "rc.h"
 
 
@@ -42,7 +41,7 @@ void emu_init()
 void emu_reset()
 {
 	lcd_reset();
-	state_reset();
+	lcdc_reset();
 	cpu_reset();
 	hw_reset();
 	mbc_reset();
@@ -64,11 +63,12 @@ void emu_run()
 {
 	static void *timer;
 	int delay;
-	
+
+	lcd_begin();
 	for (;;)
 	{
-		while (R_LY < 144)  /* wait for vblank */
-			state_step();
+		while (R_LY < 144) // && ((R_LCDC & 0x80) || (R_STAT & 3)))
+			lcdc_step();
 		
 		vid_end();
 		if (!timer) timer = sys_timer();
@@ -81,7 +81,7 @@ void emu_run()
 		if (framecount) { if (!--framecount) die("finished\n"); }
 		
 		while (R_LY > 0) /* wait for next frame */
-			state_step();
+			lcdc_step();
 	}
 }
 
