@@ -44,6 +44,7 @@ void emu_reset()
 	cpu_reset();
 	hw_reset();
 	mbc_reset();
+	sound_reset();
 }
 
 
@@ -64,7 +65,7 @@ void *sys_timer();
 
 void emu_run()
 {
-	static void *timer;
+	void *timer = sys_timer();
 	int delay;
 
 	for (;;)
@@ -74,8 +75,8 @@ void emu_run()
 			emu_step();
 		
 		vid_end();
-		if (!timer) timer = sys_timer();
-		delay = framelen - sys_elapsed(timer);
+		sound_mix();
+		delay = pcm_submit() ? 0 : framelen - sys_elapsed(timer);
 		/* printf("%d\n", delay); */
 		sys_sleep(delay);
 		sys_elapsed(timer);

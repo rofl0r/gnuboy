@@ -54,9 +54,9 @@ extern struct ram ram;
 
 void mem_updatemap();
 void ioreg_write(byte r, byte b);
-void mbc_write(addr a, byte b);
-void mem_write(addr a, byte b);
-byte mem_read(addr a);
+void mbc_write(int a, byte b);
+void mem_write(int a, byte b);
+byte mem_read(int a);
 
 
 extern int forcedmg;

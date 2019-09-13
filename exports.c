@@ -5,7 +5,8 @@
 #include "rc.h"
 
 extern rcvar_t rcfile_exports[], emu_exports[], loader_exports[],
-	lcd_exports[], debug_exports[], vid_exports[];
+	lcd_exports[], debug_exports[], vid_exports[],
+	sound_exports[], pcm_exports[];
 
 
 rcvar_t *sources[] =
@@ -16,6 +17,8 @@ rcvar_t *sources[] =
 	lcd_exports,
 	debug_exports,
 	vid_exports,
+	sound_exports,
+	pcm_exports,
 	NULL
 };
 
@@ -29,4 +32,10 @@ void init_exports()
 }
 
 
-
+void show_exports()
+{
+	int i, j;
+	for (i = 0; sources[i]; i++)
+		for (j = 0; sources[i][j].name; j++)
+			printf("%s\n", sources[i][j].name);
+}

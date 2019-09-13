@@ -34,6 +34,8 @@ void stat_trigger()
 	else R_STAT &= ~0x04;
 
 	if (R_STAT & condbits[R_STAT&3]) flag = IF_STAT;
+
+	if (!(R_LCDC & 0x80)) flag = 0;
 	
 	hw_interrupt(flag, IF_STAT);
 }
@@ -60,25 +62,23 @@ static void stat_change(int stat)
 
 void lcdc_change(byte b)
 {
-	if ((R_LCDC ^ b) & 0x80) /* lcd on/off change */
+	byte old = R_LCDC;
+	R_LCDC = b;
+	if ((R_LCDC ^ old) & 0x80) /* lcd on/off change */
 	{
 		R_LY = 0;
 		stat_change(2);
 		C = 40;
-		if (R_LCDC & 0x80)
-		{
-			lcd_begin();
-		}
+		lcd_begin();
 	}
-	R_LCDC = b;
 }
 
 
 void lcdc_trans()
 {
-	while (C <= 0)
+	if (!(R_LCDC & 0x80))
 	{
-		if (!(R_LCDC & 0x80))
+		while (C <= 0)
 		{
 			switch ((byte)(R_STAT & 3))
 			{
@@ -98,7 +98,9 @@ void lcdc_trans()
 			}
 			return;
 		}
-
+	}
+	while (C <= 0)
+	{
 		switch ((byte)(R_STAT & 3))
 		{
 		case 1:

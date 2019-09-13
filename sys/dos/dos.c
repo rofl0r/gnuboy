@@ -1,7 +1,7 @@
 /*
- * nix.c
+ * dos.c
  *
- * System interface for *nix systems.
+ * System interface for DOS.
  */
 
 #include <stdio.h>
@@ -152,6 +152,10 @@ void sys_init()
 }
 
 void sys_shutdown()
+{
+}
+
+void sys_dropperms()
 {
 }
 

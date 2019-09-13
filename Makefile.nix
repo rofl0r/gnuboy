@@ -1,6 +1,6 @@
 
 prefix = /usr/local
-bindir = $(prefix)/bin
+bindir = /bin
 
 CC = gcc
 AS = $(CC)
@@ -12,11 +12,13 @@ LDFLAGS =
 ASFLAGS = 
 
 SYS_DEFS = #-DIS_LITTLE_ENDIAN
-ASM_SRCS = 
+ASM_OBJS = 
+SND_OBJS = sys/oss/oss.o
+#SND_OBJS = sys/dummy/nosound.o
 
 TARGETS = xgnuboy #sgnuboy
 
-SYS_OBJS = sys/nix/nix.o $(ASM_SRCS)
+SYS_OBJS = sys/nix/nix.o $(ASM_OBJS) $(SND_OBJS)
 SYS_INCS = -I/usr/local/include -I/usr/X11R6/include -I./sys/nix
 
 SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o
@@ -36,7 +38,7 @@ xgnuboy: $(OBJS) $(SYS_OBJS) $(X11_OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(X11_OBJS) -o $@ $(X11_LIBS)
 
 install: all
-	$(INSTALL) -m 755 $(TARGETS) $(bindir)
+	$(INSTALL) -m 755 $(TARGETS) $(prefix)$(bindir)
 
 clean:
 	rm -f ?gnuboy gmon.out *.o sys/*.o sys/*/*.o asm/*/*.o

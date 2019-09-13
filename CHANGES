@@ -1,5 +1,28 @@
 
 
+0.9.1
+fixed yet another critical bug in sweep
+fixed STAT interrupt bug
+added support for changing more sound params while sound is active
+fixed yet another major bug in envelope for channel 2
+fixed bug in HDMA, but DKC still fails
+updated README, HACKING
+made samplerate and sound (on/off) configurable rcvars
+changed command line parsing to make setting bools more intuitive
+added --showvars to list all available rcvars
+
+0.9.0
+fixed bugs in sweep and envelope functions
+added sound channel 3
+
+0.8.5
+various minor optimizations in the C code
+same in the i386 asm cpu core
+initial work on sound framework
+oss sound output for use on *nix
+dummy sound output for use on systems without sound
+sound channels 1 and 2
+
 0.8.4
 updated README to cover new features
 fixed off-by-one-line visual error introduced in 0.8.2
