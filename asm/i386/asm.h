@@ -14,9 +14,11 @@
 
 #define ASM_REFRESH_1_2X
 #define ASM_REFRESH_2_2X
-//#define ASM_REFRESH_4_2X
+#define ASM_REFRESH_4_2X
 
-#define ASM_PAT_UPDATEPIX
+#define ASM_REFRESH_4_4X
+
+#define ASM_UPDATEPATPIX
 
 #define ASM_BG_SCAN_COLOR
 

@@ -21,7 +21,6 @@
 
 struct fb fb;
 
-static int hwsurface = 0;
 static int fullscreen = 1;
 static int use_altenter = 1;
 static int use_joy = 1, sdl_joy_num;
@@ -32,12 +31,11 @@ static char Xstatus, Ystatus;
 
 static SDL_Surface *screen;
 
-static int vmode[3] = { 160, 144, 16 };
+static int vmode[3] = { 0, 0, 16 };
 
 rcvar_t vid_exports[] =
 {
 	RCV_VECTOR("vmode", &vmode, 3),
-	RCV_BOOL("sdl_hwsurface", &hwsurface),
 	RCV_BOOL("sdl_fullscreen", &fullscreen),
 	RCV_BOOL("sdl_altenter", &use_altenter),
 	RCV_END
@@ -73,11 +71,16 @@ void vid_init()
 	int i;
 	int joy_count;
 	int flags;
-	
-	flags = SDL_ANYFORMAT | SDL_HWPALETTE;
 
-	if (hwsurface)
-		flags |= SDL_HWSURFACE;
+	if (!vmode[0] || !vmode[1])
+	{
+		int scale = rc_getint("scale");
+		if (scale < 1) scale = 1;
+		vmode[0] = 160 * scale;
+		vmode[1] = 144 * scale;
+	}
+	
+	flags = SDL_ANYFORMAT | SDL_HWPALETTE | SDL_HWSURFACE;
 
 	if (fullscreen)
 		flags |= SDL_FULLSCREEN;
@@ -90,6 +93,8 @@ void vid_init()
 
 	SDL_ShowCursor(0);
 
+	SDL_LockSurface(screen);
+	
 	fb.w = screen->w;
 	fb.h = screen->h;
 	fb.pelsize = screen->format->BytesPerPixel;
@@ -102,6 +107,8 @@ void vid_init()
 	fb.cc[1].l = screen->format->Gshift;
 	fb.cc[2].r = screen->format->Bloss;
 	fb.cc[2].l = screen->format->Bshift;
+
+	SDL_UnlockSurface(screen);
 
 	fb.enabled = 1;
 	fb.dirty = 0;
@@ -322,6 +329,7 @@ void vid_preinit()
 
 void vid_close()
 {
+	SDL_UnlockSurface(screen);
 	SDL_Quit();
 	fb.enabled = 0;
 }
@@ -333,13 +341,14 @@ void vid_settitle(char *title)
 
 void vid_begin()
 {
-	if (hwsurface) SDL_LockSurface(screen);
+	SDL_LockSurface(screen);
+	fb.ptr = screen->pixels;
 }
 
 void vid_end()
 {
-	if (hwsurface) SDL_UnlockSurface(screen);
-	SDL_UpdateRect(screen, 0, 0, 0, 0);
+	SDL_UnlockSurface(screen);
+	SDL_Flip(screen);
 }
 
 void vid_resize()

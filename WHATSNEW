@@ -8,6 +8,38 @@ versions; the CHANGES file is too technical and unorganized.
 
 
 
+RELEASE 0.9.11
+
+  NEW FEATURES
+
+Most ports can auto-choose screen size appropriate to scale given.
+Scaling to 2x, 3x, and 4x is now possible at all color depths.
+
+  PERFORMANCE
+
+SDL port should run considerably faster than before at hires modes.
+New X11 rcvar "x_shmsync" can be turned off for performance boost,
+but it can result in heavy shearing and skipped frames.
+The new scaling code is slightly faster than before.
+
+  COMPATIBILITY
+
+Konami Collection (GBC) series now works in color mode.
+Worms Armageddon is now playable, might still have some glitches though.
+Turok 3 no longer hangs at startup and seems fully playable.
+Sound samples that played too slow in many games now sound correct.
+
+  BUGS FIXED
+
+Video mode setting was not working with svgalib.
+Undocumented behavior - STOP instruction causes PC to skip forward.
+SDL hardware surface mode is now always on and should always work fine.
+More undocumented behavior - HDMA can occur while LCDC is off...?
+HDMA5 register was not being initialized correctly on reset.
+Timer was running at half the speed it should when in high-speed mode.
+
+
+
 RELEASE 0.9.10
 
   NEW FEATURES

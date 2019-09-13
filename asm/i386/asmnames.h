@@ -13,7 +13,7 @@
 #define cpu_step _cpu_step
 #define lcdc_trans _lcdc_trans
 #define debug_trace _debug_trace
-#define pat_updatepix _pat_updatepix
+#define updatepatpix _updatepatpix
 #define debug_disassemble _debug_disassemble
 #define bg_scan_color _bg_scan_color
 #define refresh_1 _refresh_1
@@ -22,6 +22,12 @@
 #define refresh_1_2x _refresh_1_2x
 #define refresh_2_2x _refresh_2_2x
 #define refresh_4_2x _refresh_4_2x
+#define refresh_1_3x _refresh_1_3x
+#define refresh_2_3x _refresh_2_3x
+#define refresh_4_3x _refresh_4_3x
+#define refresh_1_4x _refresh_1_4x
+#define refresh_2_4x _refresh_2_4x
+#define refresh_4_4x _refresh_4_4x
 #define mem_read _mem_read
 #define mem_write _mem_write
 #define cpu_idle _cpu_idle

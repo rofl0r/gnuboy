@@ -86,6 +86,17 @@ int my_atoi(const char *s)
 		}
 		return a;
 	}
+	if (*s == '-')
+	{
+		s++;
+		for (;;)
+		{
+			if (isdigit(*s))
+				a = (a*10) + *s - '0';
+			else return -a;
+			s++;
+		}
+	}
 	while (*s)
 	{
 		if (isdigit(*s))

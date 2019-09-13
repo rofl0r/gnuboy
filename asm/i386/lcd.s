@@ -22,8 +22,6 @@
 
 debug:	.string "%08x\n"
 	
-	.globl pat_updatepix
-
 	.macro _print arg=0
 	pushf
 	pusha
@@ -65,7 +63,8 @@ debug:	.string "%08x\n"
 
 
 
-pat_updatepix:
+	.globl updatepatpix
+updatepatpix:
 	movb anydirty, %al
 	testb %al, %al
 	jnz .Lupdatepatpix

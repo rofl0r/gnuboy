@@ -309,8 +309,8 @@ void sound_advance(int cnt)
 
 void cpu_timers(int cnt)
 {
-	div_advance(cnt);
-	timer_advance(cnt);
+	div_advance(cnt << cpu.speed);
+	timer_advance(cnt << cpu.speed);
 	lcdc_advance(cnt);
 	sound_advance(cnt);
 }
@@ -788,6 +788,7 @@ next:
 		CCF; break;
 
 	case 0x10: /* STOP */
+		PC++;
 		if (R_KEY1 & 1)
 		{
 			cpu.speed = cpu.speed ^ 1;
@@ -832,9 +833,10 @@ next:
 		break;
 	}
 
-	clen <<= (1-cpu.speed);
+	clen <<= 1;
 	div_advance(clen);
 	timer_advance(clen);
+	clen >>= cpu.speed;
 	lcdc_advance(clen);
 	sound_advance(clen);
 

@@ -3,6 +3,21 @@
 CHANGES file -- detailed list of all changes made...
 please see WHATSNEW instead for user-oriented information.
 
+0.9.11
+
+fixed bug that kept video mode setting from working with svgalib
+implemented program counter skip after STOP instruction (konami collections)
+fixed SDL hardware surface support -- thanks Dave Kiddell
+also fixed another bug in gnuboy graphics code related to that problem
+removed sdl_hwsurface rcvar (no longer needed)
+changed SDL code to use SDL_Flip rather than SDL_UpdateRect - much faster
+most ports now can auto-choose screen size for given scale if no vmode is given
+optional shm sync skipping for x11 -- boost performance but looses frames
+lots of new scaling stuff
+allow HDMA while LCDC is off -- fixes Worms Armageddon
+correct initial values for HDMA regs -- fixes first hang in Turok 3
+major timer fixes!! fixes second hang in Turok 3
+
 0.9.10
 hopefully fixed issue with X header locations affecting some users
 rewrote refresh_* functions to be faster and more flexible

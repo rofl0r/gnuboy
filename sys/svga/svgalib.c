@@ -23,12 +23,13 @@ struct fb fb;
 
 
 
-static int svga_mode, svga_dims[3];
+static int vmode[3] = { 0, 0, 8 };
+static int svga_mode;
 static int svga_vsync = 1;
 
 rcvar_t vid_exports[] =
 {
-	RCV_VECTOR("vmode", svga_dims, 3),
+	RCV_VECTOR("vmode", vmode, 3),
 	RCV_INT("vsync", &svga_vsync),
 	RCV_INT("svga_mode", &svga_mode),
 	RCV_END
@@ -66,10 +67,9 @@ static int selectmode()
 	int best = -1;
 	int besterr = 1<<24;
 	int err;
-	int *vd, vddummy[] = { 320, 200, 8 };
+	int *vd;
 
-	vd = rc_getvec("svga_dims");
-	if (!vd) vd = vddummy;
+	vd = vmode;
 	
 	stop = vga_lastmodenumber();
 	for (i = 0; i <= stop; i++)
@@ -124,6 +124,14 @@ void vid_init()
 	int m;
 	vga_modeinfo *mi;
 
+	if (!vmode[0] || !vmode[1])
+	{
+		int scale = rc_getint("scale");
+		if (scale < 1) scale = 1;
+		vmode[0] = 160 * scale;
+		vmode[1] = 144 * scale;
+	}
+	
 	m = svga_mode;
 	if (!m) m = selectmode();
 	
