@@ -194,7 +194,7 @@ static char *base(char *s)
 
 int main(int argc, char *argv[])
 {
-	int i, j, c;
+	int i;
 	char *opt, *arg, *cmd, *s, *rom = 0;
 
 	/* Avoid initializing video if we don't have to */
@@ -271,6 +271,7 @@ int main(int argc, char *argv[])
 			}
 			else arg = "1";
 			while ((s = strchr(opt, '-'))) *s = '_';
+			while ((s = strchr(arg, ','))) *s = ' ';
 			
 			cmd = malloc(strlen(opt) + strlen(arg) + 6);
 			sprintf(cmd, "set %s %s", opt, arg);

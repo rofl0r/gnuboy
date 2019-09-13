@@ -24,8 +24,8 @@
 #define I2(s, p) { 2, (s), (p) }
 #define I4(s, p) { 4, (s), (p) }
 #define R(r) I1(#r, &R_##r)
-#define NOSAVE { -1, 0, 0 }
-#define END { 0, 0, 0 }
+#define NOSAVE { -1, "\0\0\0\0", 0 }
+#define END { 0, "\0\0\0\0", 0 }
 
 struct svar
 {
@@ -37,8 +37,6 @@ struct svar
 static int ver;
 static int sramblock, iramblock, vramblock;
 static int hramofs, hiofs, palofs, oamofs, wavofs;
-
-static byte regmask[128];
 
 struct svar svars[] = 
 {
@@ -212,7 +210,7 @@ void savestate(FILE *f)
 	int i;
 	byte buf[4096];
 	un32 (*header)[2] = (un32 (*)[2])buf;
-	un32 d;
+	un32 d = 0;
 	int irl = hw.cgb ? 8 : 2;
 	int vrl = hw.cgb ? 4 : 2;
 	int srl = mbc.ramsize << 1;

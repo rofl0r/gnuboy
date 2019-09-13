@@ -25,7 +25,7 @@ static int fb_depth;
 static char *fb_device;
 
 static int fbfd = -1;
-static byte *fbmap, *fakemap;
+static byte *fbmap;
 static int maplen;
 
 static struct fb_fix_screeninfo fi;
@@ -46,7 +46,6 @@ void vid_preinit()
 
 void vid_init()
 {
-	int i;
 	char cmd[256];
 
 	kb_init();

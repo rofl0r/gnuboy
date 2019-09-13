@@ -44,7 +44,7 @@ void mem_updatemap()
 		map[0x7] = rom.bank[mbc.rombank] - 0x4000;
 	}
 	else map[0x4] = map[0x5] = map[0x6] = map[0x7] = NULL;
-	if (R_STAT & 0x03 == 0x03)
+	if ((R_STAT & 0x03) == 0x03)
 	{
 		map[0x8] = NULL;
 		map[0x9] = NULL;
@@ -150,13 +150,13 @@ void ioreg_write(byte r, byte b)
 		break;
 	case RI_SC:
 		/* FIXME - this is a hack for stupid roms that probe serial */
-		if (b & 0x81 == 0x81)
+		if ((b & 0x81) == 0x81)
 		{
 			R_SB = 0xff;
 			hw_interrupt(IF_SERIAL, IF_SERIAL);
 			hw_interrupt(0, IF_SERIAL);
 		}
-		R_SC = b & 0x7f;
+		R_SC = b; /* & 0x7f; */
 		break;
 	case RI_DIV:
 		REG(r) = 0;
@@ -238,9 +238,12 @@ byte ioreg_read(byte r)
 {
 	switch(r)
 	{
+	case RI_SC:
+		r = R_SC;
+		R_SC &= 0x7f;
+		return r;
 	case RI_P1:
 	case RI_SB:
-	case RI_SC:
 	case RI_DIV:
 	case RI_TIMA:
 	case RI_TMA:
@@ -494,7 +497,7 @@ byte mem_read(int a)
 		return ram.ibank[n?n:1][a & 0x0FFF];
 	case 0xE:
 		if (a < 0xFE00) return mem_read(a & 0xDFFF);
-		if ((a & 0xFF00) == 0xFE)
+		if ((a & 0xFF00) == 0xFE00)
 		{
 			/* if (R_STAT & 0x02) return 0xFF; */
 			if (a < 0xFEA0) return lcd.oam.mem[a & 0xFF];
@@ -509,6 +512,7 @@ byte mem_read(int a)
 		/* printf("reg %02X = %02X\n", a & 0xff, REG(a&0xff)); */
 		return ioreg_read(a & 0xFF);
 	}
+	return 0xff; /* not reached */
 }
 
 void mbc_reset()

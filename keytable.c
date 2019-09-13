@@ -107,6 +107,14 @@ keytable_t keytable[] =
 	{ "joy5", K_JOY5 },
 	{ "joy6", K_JOY6 },
 	{ "joy7", K_JOY7 },
+	{ "joy8", K_JOY8 },
+	{ "joy9", K_JOY9 },
+	{ "joy10", K_JOY10 },
+	{ "joy11", K_JOY11 },
+	{ "joy12", K_JOY12 },
+	{ "joy13", K_JOY13 },
+	{ "joy14", K_JOY14 },
+	{ "joy15", K_JOY15 },
 
 	{ NULL, 0 }
 };

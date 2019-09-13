@@ -18,15 +18,11 @@ static int stereo = 0;
 struct fb fb;
 
 static bitmap_t *screen = NULL;
-static int vid_width = 320;
-static int vid_height = 200;
-static int vid_bpp = 8;
+static int vmode[3] = { 320, 200, 8 };
 
 rcvar_t vid_exports[] = 
 {
-	RCV_INT("vid_width", &vid_width),
-	RCV_INT("vid_height", &vid_height),
-	RCV_INT("vid_bpp", &vid_bpp),
+	RCV_VECTOR("vmode", vmode, 3),
 	RCV_END
 };
 
@@ -182,7 +178,7 @@ void vid_init()
 	/* don't spam the graphics screen if we don't have soundcard */
 	thin_setlogfunc(NULL);
 
-	if (thin_vid_init(vid_width, vid_height, vid_bpp))
+	if (thin_vid_init(vmode[0], vmode[1], vmode[2]))
 		die("could not set video mode");
 
 	screen = thin_vid_lockwrite();

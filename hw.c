@@ -61,7 +61,6 @@ void hw_hdma_cmd(byte c)
 	int cnt;
 	addr sa;
 	int da;
-	byte b;
 
 	/* Begin or cancel HDMA */
 	if ((hw.hdma|c) & 0x80)
@@ -93,7 +92,6 @@ void hw_hdma()
 	int cnt;
 	addr sa;
 	int da;
-	byte b;
 	
 	if (!(R_LCDC & 0x80))
 		return;

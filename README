@@ -99,6 +99,9 @@ file. Some of the more interesting variables are:
   dmg_obp0    - and for sprite palette 0
   dmg_obp1    - and sprite palette 1
 
+  scale       - factor for screen scaling; currently only 1 and 2 work
+  density     - density level for screen scaling; see description below
+
   sprsort     - x-sort sprites for correctness on dmg roms
 
   syncrtc     - fake elapsed time on rtc since last session at startup
@@ -133,29 +136,13 @@ There are presently four *nix targets supported: X11, SDL, and Linux
 fbcon and svgalib. In the future other fb devices (such as the Sun
 console) should be supported as well.
 
-Unlike the other display targets, the svgalib one allows you to choose
-a video mode from among the available modes on your system. Simply set
-svga_dims with the desired width, height, and color depth, and the
-next closest available mode will be chosen. Alternatively, if you know
-the svgalib mode numbers, you can choose a particular mode number with
-the svga_mode variable. Keep in mind that only linear packed pixel
-modes are supported, so you may experience troubles if you try to use
-a mode-x or banked modes. Essentially, unless you customize svgalib or
-use a wrapper library, there's probably no point in changing the mode,
-since 320x200 is a low as you're going to get. Information on hacking
-mode timings to create a true 160x144 mode for gameboy is beyond the
-scope of this document.
-
 If you have problems with gnuboy running too slowly on svgalib, turn
-off the svga_vsync option, i.e. set svga_vsync 0. Putting
---no-svga-vsync on the command line works as well.
-
-Also, the OSS sound output module is configurable with the rc vars
-samplerate and sound, to set the output sampling rate and enable or
-disable sound, respectively.
+off the vsync option, i.e. set vsync 0. Putting --no-vsync on the
+command line works as well. At this point svgalib is the only one that
+supports vsync, so it's a non-issue on the others.
 
 
-  USAGE - DOS
+  USAGE - DOS and Windows
 
 Place your gnuboy.rc in the same directory as gnuboy.exe. You need to
 specify a save directory in it; otherwise the working directory will
@@ -166,74 +153,41 @@ called gnuboy.rc in c:/gnuboy.
 
   set savedir c:/gnuboy/saves
 
-The DOS port now supports VESA 2.0 video modes. To make use of this
-feature, you can use one of two options: vesa_mode or vesa_dims.
-
-  set vesa_mode 0x101
-  set vesa_dims 640 480 8
-
-Both of these specify that you want 640x480, 8 bpp. The first just
-uses the VESA mode number, which you have to know in advance, while
-the second will automatically search for a mode the size you want.
-The recommended mode for best image size, color quality, and
-performance is:
-
-  set vesa_dims 320 240 16
-
-but this mode is not supported on all hardware.
-
-The DOS port also now supports sound, using Matthew Conte's thinlib, a
-simple efficient library for hardware access on DOS. Eventually we
-hope to move the DOS port entirely over to using thinlib, but for now
-it's only being used for sound. By default stereo sound is disabled
-since it doesn't work right on some of the systems we've tested; to
-enable it, add the following line to your gnuboy.rc:
+By default stereo sound is disabled on DOS since it doesn't work right
+on some of the systems we've tested; to enable it, add the following
+line to your gnuboy.rc:
 
   set stereo 1
 
-Sample rate is configurable as well, but not all rates are available
-on all cards. For example, use
 
-  set samplerate 11025
+  VIDEO MODES
 
-if you want to lower sound quality to boost performance. You can also
-turn off sound entirely with
+Now all the display targets except Linux fbcon support the uniform
+"vmode" rcvar to set the video mode. From the rc file, you can specify
+a video mode like this (for 640x480, 16bpp):
 
-  set sound 0
+  set vmode 640 480 16
 
-or of course --no-sound on the command line.
+Or you can specify the mode on the command line, as
 
+  --vmode=640,480,16
 
-  COMPATIBILITY
-
-Eventually I'll put detailed information here. For now, just see known
-bugs for the few cases where roms fails.
+If the requested video mode is not available, gnuboy may either give
+an error message or use a similar available mode.
 
 
-  SUPPORTED MEMORY BANK CONTROLLERS (MBCS)
+  SCREEN SCALING
 
-At this time, gnuboy supports MBC1, MBC2, MBC3 (including realtime
-clock), and MBC5 (including the version with rumble support, although
-that functionality is omitted).
+Scaling of the screen by a factor of two has now been implemented.
+Just set the "scale" rcvar to 2 and be sure your video mode is at
+least 320x288 in size. By default, for improved performance, true
+scaling will only be done horizontally, and blank scanlines will just
+be left vertically. If you prefer a full vertical scale, set the
+"density" rcvar to 2 (the default is 1).
 
-
-  GRAPHICS SUPPORT
-
-Color Gameboy roms are supported completely, including so-called
-"highcolor" tricks. Yes, even in 256-color mode, although in games
-that use too many colors on one screen, the later ones will only be
-approximated. Use a 16 bpp (or higher) display mode if this is a
-problem.
-
-Much care has been put into ensuring that the lcd timings and
-interrupts behave as closely to the real hardware as possible. A few
-features remain unimplemented, such as reduced length HBLANK depending
-on the number of sprites visible on the scanline, but the vast
-majority of display tricks used in current roms work fine.
-
-We do, however, lack information on proper GDMA timings, which could
-theoretically cause problems for some roms. If you can provide us with
-accurate information, please do!
+Please be aware that this code is still slightly experimental, and the
+ways of configuring scaling may change considerably in the next few
+releases.
 
 
   SOUND SUPPORT
@@ -272,6 +226,44 @@ Until the sound code is further optimized, gnuboy may run somewhat
 slower than these numbers suggest.
 
 
+  SUPPORTED MEMORY BANK CONTROLLERS (MBCS)
+
+At this time, gnuboy supports MBC1, MBC2, MBC3 (including realtime
+clock), and MBC5 (including the version with rumble support, although
+that functionality is omitted).
+
+
+  GRAPHICS SUPPORT
+
+Color Gameboy roms are supported completely, including so-called
+"highcolor" tricks. Yes, even in 256-color mode, although in games
+that use too many colors on one screen, the later ones will only be
+approximated. Use a 16 bpp (or higher) display mode if this is a
+problem.
+
+Alternatively, for games that look bad in 256 color mode, you can
+run in simulated 3/3/2 bits per channel truecolor. Just set the
+variable rgb332 to something nonzero (or just putting --rgb332 on the
+command line will work). Color precision is lost somewhat, especially
+in smooth gradients, but for the most part it looks very good.
+
+Much care has been put into ensuring that the lcd timings and
+interrupts behave as closely to the real hardware as possible. A few
+features remain unimplemented, such as reduced length HBLANK depending
+on the number of sprites visible on the scanline, but the vast
+majority of display tricks used in current roms work fine.
+
+We do, however, lack information on proper GDMA timings, which could
+theoretically cause problems for some roms. If you can provide us with
+accurate information, please do!
+
+
+  COMPATIBILITY
+
+Eventually I'll put detailed information here. For now, just see known
+bugs for the few cases where roms fails.
+
+
   KNOWN BUGS
 
 The portal between the temple and the Talon in FFL3 is glitched and
@@ -289,9 +281,6 @@ works.
 Sound mixing is taking way too much cpu time. I have some ideas for
 fixing this, and I plan to write optimized assembly code for sound
 soon. If it's a problem try turning down the sample rate.
-
-Detecting X11 seems to be failing on some broken nonfree unices. I'll
-look into it sometime.
 
 
   REPORTING OR FIXING BUGS

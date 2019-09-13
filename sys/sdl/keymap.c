@@ -24,6 +24,7 @@ int keymap[][2] = {
 	{ SDLK_RIGHT, K_RIGHT },
 	{ SDLK_LEFT, K_LEFT },
 	{ SDLK_RETURN, K_ENTER },
+	{ SDLK_SPACE, K_SPACE },
 	{ SDLK_TAB, K_TAB },
 	{ SDLK_BACKSPACE, K_BS },
 	{ SDLK_DELETE, K_DEL },    

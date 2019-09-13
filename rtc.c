@@ -90,9 +90,6 @@ void rtc_tick()
 		}
 		rtc.t = 0;
 	}
-	0 && printf("%d %d %d %02d %02d %02d %02d -- %d\n",
-		rtc.carry, rtc.stop, rtc.d, rtc.h, rtc.m, rtc.s, rtc.t,
-		time(0));
 }
 
 void rtc_save_internal(FILE *f)

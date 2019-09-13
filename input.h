@@ -87,11 +87,19 @@
 #define K_JOY5 0x1b5
 #define K_JOY6 0x1b6
 #define K_JOY7 0x1b7
+#define K_JOY8 0x1b8
+#define K_JOY9 0x1b9
+#define K_JOY10 0x1ba
+#define K_JOY11 0x1bb
+#define K_JOY12 0x1bc
+#define K_JOY13 0x1bd
+#define K_JOY14 0x1be
+#define K_JOY15 0x1bf
 
-#define K_JOYUP 0x1ba
-#define K_JOYDOWN 0x1bb
-#define K_JOYRIGHT 0x1bc
-#define K_JOYLEFT 0x1bd
+#define K_JOYUP 0x1ca
+#define K_JOYDOWN 0x1cb
+#define K_JOYRIGHT 0x1cc
+#define K_JOYLEFT 0x1cd
 
 #define MAX_KEYS 0x200
 

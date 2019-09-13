@@ -50,8 +50,6 @@ void stat_trigger()
 
 static void stat_change(int stat)
 {
-	int iraise;
-	
 	stat &= 3;
 	R_STAT = (R_STAT & 0x7C) | stat;
 
@@ -107,8 +105,9 @@ void lcdc_trans()
 		case 1:
 			if (!(hw.ilines & IF_VBLANK))
 			{
-				C += 208;
+				C += 218;
 				hw_interrupt(IF_VBLANK, IF_VBLANK);
+				break;
 			}
 			if (R_LY == 0)
 			{
@@ -152,7 +151,7 @@ void lcdc_trans()
 					hw_interrupt(IF_VBLANK, IF_VBLANK);
 					C += 228;
 				}
-				else C += 20;
+				else C += 10;
 				stat_change(1);
 				break;
 			}

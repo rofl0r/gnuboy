@@ -8,6 +8,38 @@ versions; the CHANGES file is too technical and unorganized.
 
 
 
+RELEASE 0.9.10
+
+  NEW FEATURES
+
+Primitive but fast and fully functional scale-by-two support.
+New rcvar "vmode" sets video mode in all the targets that support it.
+Now up to 16 joystick buttons can be used, as opposed to 8 before.
+Static palette mode (rcvar "rgb332"), which can make highcolor games
+look better when run at 8bpp by faking a 3/3/2 color channel mode.
+
+  COMPATIBILITY
+
+Added a quick hack to fake serial I/O so that Super RC Pro-Am works.
+Spiderman's web is now visible in Spiderman GBC.
+
+  PERFORMANCE
+
+New refresh code blits lines slightly faster.
+Added sdl_hwsurface rcvar to turn hardware surface on for speed boost,
+disabled by default because it crashes on Windows.
+
+  BUGS FIXED
+
+Hopefully fixed issue with X header locations affecting some users.
+DMG sprite sorting isn't working right. It's now disabled by default.
+VBLANK timings have been changed slightly to fix Daedalian Opus.
+Fixed various minor bugs found by enabling compiler warnings.
+Spacebar was not working with SDL. Fixed.
+Fixed bug that made OAM unreadable.
+
+
+
 RELEASE 0.9.9
 
   NEW FEATURES

@@ -114,7 +114,6 @@ void kb_poll()
 	event_t ev;
 	byte k;
 	int st;
-	struct vt_stat vts;
 	
 	while (read(kbfd, &k, 1) > 0)
 	{

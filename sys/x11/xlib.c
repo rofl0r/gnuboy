@@ -34,8 +34,11 @@
 
 struct fb fb;
 
+static int vmode[3] = { 160, 144, 0 };
+
 rcvar_t vid_exports[] =
 {
+	RCV_VECTOR("vmode", &vmode, 3),
 	RCV_END
 };
 
@@ -83,7 +86,7 @@ static GC x_gc;
 
 static XSizeHints x_size;
 static XWMHints x_wmhints;
-static XClassHint x_class;
+/*static XClassHint x_class;*/
 
 #ifdef USE_XSHM
 static XShmSegmentInfo x_shm;
@@ -199,7 +202,7 @@ static void colorshifts()
 {
 	int i;
 	int mask[3];
-	int l, c, r;
+	int l, c;
 
 	mask[0] = x_vis->red_mask;
 	mask[1] = x_vis->green_mask;
@@ -276,10 +279,10 @@ void vid_init()
 	x_gcvalmask = GCGraphicsExposures;
 	x_gcval.graphics_exposures = False;
 
-	fb.w = 160;
-	fb.h = 144;
+	fb.w = vmode[0];
+	fb.h = vmode[1];
 	fb.pelsize = x_bytes == 3 ? 4 : x_bytes;
-	fb.pitch = 160 * fb.pelsize;
+	fb.pitch = fb.w * fb.pelsize;
 	fb.indexed = x_pseudo;
 	fb.enabled = 1;
 	fb.dirty = 0;
@@ -312,7 +315,7 @@ void vid_init()
 	for(;;)
 	{
 		XNextEvent(x_display, &x_ev);
-		if (x_ev.type = Expose && !x_ev.xexpose.count)
+		if (x_ev.type == Expose && !x_ev.xexpose.count)
 			break;
 	}
 

@@ -1,7 +1,7 @@
 
 include Version
 
-OBJS = lcd.o lcdc.o palette.o cpu.o mem.o rtc.o hw.o sound.o \
+OBJS = lcd.o refresh.o lcdc.o palette.o cpu.o mem.o rtc.o hw.o sound.o \
 	events.o keytable.o \
 	loader.o save.o debug.o emu.o main.o \
 	rccmds.o rckeys.o rcvars.o rcfile.o exports.o \

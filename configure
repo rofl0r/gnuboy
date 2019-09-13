@@ -2037,7 +2037,7 @@ if test "$enable_asm" = yes ; then
 case `uname -m` in
 i?86)
 echo "$ac_t""using optimized i386 cores" 1>&6
-ASM="-DUSE_ASM -I./asm/i386" ; ASM_OBJS="asm/i386/cpu.o asm/i386/lcd.o" ;;
+ASM="-DUSE_ASM -I./asm/i386" ; ASM_OBJS="asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.s" ;;
 *)
 echo "$ac_t""no optimized asm core available for `uname -m`" 1>&6 ;;
 esac
