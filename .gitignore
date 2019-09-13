@@ -1,0 +1,14 @@
+Makefile
+config.status
+sys/nix/config.h
+*.o
+fbgnuboy
+sdlgnuboy
+xgnuboy
+joytest
+*.log
+*.gbc
+*.xz
+*.gz
+*.zip
+archives/
