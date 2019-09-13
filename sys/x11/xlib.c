@@ -12,7 +12,13 @@
 #define USE_XSHM
 #endif
 #else
-#define USE_XSHM  /* assume we have shm if no config.h */
+#define USE_XSHM  /* assume we have shm if no config.h - is this ok? */
+#endif
+
+#ifdef USE_XSHM
+/* make sure ipc.h and shm.h will work! */
+#define _SVID_SOURCE
+#define _XOPEN_SOURCE
 #endif
 
 #include <stdlib.h>
@@ -180,7 +186,7 @@ static void allocscreen()
 	if (x_byteswap && x_bytes > 1)
 		fb.ptr = malloc(x_image->bytes_per_line * x_image->height);
 	else
-		fb.ptr = x_image->data;
+		fb.ptr = (byte *)x_image->data;
 }
 
 

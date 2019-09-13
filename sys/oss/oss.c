@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+char *strdup();
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+char *strdup();
 
 #include <SDL/SDL.h>
 

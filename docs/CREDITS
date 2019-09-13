@@ -18,6 +18,7 @@ publicity
 
 Damian M Gryski --
 SDL port
+various bugfix patches
 
 Ralf Hoffmann --
 Linux joystick code
@@ -50,7 +51,15 @@ fbtv, from which mga accel code was taken
 
 Jonathan Gevaryahu AKA Lord Nightmare --
 tons of help improving sound emulation!
+color filter code and default filter values
+misc debugging support
 
 Neil Stevens --
 collecting samples for sound channel 4 (noise)
+
+David Madore --
+public domain "inflate" decompressor
+
+Hii (author of TGB) --
+lots of info on various memory mappers
 

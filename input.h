@@ -42,6 +42,7 @@
 #define K_SLASH '/'
 #define K_BSLASH '\\'
 #define K_SEMI ';'
+#define K_QUOTE '\''
 
 #define K_F1 0x131
 #define K_F2 0x132

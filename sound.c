@@ -21,10 +21,10 @@ const static byte dmgwave[16] =
 
 const static byte cgbwave[16] =
 {
-	0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00
+	0x00, 0xff, 0x00, 0xff,
+	0x00, 0xff, 0x00, 0xff,
+	0x00, 0xff, 0x00, 0xff,
+	0x00, 0xff, 0x00, 0xff,
 };
 
 const static byte sqwave[4][8] =
@@ -100,13 +100,13 @@ void sound_dirty()
 	S1.envol = R_NR12 >> 4;
 	S1.endir = (R_NR12>>3) & 1;
 	S1.endir |= S1.endir - 1;
-	S1.enlen = (R_NR12 & 3) << 15;
+	S1.enlen = (R_NR12 & 7) << 15;
 	s1_freq();
 	S2.len = (64-(R_NR21&63)) << 13;
 	S2.envol = R_NR22 >> 4;
 	S2.endir = (R_NR22>>3) & 1;
 	S2.endir |= S2.endir - 1;
-	S2.enlen = (R_NR22 & 3) << 15;
+	S2.enlen = (R_NR22 & 7) << 15;
 	s2_freq();
 	S3.len = (256-R_NR31) << 20;
 	s3_freq();
@@ -114,7 +114,7 @@ void sound_dirty()
 	S4.envol = R_NR42 >> 4;
 	S4.endir = (R_NR42>>3) & 1;
 	S4.endir |= S4.endir - 1;
-	S4.enlen = (R_NR42 & 3) << 15;
+	S4.enlen = (R_NR42 & 7) << 15;
 	s4_freq();
 }
 
@@ -298,8 +298,8 @@ void s1_init()
 	S1.endir = (R_NR12>>3) & 1;
 	S1.endir |= S1.endir - 1;
 	S1.enlen = (R_NR12 & 7) << 15;
+	if (!S1.on) S1.pos = 0;
 	S1.on = 1;
-	S1.pos = 0;
 	S1.cnt = 0;
 	S1.encnt = 0;
 }
@@ -310,8 +310,8 @@ void s2_init()
 	S2.endir = (R_NR22>>3) & 1;
 	S2.endir |= S2.endir - 1;
 	S2.enlen = (R_NR22 & 7) << 15;
+	if (!S2.on) S2.pos = 0;
 	S2.on = 1;
-	S2.pos = 0;
 	S2.cnt = 0;
 	S2.encnt = 0;
 }
@@ -319,7 +319,7 @@ void s2_init()
 void s3_init()
 {
 	int i;
-	S3.pos = 0;
+	if (!S3.on) S3.pos = 0;
 	S3.cnt = 0;
 	S3.on = R_NR30 >> 7;
 	if (S3.on) for (i = 0; i < 16; i++)

@@ -408,27 +408,22 @@ void mbc_write(int a, byte b)
 			break;
 		}
 		break;
-	case MBC_HUC3: /* FIXME - this is all guesswork -- is it right??? */
+	case MBC_HUC3:
 		switch (ha & 0xE)
 		{
 		case 0x0:
-			/* mbc.enableram = ((b & 0x0F) == 0x0A); */
-			mbc.enableram = 1;
-			mbc.rambank = b;
+			mbc.enableram = ((b & 0x0F) == 0x0A);
 			break;
 		case 0x2:
-			if (!b) b = 1;
-			mbc.rombank = b;
+			b &= 0x7F;
+			mbc.rombank = b ? b : 1;
 			break;
 		case 0x4:
-			if (mbc.model)
-			{
-				mbc.rambank = b & 0x03;
-				break;
-			}
+			rtc.sel = b & 0x0f;
+			mbc.rambank = b & 0x03;
 			break;
 		case 0x6:
-			mbc.model = b & 1;
+			rtc_latch(b);
 			break;
 		}
 		break;
@@ -534,6 +529,8 @@ byte mem_read(int a)
 		/* if ((R_STAT & 0x03) == 0x03) return 0xFF; */
 		return lcd.vbank[R_VBK&1][a & 0x1FFF];
 	case 0xA:
+		if (!mbc.enableram && mbc.type == MBC_HUC3)
+			return 0x01;
 		if (!mbc.enableram)
 			return 0xFF;
 		if (rtc.sel&8)

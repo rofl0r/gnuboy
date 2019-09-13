@@ -10,6 +10,32 @@ GNUBOY CHANGES FILE -- detailed list of all changes made
   release, please refer to the file WHATSNEW.
 
 
+1.0.3
+fixed a typo in the SDL keymap file that kept . from working
+added support for binding keys to the ' key
+fixed bug related in nix.c's sys_checkdir that made it always demand writable
+fixed loader.c since it depended on this bug
+removed the literal newlines inside the copyright string in main.c
+removed some parentheses in save.c's macros
+(these were perfectly valid but caused problems with a broken compiler, lcc)
+added return-type prototypes for strdup since it's not always in string.h
+(many of the above were old bugfixes sent in by Damian M Gryski)
+added slow, primitive support for gzipped rom files
+(thanks to David Madore for the portable inflate code taken from his quine)
+various minor source cleanups
+more preliminary work on the fast register/himem io routines (not used yet)
+fixed HuC3 emulation, according to TGB's sources
+added hacks to work around HuC3's IR port not being implemented
+(Robopon Sun and Star now seem to run fine)
+fixed a few sound inconsistencies after loading a savestate
+various fixes to keybinding system and X11 keymap
+integrated Jonathan Gevaryahu's color filter
+added "gbamode" rcvar to unlock gba-only features in some cgb games
+(this has NOTHING to do with gba emulation!)
+fixed DMG sprite sorting code! it's now enabled by default
+reverted mistaken CGB wave pattern "fix" in 1.0.2
+don't always reset sound positions on sound init (is this correct?)
+
 1.0.2 (2001-09-18)
 fixed bugs in rc_setvar calls in sys_initpath
 fixed multiple definition of cpu struct in cpu.h

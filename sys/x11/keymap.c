@@ -25,7 +25,7 @@ int keymap[][2] =
 	{ XK_Return, K_ENTER },
 	{ XK_Tab, K_TAB },
 	{ XK_BackSpace, K_BS },
-	{ XK_Delete, K_DEL },    /* FIXME - is this right? */
+	{ XK_Delete, K_DEL },
 	{ XK_Insert, K_INS },
 	{ XK_Home, K_HOME },
 	{ XK_End, K_END },
@@ -59,6 +59,7 @@ int keymap[][2] =
 	{ XK_KP_Down, K_NUM2 },
 	{ XK_KP_Next, K_NUM3 },
 	{ XK_KP_Left, K_NUM4 },
+	{ XK_KP_Begin, K_NUM5 },
 	{ XK_KP_Space, K_NUM5 },  /* FIXME - ??? */
 	{ XK_KP_Right, K_NUM6 },
 	{ XK_KP_Home, K_NUM7 },

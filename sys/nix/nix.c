@@ -63,7 +63,7 @@ void sys_sleep(int us)
 void sys_checkdir(char *path, int wr)
 {
 	char *p;
-	if (access(path, X_OK | (write ? W_OK : 0)))
+	if (access(path, X_OK | (wr ? W_OK : 0)))
 	{
 		if (!access(path, F_OK))
 			die("cannot access %s: %s\n", path, strerror(errno));

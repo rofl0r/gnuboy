@@ -8,6 +8,38 @@
 
 
 
+RELEASE 1.0.3
+
+All ANSI C incompatibilities should be fixed. Please report any that
+remain.
+
+Various bugs encountered when building gnuboy on strange compilers
+have been fixed.
+
+Internal support for decompressing gzipped roms now exists in a
+minimal form. The inflate code used is taken from a quine
+(self-reproducing program) written by David Madore and placed in the
+public domain. This code is very portable but is rather slow and may
+crash when given invalid data; however, there should be no impact on
+security. Currently only gzip files (not pkzip files) are supported.
+
+HuC3 emultaion has been fixed to some extent. Robopon Sun and Star are
+both playable now, but many features of the HuC3 are still not
+implemented.
+
+Color filtering to make gnuboy look much more like a real CGB is now
+included, thanks to the work of Jonathan Gevaryahu.
+
+A new rcvar "gbamode" has been added to unlock the GBA-only features
+present in some newer CGB games. (This has nothing to do with GBA
+emulation, which gnuboy does not do and will not do in the future.)
+
+Sprite sorting in DMG mode has been fixed. This should improve things
+in various DMG games where sprites previously overlapped in the wrong
+order.
+
+
+
 RELEASE 1.0.2
 
 A minor problem in the frequency sweep function on sound channel 1 was

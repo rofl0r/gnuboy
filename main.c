@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *strdup();
+
 #include <stdarg.h>
 #include <signal.h>
 

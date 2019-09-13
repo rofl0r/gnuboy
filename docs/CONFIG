@@ -143,10 +143,11 @@ keytable.c for a full list:
   slash         / or ?
   bslash        \ or |
   semi          ; or :
+  quote         ' or "
 
 The numeric keypad is referenced as follows
 
-  num0-num9     Numeral keys 0-9
+  num0-num9     Numeral keys 0-9 (on keypad)
   numplus       Numeric keypad +
   numminus      Numeric keypad -
   nummul        Numeric keypad *
@@ -446,6 +447,40 @@ at all possible, is to use 16bpp or higher mode, but that may run too
 slowly on older computers.
 
 
+  COLOR FILTERING
+
+Optionally, gnuboy can filter screen colors to make them look more
+washed out or faded like on a real GBC. To enable this feature,
+
+  set colorfilter 1
+
+By default, gnuboy will not apply the filter when running DMG (mono)
+games, since many of the sample palettes are already designed to
+immitate a Gameboy LCD. If you would like to have the filter also take
+effect when running in DMG mode,
+
+  set filterdmg 1
+
+You can also customize the filter parameters to get different color
+effects from the default ones. See the sample file filters.rc for
+examples.
+
+
+  SPRITE SORTING
+
+Normally sprites are sorted and prioritized according to their x
+coordinate when in DMG mode. However, this takes a little bit of extra
+cpu time, and it's not needed by most DMG games, so it can be disabled
+as follows:
+
+  set sprsort 0
+
+Note that although sprite sorting was disabled in previous releases
+because it was not working properly, it now works great, so unless you
+really need to maximize performance, you should probably leave it
+enabled.
+
+
   SOUND OPTIONS
 
 Fortunately sound is a lot simpler than video. At this time, there are
@@ -563,12 +598,6 @@ useful. Redirecting stdout to a file is a must!
 
 The "sprdebug" variable is used to see how many sprites are visible
 per line. Try it and see!
-
-Finally, this isn't really a debugging option, but I list it here
-since it doesn't work correctly yet: "sprsort". Normally sprites are
-supposed to be sorted and prioritized according to their x coordinate
-when in DMG mode, but this code doesn't work yet so it's disabled by
-default. Enable it with this option if you want to debug it.
 
 
   PLATFORM-SPECIFIC OPTIONS

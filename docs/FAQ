@@ -67,7 +67,8 @@ A: Set the following environment variables before running:
     SDL_VIDEODRIVER=windib
     SDL_AUDIODRIVER=waveout
 Doing so should fix problems with other SDL programs too. If it still
-doesn't work, let us know.
+doesn't work, let us know. Your milage may vary; some people have
+reported that this doesn't help.
 
 
 Q: Why is sound pitch off by about 1% in gnuboy?
@@ -76,6 +77,14 @@ A: You have a very good ear. It's a rounding issue that won't be
 outright fixed for a while. If you want a workaround, set the sample
 rate to a power of two (for example 32768 works well) on the command
 line or in your gnuboy.rc.
+
+
+Q: Why does sound have ugly static noise on Windows?
+
+A: This is a bug in SDL's DirectSound support. Try setting the
+environment variable:
+    SDL_AUDIODRIVER=waveout
+before running gnuboy. Hopefully this won't cause any problems.
 
 
 

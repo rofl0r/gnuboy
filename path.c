@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *strdup();
+
 #ifdef ALT_PATH_SEP
 #define SEP ';'
 #else

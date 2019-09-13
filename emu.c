@@ -79,10 +79,12 @@ void emu_run()
 		vid_end();
 		rtc_tick();
 		sound_mix();
-		delay = pcm_submit() ? 0 : framelen - sys_elapsed(timer);
-		/* printf("%d\n", delay); */
-		sys_sleep(delay);
-		sys_elapsed(timer);
+		if (!pcm_submit())
+		{
+			delay = framelen - sys_elapsed(timer);
+			sys_sleep(delay);
+			sys_elapsed(timer);
+		}
 		doevents();
 		vid_begin();
 		if (framecount) { if (!--framecount) die("finished\n"); }

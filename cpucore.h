@@ -269,7 +269,7 @@ const static byte daa_table[4096] =
 	0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A, 0x9A,
 };
 
-const static daa_carry_table[64] =
+const static byte daa_carry_table[64] =
 {
 	00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,	
 	00, 00, 00, 00, 00, 00, 00, 00, FC, FC, 00, 00, 00, 00, 00, 00,

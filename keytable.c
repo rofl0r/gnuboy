@@ -26,8 +26,11 @@ keytable_t keytable[] =
 	{ "tab", K_TAB },
 	{ "space", K_SPACE },
 	{ "bs", K_BS },
+	{ "backspace", K_BS },     /* dup */
 	{ "del", K_DEL },
+	{ "delete", K_DEL },       /* dup */
 	{ "ins", K_INS },
+	{ "insert", K_INS },       /* dup */
 	{ "home", K_HOME },
 	{ "end", K_END },
 	{ "prior", K_PRIOR },
@@ -35,8 +38,10 @@ keytable_t keytable[] =
 	{ "pgup", K_PRIOR }, /* duplicate for pgup/pgdn fans */
 	{ "pgdn", K_NEXT },  /* ditto */
 	{ "esc", K_ESC },
+	{ "escape", K_ESC },       /* dup */
 	{ "pause", K_PAUSE },
 	{ "caps", K_CAPS },
+	{ "capslock", K_CAPS },    /* dup */
 	{ "numlock", K_NUMLOCK },
 	{ "scroll", K_SCROLL },
 	
@@ -57,6 +62,7 @@ keytable_t keytable[] =
 	{ "|", K_BSLASH },         /* dup */
 	{ "semi", K_SEMI },
 	{ "semicolon", K_SEMI },   /* dup */
+	{ "quote", K_QUOTE },
 	
 	{ "f1", K_F1 },
 	{ "f2", K_F2 },
@@ -87,7 +93,8 @@ keytable_t keytable[] =
 	{ "numdiv", K_NUMDIV },
 	{ "numdot", K_NUMDOT },
 	{ "numenter", K_NUMENTER },
-	
+
+	/* Note that these are not presently used... */
 	{ "mouse0", K_MOUSE0 },
 	{ "mouse1", K_MOUSE1 },
 	{ "mouse2", K_MOUSE2 },

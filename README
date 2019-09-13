@@ -51,7 +51,8 @@ Aspects not emulated at this time include:
 * Serial IO (link cable).
   Undocumented 'extra' ram in OAM space on Gameboy Color.
   All Super Gameboy extensions.
-* HuC1, HuC3, and other obscure mappers.
+* GBC, HuC1, and HuC3 IR ports.
+* Obscure mappers such as TAMA5.
   Sorting sprites by X coordinate in DMG mode.
   HALT instruction skipping in DMG mode.
   CPU stalls during HDMA and GDMA.
@@ -94,10 +95,6 @@ work perfectly on gnuboy with the following exceptions:
   be made to crash if the player jumps into the ceiling in the first
   level. It's not clear whether this bug is MBC-related, something
   else, or an actual bug in the original game.
-
-  Robopon Star and Sun both require HuC3 which is not implemented.
-  Both hang immediately after the first intro screen and are thus
-  unplayable.
 
   Monster Go! Go! Go! (Japanese) is unplayable. The cause of the
   problem is not fully known, but it's either a very bad dump or it's
