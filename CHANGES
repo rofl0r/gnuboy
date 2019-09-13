@@ -1,0 +1,16 @@
+
+
+0.8.2
+rewrote lcdc state behavior completely, fixed lots of compat issues
+implemented serial io failure for roms that need it, fixed more compat
+now, mk1, sml2, and alleyway are all fixed!
+additions to input.h and keytable.c to allow future joystick support
+
+0.8.1
+fixed stupid timer interrupt bug in asm cpu core
+renamed screen to fb so as not to conflict with allegro symbol names
+
+0.8.0
+initial release
+
+

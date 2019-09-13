@@ -27,13 +27,12 @@
 #include <sys/shm.h>
 #endif
 
-#include "screen.h"
+#include "fb.h"
 #include "input.h"
 #include "rc.h"
 
 
-screen_t screen;
-extern int vidres[2];
+struct fb fb;
 
 rcvar_t vid_exports[] =
 {
@@ -104,8 +103,8 @@ static XEvent x_ev;
 static void freescreen()
 {
 	if (!initok || !x_image) return;
-	if ((char *)screen.fb != (char *)x_image->data)
-		free(screen.fb);
+	if ((char *)fb.ptr != (char *)x_image->data)
+		free(fb.ptr);
 #ifdef USE_XSHM
 	if (x_useshm)
 	{
@@ -121,7 +120,7 @@ static void freescreen()
 #endif
 	free(x_image);
 	x_image = NULL;
-	screen.fb = NULL;
+	fb.ptr = NULL;
 }
 
 static void allocscreen()
@@ -149,7 +148,7 @@ static void allocscreen()
 				die("XShmAttach failed\n");
 			XSync(x_display, False);
 			x_shmdone = 1;
-			screen.pitch = x_image->bytes_per_line;
+			fb.pitch = x_image->bytes_per_line;
 		}
 		else
 		{
@@ -174,9 +173,9 @@ static void allocscreen()
 #endif
 		;
 	if (x_byteswap && x_bytes > 1)
-		screen.fb = malloc(x_image->bytes_per_line * x_image->height);
+		fb.ptr = malloc(x_image->bytes_per_line * x_image->height);
 	else
-		screen.fb = x_image->data;
+		fb.ptr = x_image->data;
 }
 
 
@@ -184,8 +183,8 @@ static void allocscreen()
 void vid_resize()
 {
 	freescreen();
-	x_width = screen.w;
-	x_height = screen.h;
+	x_width = fb.w;
+	x_height = fb.h;
 	XResizeWindow(x_display, x_win, x_width, x_height);
 	x_size.flags = PSize | PMinSize | PMaxSize;
 	x_size.min_width = x_size.max_width = x_size.base_width = x_width;
@@ -210,8 +209,8 @@ static void colorshifts()
 	{
 		for (l = 0; l < 32 && !((1<<l) & mask[i]); l++);
 		for (c = 0; l+c < 32 && ((1<<(l+c)) & mask[i]); c++);
-		screen.cc[i].l = l;
-		screen.cc[i].r = 8-c;
+		fb.cc[i].l = l;
+		fb.cc[i].r = 8-c;
 	}
 }
 
@@ -277,15 +276,15 @@ void vid_init()
 	x_gcvalmask = GCGraphicsExposures;
 	x_gcval.graphics_exposures = False;
 
-	screen.w = 160;
-	screen.h = 144;
-	screen.pelsize = x_bytes == 3 ? 4 : x_bytes;
-	screen.pitch = 160 * screen.pelsize;
-	screen.indexed = x_pseudo;
+	fb.w = 160;
+	fb.h = 144;
+	fb.pelsize = x_bytes == 3 ? 4 : x_bytes;
+	fb.pitch = 160 * fb.pelsize;
+	fb.indexed = x_pseudo;
 	
 	x_win_x = x_win_y = 0;
-	x_width = screen.w;
-	x_height = screen.h;
+	x_width = fb.w;
+	x_height = fb.h;
 	x_win = XCreateWindow(
 		x_display, RootWindow(x_display, x_screen),
 		x_win_x, x_win_y, x_width, x_height, 0, x_bits,
@@ -439,9 +438,9 @@ void doswap()
 	int cnt;
 	un16 t16;
 	un32 t32;
-	un16 *src16 = (void *)screen.fb;
+	un16 *src16 = (void *)fb.ptr;
 	un16 *dst16 = (void *)x_image->data;
-	un32 *src32 = (void *)screen.fb;
+	un32 *src32 = (void *)fb.ptr;
 	un32 *dst32 = (void *)x_image->data;
 	
 	switch (x_bytes)

@@ -14,7 +14,7 @@ dnl AC_CHECK_SIZEOF(short)
 dnl AC_CHECK_SIZEOF(int)
 dnl AC_CHECK_SIZEOF(long)
 
-AC_FUNC_MMAP
+dnl AC_FUNC_MMAP
 
 AC_CHECK_FUNCS(usleep, ,[
 AC_CHECK_FUNCS(select, ,[

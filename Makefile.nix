@@ -39,7 +39,7 @@ install: all
 	$(INSTALL) -m 755 $(TARGETS) $(bindir)
 
 clean:
-	rm -f ?gnuboy gmon.out *.o sys/*.o sys/*/*.o lib/*.o asm/*/*.o
+	rm -f ?gnuboy gmon.out *.o sys/*.o sys/*/*.o asm/*/*.o
 
 
 

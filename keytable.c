@@ -93,6 +93,11 @@ keytable_t keytable[] =
 	{ "mouse2", K_MOUSE2 },
 	{ "mouse3", K_MOUSE3 },
 	{ "mouse4", K_MOUSE4 },
+
+	{ "joyleft", K_JOYLEFT },
+	{ "joyright", K_JOYRIGHT },
+	{ "joyup", K_JOYUP },
+	{ "joydown", K_JOYDOWN },
 	
 	{ "joy0", K_JOY0 },
 	{ "joy1", K_JOY1 },

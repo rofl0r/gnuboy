@@ -14,13 +14,13 @@
 #include <sys/movedata.h>
 #include "vesa.h"
 
-#include "screen.h"
+#include "fb.h"
 #include "input.h"
 #include "rc.h"
 
 
 
-screen_t screen;
+struct fb fb;
 
 static byte static_fb[64000];
 static un32 vidaddr;
@@ -78,14 +78,14 @@ static void setvga()
 	vs = 320*28;
 	vl = 320*144;
 	vidaddr = 0x000A0000;
-	screen.pitch = 320;
-	screen.w = 320;
-	screen.h = 144;
-	screen.pelsize = 1;
-	screen.indexed = 1;
-	screen.cc[0].r = screen.cc[1].r = screen.cc[2].r = 8;
-	screen.cc[0].l = screen.cc[1].l = screen.cc[2].l = 0;
-	screen.fb = static_fb;
+	fb.pitch = 320;
+	fb.w = 320;
+	fb.h = 144;
+	fb.pelsize = 1;
+	fb.indexed = 1;
+	fb.cc[0].r = fb.cc[1].r = fb.cc[2].r = 8;
+	fb.cc[0].l = fb.cc[1].l = fb.cc[2].l = 0;
+	fb.ptr = static_fb;
 }
 
 void setvesa(int mode) 
@@ -122,24 +122,24 @@ void setvesa(int mode)
 	switch(modeinfo.bpp)
 	{
 	case 8:
-		screen.indexed = 1;
-		screen.pelsize = 1;
+		fb.indexed = 1;
+		fb.pelsize = 1;
 		vb = 1;
 		break;
 	case 15:
 	case 16:
-		screen.indexed = 0;
-		screen.pelsize = 2;
+		fb.indexed = 0;
+		fb.pelsize = 2;
 		vb = 2;
 		break;
 	case 24:
-		screen.indexed = 0;
-		screen.pelsize = 3;
+		fb.indexed = 0;
+		fb.pelsize = 3;
 		vb = 3;
 		break;
 	case 32:
-		screen.indexed = 0;
-		screen.pelsize = 4;
+		fb.indexed = 0;
+		fb.pelsize = 4;
 		vb = 4;
 		break;
 	default:
@@ -151,18 +151,18 @@ void setvesa(int mode)
 	vp = modeinfo.bytesperscanline;
 	vs = ((vh - 144)>>1)*vp;
 	
-	screen.pitch = vp;
-	screen.w = vw;
-	screen.h = 144;
+	fb.pitch = vp;
+	fb.w = vw;
+	fb.h = 144;
 	
-	screen.cc[0].r = 8 - modeinfo.redmasksize;
-	screen.cc[1].r = 8 - modeinfo.greenmasksize;
-	screen.cc[2].r = 8 - modeinfo.bluemasksize;
-	screen.cc[0].l = modeinfo.redfieldpos;
-	screen.cc[1].l = modeinfo.greenfieldpos;
-	screen.cc[2].l = modeinfo.bluefieldpos;
+	fb.cc[0].r = 8 - modeinfo.redmasksize;
+	fb.cc[1].r = 8 - modeinfo.greenmasksize;
+	fb.cc[2].r = 8 - modeinfo.bluemasksize;
+	fb.cc[0].l = modeinfo.redfieldpos;
+	fb.cc[1].l = modeinfo.greenfieldpos;
+	fb.cc[2].l = modeinfo.bluefieldpos;
 
-	screen.fb = static_fb;
+	fb.ptr = static_fb;
 	
 	meminfo.size = vp * vh;
 	meminfo.address = modeinfo.physbaseptr;

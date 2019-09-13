@@ -538,8 +538,11 @@ timer_table:
 	.endm
 
 	.macro _trace
-	pushf
-	pusha
+	testb $1, debug_trace
+	jz .Lnotrace\@
+	pushl %eax
+	pushl %ecx
+	pushl %edx
 	movl %ebx, AF
 	movl $1, %eax
 	pushl %eax
@@ -547,8 +550,10 @@ timer_table:
 	pushl %eax
 	call debug_disassemble
 	addl $8, %esp
-	popa
-	popf
+	popl %edx
+	popl %ecx
+	popl %eax
+.Lnotrace\@:	
 	.endm
 	
 
@@ -2193,7 +2198,7 @@ cpu_emulate:
 	movl IMA, %eax
 	movl %eax, IME
 
-	//_trace
+	_trace
 	
 	_fetch
 	xorl %ecx, %ecx
@@ -2259,14 +2264,9 @@ opdone:
 	cmpl $256, %eax
 	jl .Lendtimer
 
-	movb ilines, %cl
-	xorb $4, %cl
-	andb $4, %cl
-	orb %cl, IF
-	orb %cl, ilines
-	// skip halt logic -- if we get here, cpu is NOT halted!
-
+	movb $4, %cl
 	xorl %edx, %edx
+	orb %cl, IF
 	movl $256, %ecx
 	movb TMA, %dl
 	subl $256, %eax

@@ -88,6 +88,11 @@
 #define K_JOY6 0x1b6
 #define K_JOY7 0x1b7
 
+#define K_JOYUP 0x1ba
+#define K_JOYDOWN 0x1bb
+#define K_JOYRIGHT 0x1bc
+#define K_JOYLEFT 0x1bd
+
 #define MAX_KEYS 0x200
 
 typedef struct keytable_s

@@ -218,26 +218,18 @@ guest, but it didn't seem to be happening for me.
 
   KNOWN BUGS
 
-MK1 hangs on one of the intro screens.
-
-Alleyway's controls are completely messed up.
-
 DKC and a few other CGB roms have major tile glitches.
-
-SML2 has all kinds of problems.
-
-The state in which LCD display is disabled is not handled at all
-correctly, but most games work fine. Most of the above problems are
-expected to be caused by this bug, however. We have found no
-documentation on how display disable is supposed to work, so advice
-would be appreciated, especially if you can support your theory with
-evidence.
 
 The portal between the temple and the Talon in FFL3 is glitched and
 the game freezes for a second or two building the incorrect animation
 when entering those screens. This seems unrelated to the former bugs.
 
 The MBC3 realtime clock is not implemented.
+
+LCDC STAT periods might be the wrong length immediately following
+transitions between LCDC on/off. This is a pain to fix and it doesn't
+seem to be causing any problems, so it will be ignored for the time
+being.
 
 Things might run a little too fast on DOS and maybe slightly too slow
 on *nix. The timing code isn't quite perfect yet. Perhaps once there's
