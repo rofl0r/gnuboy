@@ -42,6 +42,8 @@ test "$x_includes" && XINCS="-I$x_includes"
 test "$x_libraries" && XLIBS="-L$x_libraries"
 fi
 
+AC_CHECK_HEADERS(sys/soundcard.h, [SOUND=sys/oss/oss.o], [SOUND=sys/dummy/nosound.o])
+
 AC_ARG_ENABLE(debug,    [  --enable-debug          include debugging symbols], [])
 AC_ARG_ENABLE(profile,  [  --enable-profile        enable performance profiling], [])
 AC_ARG_ENABLE(optimize, [  --enable-optimize=LEVEL select optimization level (full,low,none)], [], [enable_optimize=yes])
@@ -102,6 +104,7 @@ fi
 
 
 AC_SUBST(ENDIAN)
+AC_SUBST(SOUND)
 AC_SUBST(ASM)
 AC_SUBST(ASM_OBJS)
 AC_SUBST(TARGETS)

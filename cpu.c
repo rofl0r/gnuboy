@@ -249,7 +249,7 @@ void cpu_reset()
 	cpu.tim = 0;
 	cpu.lcdc = 40;
 
-	IMA = 0;
+	IME = 0;
 	IMA = 0;
 	
 	PC = 0x0100;
@@ -279,7 +279,7 @@ void timer_advance(int cnt)
 	
 	if (!(R_TAC & 0x04)) return;
 
-	unit = timer_table[R_TAC & 0x03];
+	unit = ((-R_TAC) & 3) << 1; //timer_table[R_TAC & 0x03];
 	cpu.tim += (cnt<<unit);
 
 	if (cpu.tim >= 512)
@@ -303,11 +303,17 @@ void lcdc_advance(int cnt)
 	if (cpu.lcdc <= 0) lcdc_trans();
 }
 
+void sound_advance(int cnt)
+{
+	cpu.snd += cnt;
+}
+
 void do_timers(int cnt)
 {
 	div_advance(cnt);
 	timer_advance(cnt);
 	lcdc_advance(cnt);
+	sound_advance(cnt);
 }
 
 int cpu_idle(int max)
@@ -328,7 +334,7 @@ int cpu_idle(int max)
 	}
 
 	/* Figure out when the next timer interrupt will happen */
-	unit = timer_table[R_TAC & 0x03];
+	unit = ((-R_TAC) & 3) << 1;
 	cnt = (511 - cpu.tim + (1<<unit)) >> unit;
 	cnt += (255 - R_TIMA) << (9 - unit);
 
@@ -349,7 +355,7 @@ int cpu_emulate(int cycles)
 	static union reg acc;
 	static byte b;
 	static word w;
-	static addr addr;
+	static int addr;
 
 	i = cycles;
 next:
@@ -836,6 +842,7 @@ next:
 	div_advance(clen);
 	timer_advance(clen);
 	lcdc_advance(clen);
+	sound_advance(clen);
 
 	i -= clen;
 	if (i > 0) goto next;

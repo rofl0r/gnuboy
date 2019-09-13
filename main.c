@@ -105,6 +105,9 @@ static void help(char *name)
 "      --source FILE             read rc commands from FILE\n"
 "      --bind KEY COMMAND        bind KEY to perform COMMAND\n"
 "      --VAR=VALUE               set rc variable VAR to VALUE\n"
+"      --VAR                     set VAR to 1 (turn on boolean options)\n"
+"      --no-VAR                  set VAR to 0 (turn off boolean options)\n"
+"      --showvars                list all available rc variables\n"
 "      --help                    display this help and exit\n"
 "      --version                 output version information and exit\n"
 "      --copying                 show copying permissions\n"
@@ -161,10 +164,13 @@ int real_main(int argc, char *argv[])
 			copying();
 		else if (!strcmp(argv[i], "--bind")) i += 2;
 		else if (!strcmp(argv[i], "--source")) i++;
-		else if (argv[i][0] == '-' && argv[i][1] == '-')
+		else if (!strcmp(argv[i], "--showvars"))
 		{
-			if (!strchr(argv[i], '=')) i++;
+			sys_dropperms();
+			show_exports();
+			exit(0);
 		}
+		else if (argv[i][0] == '-' && argv[i][1] == '-');
 		else if (argv[i][0] == '-');
 		else rom = argv[i];
 	}
@@ -203,6 +209,15 @@ int real_main(int argc, char *argv[])
 			rc_command(cmd);
 			free(cmd);
 		}
+		else if (!strncmp(argv[i], "--no-", 5))
+		{
+			opt = strdup(argv[i]+5);
+			cmd = malloc(strlen(opt) + 7);
+			sprintf(cmd, "set %s 0", opt);
+			rc_command(cmd);
+			free(cmd);
+			free(opt);
+		}
 		else if (argv[i][0] == '-' && argv[i][1] == '-')
 		{
 			opt = strdup(argv[i]+2);
@@ -211,9 +226,7 @@ int real_main(int argc, char *argv[])
 				*s = 0;
 				arg = s+1;
 			}
-			else if (i + 1 < argc)
-				arg = argv[++i];
-			else die("missing argument to %s\n", opt);
+			else arg = "1";
 			
 			cmd = malloc(strlen(opt) + strlen(arg) + 6);
 			sprintf(cmd, "set %s %s", opt, arg);
@@ -227,6 +240,7 @@ int real_main(int argc, char *argv[])
 
 	vid_init();
 	sys_init();
+	pcm_init();
 
 	rom = strdup(rom);
 	sys_sanitize(rom);

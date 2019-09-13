@@ -122,7 +122,7 @@ void vid_init()
 	int m;
 	vga_modeinfo *mi;
 
-	m = rc_getint("svga_mode");
+	m = svga_mode;
 	if (!m) m = selectmode();
 	
 	if (!vga_hasmode(m))

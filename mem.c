@@ -219,6 +219,16 @@ void ioreg_write(byte r, byte b)
 		hw_hdma_cmd(b);
 		break;
 	}
+	switch (r)
+	{
+	case RI_HDMA1:
+	case RI_HDMA2:
+	case RI_HDMA3:
+	case RI_HDMA4:
+	case RI_HDMA5:
+		/* printf("HDMA %d: %02X\n", r - RI_HDMA1 + 1, b); */
+		return;
+	}
 	/* printf("reg %02X => %02X (%02X)\n", r, REG(r), b); */
 }
 
@@ -277,7 +287,7 @@ byte ioreg_read(byte r)
  * and a byte value written to the address.
  */
 
-void mbc_write(addr a, byte b)
+void mbc_write(int a, byte b)
 {
 	byte ha = (a>>12);
 
@@ -379,29 +389,29 @@ void mbc_write(addr a, byte b)
  * region, it accepts writes to any address.
  */
 
-void mem_write(addr a, byte b)
+void mem_write(int a, byte b)
 {
 	int n;
-	byte ha = (a>>8) & 0xE0;
+	byte ha = (a>>12) & 0xE;
 	
 	/* printf("write to 0x%04X: 0x%02X\n", a, b); */
 	switch (ha)
 	{
-	case 0x00:
-	case 0x20:
-	case 0x40:
-	case 0x60:
+	case 0x0:
+	case 0x2:
+	case 0x4:
+	case 0x6:
 		mbc_write(a, b);
 		break;
-	case 0x80:
+	case 0x8:
 		/* if ((R_STAT & 0x03) == 0x03) break; */
 		vram_write(a & 0x1FFF, b);
 		break;
-	case 0xA0:
+	case 0xA:
 		if (!mbc.enableram) break;
 		ram.sbank[mbc.rambank][a & 0x1FFF] = b;
 		break;
-	case 0xC0:
+	case 0xC:
 		if ((a & 0xF000) == 0xC000)
 		{
 			ram.ibank[0][a & 0x0FFF] = b;
@@ -410,7 +420,7 @@ void mem_write(addr a, byte b)
 		n = R_SVBK & 0x07;
 		ram.ibank[n?n:1][a & 0x0FFF] = b;
 		break;
-	case 0xE0:
+	case 0xE:
 		if (a < 0xFE00)
 		{
 			mem_write(a & 0xDFFF, b);
@@ -420,6 +430,11 @@ void mem_write(addr a, byte b)
 		{
 			/* if (R_STAT & 0x02) break; */
 			if (a < 0xFEA0) lcd.oam.mem[a & 0xFF] = b;
+			break;
+		}
+		if (a >= 0xFF10 && a <= 0xFF3F)
+		{
+			sound_write(a & 0xFF, b);
 			break;
 		}
 		if ((a & 0xFF80) == 0xFF80 && a != 0xFFFF)
@@ -438,33 +453,33 @@ void mem_write(addr a, byte b)
  * region.
  */
 
-byte mem_read(addr a)
+byte mem_read(int a)
 {
 	int n;
-	byte ha = (a>>8) & 0xE0;
+	byte ha = (a>>12) & 0xE;
 	
 	/* printf("read %04x\n", a); */
 	switch (ha)
 	{
-	case 0x00:
-	case 0x20:
+	case 0x0:
+	case 0x2:
 		return rom.bank[0][a];
-	case 0x40:
-	case 0x60:
+	case 0x4:
+	case 0x6:
 		return rom.bank[mbc.rombank][a & 0x3FFF];
-	case 0x80:
+	case 0x8:
 		/* if ((R_STAT & 0x03) == 0x03) return 0xFF; */
 		return lcd.vbank[R_VBK][a & 0x1FFF];
-	case 0xA0:
+	case 0xA:
 		if (!mbc.enableram)
 			return 0xFF;
 		return ram.sbank[mbc.rambank][a & 0x1FFF];
-	case 0xC0:
+	case 0xC:
 		if ((a & 0xF000) == 0xC000)
 			return ram.ibank[0][a & 0x0FFF];
 		n = R_SVBK & 0x07;
 		return ram.ibank[n?n:1][a & 0x0FFF];
-	case 0xE0:
+	case 0xE:
 		if (a < 0xFE00) return mem_read(a & 0xDFFF);
 		if ((a & 0xFF00) == 0xFE)
 		{
@@ -473,6 +488,8 @@ byte mem_read(addr a)
 			else return 0xFF;
 		}
 		if (a == 0xFFFF) return REG(0xFF);
+		if (a >= 0xFF10 && a <= 0xFF3F)
+			return sound_read(a & 0xFF);
 		if ((a & 0xFF80) == 0xFF80)
 			return ram.stack[a & 0x7F];
 		/* printf("reg %02X = %02X\n", a & 0xff, REG(a&0xff)); */

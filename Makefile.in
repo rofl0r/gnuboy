@@ -14,7 +14,7 @@ ASFLAGS = $(CFLAGS)
 TARGETS = @TARGETS@
 
 SYS_DEFS = @DEFS@ @ENDIAN@ @ASM@
-SYS_OBJS = sys/nix/nix.o @ASM_OBJS@
+SYS_OBJS = sys/nix/nix.o @ASM_OBJS@ @SOUND@
 SYS_INCS = -I/usr/local/include @XINCS@ -I./sys/nix
 
 SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o

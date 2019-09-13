@@ -1,4 +1,8 @@
 
+#ifndef __REGS_H__
+#define __REGS_H__
+
+
 #include "hw.h"
 
 /* General internal/io stuff */
@@ -54,6 +58,32 @@
 #define RI_BCPD  0x69
 #define RI_OCPS  0x6A
 #define RI_OCPD  0x6B
+
+
+
+/* Sound */
+
+#define RI_NR10 0x10
+#define RI_NR11 0x11
+#define RI_NR12 0x12
+#define RI_NR13 0x13
+#define RI_NR14 0x14
+#define RI_NR21 0x16
+#define RI_NR22 0x17
+#define RI_NR23 0x18
+#define RI_NR24 0x19
+#define RI_NR30 0x1A
+#define RI_NR31 0x1B
+#define RI_NR32 0x1C
+#define RI_NR33 0x1D
+#define RI_NR34 0x1E
+#define RI_NR41 0x20
+#define RI_NR42 0x21
+#define RI_NR43 0x22
+#define RI_NR44 0x23
+#define RI_NR50 0x24
+#define RI_NR51 0x25
+#define RI_NR52 0x26
 
 
 
@@ -116,6 +146,34 @@
 #define R_OCPD  REG(RI_OCPD)
 
 
+
+/* Sound */
+
+#define R_NR10 REG(RI_NR10)
+#define R_NR11 REG(RI_NR11)
+#define R_NR12 REG(RI_NR12)
+#define R_NR13 REG(RI_NR13)
+#define R_NR14 REG(RI_NR14)
+#define R_NR21 REG(RI_NR21)
+#define R_NR22 REG(RI_NR22)
+#define R_NR23 REG(RI_NR23)
+#define R_NR24 REG(RI_NR24)
+#define R_NR30 REG(RI_NR30)
+#define R_NR31 REG(RI_NR31)
+#define R_NR32 REG(RI_NR32)
+#define R_NR33 REG(RI_NR33)
+#define R_NR34 REG(RI_NR34)
+#define R_NR41 REG(RI_NR41)
+#define R_NR42 REG(RI_NR42)
+#define R_NR43 REG(RI_NR43)
+#define R_NR44 REG(RI_NR44)
+#define R_NR50 REG(RI_NR50)
+#define R_NR51 REG(RI_NR51)
+#define R_NR52 REG(RI_NR52)
+
+
+
+#endif
 
 
 

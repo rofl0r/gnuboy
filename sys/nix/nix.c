@@ -191,6 +191,12 @@ void sys_shutdown()
 {
 }
 
+void sys_dropperms()
+{
+	if (setgid(getgid())) die("failed to drop perms!\n");
+	if (setuid(getuid())) die("failed to drop perms!\n");
+}
+
 int main(int argc, char *argv[])
 {
 	return real_main(argc, argv);

@@ -23,6 +23,7 @@ struct cpu
 	int halt;
 	int div, tim;
 	int lcdc;
+	int snd;
 } cpu;
 
 extern struct cpu cpu;

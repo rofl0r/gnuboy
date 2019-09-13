@@ -79,6 +79,7 @@ file. Some of the more interesting variables are:
   savedir     - the directory where save files will be stored
   forcedmg    - set to 1/true/yes to force color roms to play mono
   framelen    - delay in microseconds between frames
+  framecount  - run only the given number of frames, then exit
 
   dmg_bgp     - specify 4 custom colors to be used for mono background
   dmg_wndp    - same thing, but for the window layer
@@ -131,6 +132,10 @@ since 320x200 is a low as you're going to get. Information on hacking
 mode timings to create a true 160x144 mode for gameboy is beyond the
 scope of this document.
 
+Also, the OSS sound output module is configurable with the rc vars
+samplerate and sound, to set the output sampling rate and enable or
+disable sound, respectively.
+
 
   USAGE - DOS
 
@@ -154,16 +159,10 @@ bugs for the few cases where roms fails.
 
 At this time, gnuboy supports MBC1, MBC2, MBC3, and MBC5 (including
 the version with rumble support, although that functionality is
-omitted). MBC3+RTC is not supported, as we have not been able to find
-any good documentation, particularly in regard to the new model that
-supports 128k SRAM. As usual, info would be appreciated.
+omitted). MBC3+RTC is not supported, but it should be in soon.
 
 
   GRAPHICS SUPPORT
-
-(At present there are a few missing features in the color gameboy
-background priority behavior, due to a recent rewrite of the lcd
-core. These should be fixed by release time.)
 
 Color Gameboy roms are supported completely, including so-called
 "highcolor" tricks. Yes, even in 256-color mode, although in games
@@ -180,16 +179,14 @@ majority of display tricks used in current roms work fine.
 
 We do, however, lack information on proper HDMA/GDMA timings, which
 could explain gnuboy's display failures in a few select color roms. If
-anyone could provide us with accurate information, it would be much
-appreciated.
+you can provide us with accurate information, please do!
 
 
   SOUND SUPPORT
 
-No, there is presently no sound support whatsoever. We do have plans
-to implement sound before long, and depending on how quickly things
-go, we might have the first emulator to successfully play the various
-digital voice demos floating around.
+Sound is the present development focus of gnuboy. While not perfect
+yet, the quality is reasonably good, and most digital voice demos and
+games tested work. Channel 4 is still missing.
 
 
   JOYSTICK AND GAMEPAD SUPPORT
@@ -244,8 +241,12 @@ The main loop in emu_run is very sloppy and not quite right, but it
 works.
 
 Things might run a little too fast on DOS and maybe slightly too slow
-on *nix. The timing code isn't quite perfect yet. Perhaps once there's
-sound we'll let sound regulate timing.
+on *nix. The timing code isn't quite perfect yet. Experiment with the
+framelen rcvar if you like.
+
+Not all sound functionality is in place, and some games that used to
+work fail now that partial sound support is in place. These problems
+should all go away soon.
 
 
   REPORTING OR FIXING BUGS

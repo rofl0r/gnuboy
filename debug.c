@@ -568,7 +568,7 @@ void debug_disassemble(addr a, int c)
 	static int i, j, k;
 	static byte code;
 	static byte ops[3];
-	static addr opaddr;
+	static int opaddr;
 	static char mnemonic[256];
 	static char *pattern;
 
@@ -637,14 +637,11 @@ void debug_disassemble(addr a, int c)
 			printf("%02X %02X %02X ", ops[0], ops[1], ops[2]);
 			break;
 		}
-		0&&printf(
-			"%-16s IE=%02X IF=%02X LCDC=%02X STAT=%02X LY=%02X LYC=%02X\n",
-			mnemonic, R_IE, R_IF, R_LCDC, R_STAT, R_LY, R_LYC
-		);
+		printf("%-16.16s", mnemonic);
 		printf(
-			"%-16s SP=%04X.%04X BC=%04X.%02X.%02X DE=%04X.%02X "
-			"HL=%04X.%02X A=%02X F=%02X %c%c%c%c%c\n",
-			mnemonic, SP, READW(SP),
+			" SP=%04X.%04X BC=%04X.%02X.%02X DE=%04X.%02X "
+			"HL=%04X.%02X A=%02X F=%02X %c%c%c%c%c",
+			SP, READW(SP),
 			BC, READB(BC), READB(0xFF00 | C),
 			DE, READB(DE),
 			HL, READB(HL), A,
@@ -654,6 +651,11 @@ void debug_disassemble(addr a, int c)
 			((F & 0x20) ? 'H' : '-'),
 			((F & 0x10) ? 'C' : '-')
 		);
+		0&&printf(
+			" IE=%02X IF=%02X LCDC=%02X STAT=%02X LY=%02X LYC=%02X",
+			R_IE, R_IF, R_LCDC, R_STAT, R_LY, R_LYC
+		);
+		printf("\n");
 		c--;
 	}
 }

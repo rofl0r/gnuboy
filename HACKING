@@ -82,6 +82,7 @@ HACKING - this file, obviously
 COPYING - the gnu gpl, grants freedom under condition of preseving it
 
 [build files]
+Version - doubles as a C and makefile include, identifies version number
 Rules - generic build rules to be included by makefiles
 Makefile.* - system-specific makefiles
 configure* - script for generating *nix makefiles
@@ -351,6 +352,35 @@ table -- and this could presumably be done 4 pixels at a time with
 32bit operations. This area remains to be explored, but if it works,
 it might end up being the last hurdle to getting realtime emulation
 working on very low-end systems like i486.
+
+
+  SOUND
+
+Rather than processing sound after every few instructions (and thus
+killing the cache coherency), we update sound in big chunks. Yet this
+in no way affects precise sound timing, because sound_mix is always
+called before reading or writing a sound register, and at the end of
+each frame.
+
+The main sound module interfaces with the system-specific code through
+one structure, pcm, and a few functions: pcm_init, pcm_shutdown, and
+pcm_submit. While the first two should be obvious, pcm_submit needs
+some explaining. Whenever realtime sound output is operational,
+pcm_submit is responsible for timing, and should not return until it
+has successfully processed all the data in its input buffer (pcm.buf).
+On *nix sound devices, this typically means just waiting for the write
+syscall to return, but on systems such as DOS where low level IO must
+be handled in the program, pcm_submit needs to delay until the
+current position in the DMA buffer has advanced sufficiently to make
+space for the new samples, then copy them.
+
+For special sound output implementations like write-to-file or the
+dummy sound device, pcm_submit should write the data immediately and
+return 0, indicating to the caller that other methods must be used for
+timing.
+
+And yes, for unices without OSS, we hope to add piped audio output
+soon. Perhaps Sun audio device and a few others as well.
 
 
   OPTIMIZED ASSEMBLY CODE

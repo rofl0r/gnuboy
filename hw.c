@@ -58,7 +58,8 @@ void hw_dma(byte b)
 void hw_hdma_cmd(byte c)
 {
 	int cnt;
-	addr sa, da;
+	addr sa;
+	int da;
 	byte b;
 
 	/* Begin or cancel HDMA */
@@ -69,8 +70,8 @@ void hw_hdma_cmd(byte c)
 	}
 	
 	/* Perform GDMA */
-	sa = ((addr)R_HDMA1 << 8) | R_HDMA2;
-	da = 0x8000 | ((addr)R_HDMA3 << 8) | R_HDMA4;
+	sa = ((addr)R_HDMA1 << 8) | (R_HDMA2&0xf0);
+	da = 0x8000 | ((int)(R_HDMA3&0x1f) << 8) | (R_HDMA4&0xf0);
 	cnt = ((int)c)+1;
 	/* FIXME - this should use cpu time! */
 	cnt <<= 4;
@@ -91,14 +92,15 @@ void hw_hdma_cmd(byte c)
 void hw_hdma()
 {
 	int cnt;
-	addr sa, da;
+	addr sa;
+	int da;
 	byte b;
 	
 	if (!(R_LCDC & 0x80))
 		return;
 
-	sa = ((addr)R_HDMA1 << 8) | R_HDMA2;
-	da = 0x8000 | ((addr)R_HDMA3 << 8) | R_HDMA4;
+	sa = ((addr)R_HDMA1 << 8) | (R_HDMA2&0xf0);
+	da = 0x8000 | ((int)(R_HDMA3&0x1f) << 8) | (R_HDMA4&0xf0);
 	cnt = 16;
 	/* cpu.stall += 102; */
 	while (cnt--)

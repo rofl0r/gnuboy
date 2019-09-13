@@ -1,5 +1,13 @@
 
-
+	// i386 asm cpu core
+	// optimized for 486/pentium/k6
+	
+	// global register usage:
+	// %bl - flags
+	// %bh - A
+	// %bp - PC
+	// %esi - number of cycles we have left
+	// %edi - number of cycles used by current instruction
 
 	.set PC, cpu
 	.set SP, cpu+4
@@ -25,6 +33,7 @@
 	.set div, cpu+40
 	.set tim, cpu+44
 	.set lcdc, cpu+48
+	.set snd, cpu+52
 
 	.set regs, hw
 
@@ -520,9 +529,6 @@ int_vec_table:
 	.long 0x60, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
 	.long 0x58, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
 
-timer_table:
-	.byte 0, 6, 4, 2
-
 
 	.macro _print arg=0
 	pushf
@@ -564,17 +570,16 @@ timer_table:
 	.macro _writeb
 	movl %eax, %ecx
 	shrl $12, %eax
-	pushl %edx
-	movl wmap(,%eax,4), %edx
-	testl %edx,%edx
+	movl wmap(,%eax,4), %eax
+	testl %eax,%eax
 	jnz .Lusemap\@
+	pushl %edx
 	pushl %ecx
 	call mem_write
 	addl $8,%esp
 	jmp .Lfinish\@
 .Lusemap\@:
-	popl %eax
-	movb %al, (%edx,%ecx)
+	movb %dl, (%eax,%ecx)
 .Lfinish\@:
 	.endm
 	
@@ -592,6 +597,24 @@ timer_table:
 	jmp .Lfinish\@
 .Lusemap\@:
 	movb (%edx,%ecx),%al
+.Lfinish\@:
+	.endm
+
+	// read signed byte from addr %eax, upper bytes must be zero
+	// result in %eax
+	.macro _readbs
+	movl %eax, %ecx
+	shrl $12, %eax
+	movl rmap(,%eax,4), %edx
+	testl %edx,%edx
+	jnz .Lusemap\@
+	pushl %ecx
+	call mem_read
+	movsbl %al, %eax
+	popl %ecx
+	jmp .Lfinish\@
+.Lusemap\@:
+	movsbl (%edx,%ecx),%eax
 .Lfinish\@:
 	.endm
 
@@ -614,15 +637,129 @@ timer_table:
 .Lfinish\@:	
 	.endm
 
+	// fetch signed byte from PC
+	// result in %eax
+	.macro _fetchs
+	movl %ebp, %eax
+	movl %ebp, %ecx
+	shrl $12, %eax
+	incw %bp
+	movl rmap(,%eax,4), %edx
+	testl %edx,%edx
+	jnz .Lusemap\@
+	pushl %ecx
+	call mem_read
+	popl %ecx
+	movsbl %al, %eax
+	jmp .Lfinish\@
+.Lusemap\@:
+	movsbl (%edx,%ecx),%eax
+.Lfinish\@:	
+	.endm
+
+	// fetch word from PC
+	// result in %ax, padded with zeros
 	.macro _fetchw
-	_fetch
+	movl %ebp, %eax
+	movl %ebp, %edx
+	shrl $12, %eax
+	incl %edx
+	movl %ebp, %ecx
+	testl $0xfff, %edx
+	jz .Lunaligned\@
+	movl rmap(,%eax,4), %edx
+	testl %edx, %edx
+	jnz .Lusemap\@
+.Lunaligned\@:
+	incl %ebp
+	pushl %ecx
+	call mem_read
 	pushl %eax
-	_fetch
+	pushl %ebp
+	incl %ebp
+	call mem_read
+	popl %ecx
 	popl %ecx
 	movb %al, %ah
 	movb %cl, %al
+	popl %ecx
+	andl $0xffff, %ebp
+	jmp .Lfinish\@
+.Lusemap\@:
+	movw (%edx,%ecx),%ax
+	addw $2, %bp
+.Lfinish\@:
 	.endm
 
+	// read word from %eax, upper byte must be zero
+	// result in %ax, padded with zeros
+	.macro _readw
+	movl %eax, %edx
+	shrl $12, %eax
+	movl %edx, %ecx
+	incl %edx
+	testl $0xfff, %edx
+	jz .Lunaligned\@
+	movl rmap(,%eax,4), %edx
+	testl %edx, %edx
+	jnz .Lusemap\@
+.Lunaligned\@:
+	pushl %ecx
+	pushl %ecx
+	call mem_read
+	popl %ecx
+	popl %ecx
+	incl %ecx
+	pushl %eax
+	pushl %ecx
+	call mem_read
+	popl %ecx
+	popl %ecx
+	movb %al, %ah
+	movb %cl, %al
+	jmp .Lfinish\@
+.Lusemap\@:
+	movw (%edx,%ecx),%ax
+.Lfinish\@:
+	.endm
+
+	// write word to addr %eax, upper bytes must be zero
+	// source byte passed in %dx
+	.macro _writew
+	movl %eax, %ecx
+	shrl $12, %eax
+	pushl %edx
+	movl %ecx, %edx
+	incl %edx
+	testl $0xfff, %edx
+	jz .Lunaligned\@
+	movl wmap(,%eax,4), %edx
+	testl %edx, %edx
+	jnz .Lusemap\@
+.Lunaligned\@:
+	popl %edx
+	pushl %edx
+	pushl %ecx
+	pushl %edx
+	pushl %ecx
+	call mem_write
+	popl %ecx
+	popl %ecx
+	popl %ecx
+	popl %edx
+	incl %ecx
+	shrl $8, %edx
+	pushl %edx
+	pushl %ecx
+	call mem_write
+	addl $8, %esp
+	jmp .Lfinish\@
+.Lusemap\@:
+	popl %eax
+	movw %ax, (%edx,%ecx)
+.Lfinish\@:
+	.endm
+	
 	
 	.macro _end
 	jmp opdone
@@ -661,37 +798,22 @@ timer_table:
 	.endm
 
 	.macro _push
-	pushl %eax
-	movb %ah, %dl
+	movl %eax, %edx
 	movl SP, %eax
-	decw %ax
-	_writeb
-	movl SP, %eax
-	popl %edx
 	subw $2, %ax
 	movl %eax, SP
-	_writeb
+	_writew
 	.endm
 
 	.macro _pop
 	movl SP, %eax
-	_readb
-	pushl %eax
-	movl SP, %eax
-	incl %eax
-	_readb
-	movl SP, %edx
-	popl %ecx
-	addw $2, %dx
-	movb %al, %ch
-	movl %edx, SP
-	movl %ecx, %eax
+	_readw
+	addw $2, SP
 	.endm
 
 	.macro _JR
 	movl %ebp, %eax
-	_readb
-	movsbl %al, %eax
+	_readbs
 	incl %eax
 	addw %ax, %bp
 	.endm
@@ -788,10 +910,10 @@ timer_table:
 	_ADD subb, subflagtable, 0
 	.endm
 
-	.macro _ADDW src=HL
+	.macro _ADDW
 	movl HL, %edx
-	addb \src, %dl
-	adcb \src+1, %dh
+	addb %al, %dl
+	adcb %ah, %dh
 	lahf
 	movl %edx, HL
 	movb $0, %dh
@@ -822,7 +944,6 @@ timer_table:
 	andb %al, %bh
 	_endnz
 	orb $0x80, %bl
-	_end
 	.endm
 
 	.macro _OR instr=orb
@@ -830,7 +951,6 @@ timer_table:
 	\instr %al, %bh
 	_endnz
 	orb $0x80, %bl
-	_end
 	.endm
 
 	.macro _XOR
@@ -1112,6 +1232,7 @@ __INVALID:
 	pushl $invalid
 	call die
 
+
 __LD_B_C:
 	_LD B,C
 __LD_B_D:
@@ -1122,9 +1243,6 @@ __LD_B_H:
 	_LD B,H
 __LD_B_L:
 	_LD B,L
-__LD_B_$HL:
-	_ld_from_hl B
-	_end
 __LD_B_A:
 	movb %bh, B
 	_end
@@ -1138,9 +1256,6 @@ __LD_C_H:
 	_LD C,H
 __LD_C_L:
 	_LD C,L
-__LD_C_$HL:
-	_ld_from_hl C
-	_end
 __LD_C_A:
 	movb %bh, C
 	_end
@@ -1154,9 +1269,6 @@ __LD_D_H:
 	_LD D,H
 __LD_D_L:
 	_LD D,L
-__LD_D_$HL:
-	_ld_from_hl D
-	_end
 __LD_D_A:
 	movb %bh, D
 	_end
@@ -1170,9 +1282,6 @@ __LD_E_H:
 	_LD E,H
 __LD_E_L:
 	_LD E,L
-__LD_E_$HL:
-	_ld_from_hl E
-	_end
 __LD_E_A:
 	movb %bh, E
 	_end
@@ -1186,9 +1295,6 @@ __LD_H_E:
 	_LD H,E
 __LD_H_L:
 	_LD H,L
-__LD_H_$HL:
-	_ld_from_hl H
-	_end
 __LD_H_A:
 	movb %bh, H
 	_end
@@ -1202,12 +1308,29 @@ __LD_L_E:
 	_LD L,E
 __LD_L_H:
 	_LD L,H
-__LD_L_$HL:
-	_ld_from_hl L
-	_end
 __LD_L_A:
 	movb %bh, L
 	_end
+__LD_A_B:
+	movb B, %bh
+	_end
+__LD_A_C:
+	movb C, %bh
+	_end
+__LD_A_D:
+	movb D, %bh
+	_end
+__LD_A_E:
+	movb E, %bh
+	_end
+__LD_A_H:
+	movb H, %bh
+	_end
+__LD_A_L:
+	movb L, %bh
+	_end
+
+	
 __LD_$HL_B:
 	_ld_to_hl B
 	_end
@@ -1229,23 +1352,24 @@ __LD_$HL_L:
 __LD_$HL_A:
 	_ld_to_hl %bh
 	_end
-__LD_A_B:
-	movb B, %bh
+
+__LD_B_$HL:
+	_ld_from_hl B
 	_end
-__LD_A_C:
-	movb C, %bh
+__LD_C_$HL:
+	_ld_from_hl C
 	_end
-__LD_A_D:
-	movb D, %bh
+__LD_D_$HL:
+	_ld_from_hl D
 	_end
-__LD_A_E:
-	movb E, %bh
+__LD_E_$HL:
+	_ld_from_hl E
 	_end
-__LD_A_H:
-	movb H, %bh
+__LD_H_$HL:
+	_ld_from_hl H
 	_end
-__LD_A_L:
-	movb L, %bh
+__LD_L_$HL:
+	_ld_from_hl L
 	_end
 __LD_A_$HL:
 	_ld_from_hl %bh
@@ -1287,71 +1411,80 @@ __LDD_A_$HL:
 	_DECW HL
 		
 
-	
+__FETCH:
+	_fetch
+	ret
 
 __LD_B_IMM:
-	_ld_from_imm B
+	call __FETCH
+	movb %al, B
 	_end
 __LD_C_IMM:
-	_ld_from_imm C
+	call __FETCH
+	movb %al, C
 	_end
 __LD_D_IMM:
-	_ld_from_imm D
+	call __FETCH
+	movb %al, D
 	_end
 __LD_E_IMM:
-	_ld_from_imm E
+	call __FETCH
+	movb %al, E
 	_end
 __LD_H_IMM:
-	_ld_from_imm H
+	call __FETCH
+	movb %al, H
 	_end
 __LD_L_IMM:
-	_ld_from_imm L
+	call __FETCH
+	movb %al, L
 	_end
 __LD_$HL_IMM:
-	_ld_from_imm %dl
+	call __FETCH
+	movb %al, %dl
 	movl HL, %eax
 	_writeb
 	_end
 __LD_A_IMM:
-	_ld_from_imm %bh
+	call __FETCH
+	movb %al, %bh
 	_end
 
+
+__FETCHW:
+	_fetchw
+	ret
 
 __LD_BC_IMM:
-	_ld_from_imm C
-	_ld_from_imm B
+	call __FETCHW
+	movl %eax, BC
 	_end
 __LD_DE_IMM:
-	_ld_from_imm E
-	_ld_from_imm D
+	call __FETCHW
+	movl %eax, DE
 	_end
 __LD_HL_IMM:
-	_ld_from_imm L
-	_ld_from_imm H
+	call __FETCHW
+	movl %eax, HL
 	_end
 __LD_SP_IMM:
-	_ld_from_imm SP
-	_ld_from_imm SP+1
+	call __FETCHW
+	movl %eax, SP
 	_end
+
 
 
 __LD_$IMM_SP:
 	_fetchw
-	movb SP, %dl
-	pushl %eax
-	_writeb
-	popl %eax
-	movb SP+1, %dl
-	incw %ax
-	_writeb
+	movl SP, %edx
+	_writew
 	_end
 __LD_SP_HL:
 	movl HL, %eax
 	movl %eax, SP
 	_end
 __LD_HL_SP_IMM:
-	_fetch
-	movsbl %al, %eax
+	_fetchs
 	_ADDSP HL
 	_end
 
@@ -1648,16 +1781,18 @@ __CP:
 	
 		
 __ADD_BC:
-	_ADDW BC
-	_end
+	movl BC, %eax
+	jmp __ADDW
 __ADD_DE:
-	_ADDW DE
-	_end
-__ADD_HL:
-	_ADDW HL
-	_end
+	movl DE, %eax
+	jmp __ADDW
 __ADD_SP:
-	_ADDW SP
+	movl SP, %eax
+	jmp __ADDW
+__ADD_HL:
+	movl HL, %eax
+__ADDW:
+	_ADDW
 	_end
 
 
@@ -1727,35 +1862,25 @@ __DEC_A:
 	
 __INC_BC:
 	_INCW BC
-	_end
 __INC_DE:
 	_INCW DE
-	_end
 __INC_HL:
 	_INCW HL
-	_end
 __INC_SP:
 	_INCW SP
-	_end
-		
 __DEC_BC:
 	_DECW BC
-	_end
 __DEC_DE:
 	_DECW DE
-	_end
 __DEC_HL:
 	_DECW HL
-	_end
 __DEC_SP:
 	_DECW SP
-	_end
 
 	
 
 __ADD_SP_IMM:
-	_fetch
-	movsbl %al, %eax
+	_fetchs
 	_ADDSP
 	_end
 
@@ -2226,17 +2351,21 @@ opdone:
 	jg .Lnolcdc
 	call lcdc_trans
 .Lnolcdc:	
-	
+
+	addl %edi, snd
 	// count off cycles used
 	subl %edi, %esi
 	jg .Lnext
 	jmp .Ldone
 
 .Ltimer:
-	andl $0x03, %ecx
+	xorb $0xff, %cl
 	movl %edi, %eax
+	incb %cl
 	movl tim, %edx
-	movb timer_table(%ecx), %cl
+	andb $0x03, %cl
+	addb %cl, %cl
+	
 	shll %cl, %eax
 	addl %eax, %edx
 	movl %edx, tim
