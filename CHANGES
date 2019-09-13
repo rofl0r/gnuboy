@@ -3,6 +3,16 @@
 CHANGES file -- detailed list of all changes made...
 please see WHATSNEW instead for user-oriented information.
 
+0.9.13
+added matroxfb YUV scaling support
+moved lcd_refreshline from the 3->0 stat change to the 2->3 one
+(this fixes a slight visual glitch in Alleyway)
+experimental: no LYC=LY interrupt during VBLANK...?
+fixed emulation bug (RL/RR) in asm cpu core that broke Montezuma's Return
+fixed some minor bugs in the matrox scaler register settings
+fixed SWAP (HL) instruction in the asm core (fixes Pokemon Yellow)
+added more assembly language scalers for performance
+
 0.9.12
 started adding HuC3 MBC support
 removed some code that was accidentally left in that broke dos/win builds

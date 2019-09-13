@@ -221,6 +221,10 @@ void ioreg_write(byte r, byte b)
 	}
 	switch (r)
 	{
+	case RI_BGP:
+	case RI_OBP0:
+	case RI_OBP1:
+		/* printf("palette reg %02X write %02X at LY=%02X\n", r, b, R_LY); */
 	case RI_HDMA1:
 	case RI_HDMA2:
 	case RI_HDMA3:
