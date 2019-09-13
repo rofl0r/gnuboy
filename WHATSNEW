@@ -8,6 +8,30 @@ versions; the CHANGES file is too technical and unorganized.
 
 
 
+RELEASE 0.9.9
+
+  NEW FEATURES
+
+DOS port is now entirely thinlib-based. Should be more robust, featureful.
+For example, custom video modes such as 256x224 are available.
+
+  PERFORMANCE
+
+New asm routines for displaying the background layer on color games.
+This results in a significant performance boost low-end machines (~P75).
+SDL code no longer fakes 16bpp but uses the native color depth.
+
+  BUGS FIXED
+
+SDL gnuboy no longer produces random pops in sound at startup.
+Mono/stereo should now be handled correctly in the SDL code.
+Eliminated compiletime error about SDL_DISABLE on SDL ver < 1.1.8.
+Serious bug -- loading savestates was not updating the memory bank map --
+resulted in bogus behavior after loading in certain situations.
+Scrapped SDL_HWSURFACE to make fullscreen work on Windows.
+
+
+
 RELEASE 0.9.8
 
   NEW FEATURES

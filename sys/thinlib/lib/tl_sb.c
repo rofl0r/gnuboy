@@ -23,7 +23,7 @@
 **
 ** Note: the information in this file has been gathered from many
 **  Internet documents, and from source code written by Ethan Brodsky.
-** $Id: tl_sb.c,v 1.10 2001/02/19 03:38:32 matt Exp $
+** $Id: tl_sb.c,v 1.11 2001/03/12 06:06:55 matt Exp $
 */
 
 #include <stdlib.h>
@@ -603,9 +603,6 @@ static void sb_isr(void)
 {
    uint32 address, offset;
 
-   /* maybe needed for slow machines? */
-   /*THIN_DISABLE_INTS();*/
-
    dma.count++;
 
    /* NOTE: this only works with 8-bit, as one-shot mode
@@ -640,9 +637,6 @@ static void sb_isr(void)
    if (sb.irq > 7)
       outportb(0xA0, 0x20);
    outportb(0x20, 0x20);
-
-   /* maybe needed for slow machines? */
-   /*THIN_ENABLE_INTS();*/
 }
 THIN_LOCKED_STATIC_FUNC(sb_isr)
 
@@ -815,11 +809,7 @@ int thin_sb_init(int *sample_rate, int *buf_size, int *format)
    
    if (sb_probe())
       return -1;
-/*
-   thin_printf("thin@sb: DSP version: %d.%d baseio: %X IRQ: %d DMA: %d High: %d\n",
-               sb.dsp_version >> 8, sb.dsp_version & 0xFF,
-               sb.baseio, sb.irq, sb.dma, sb.dma16);
-*/
+
    /* try autoinit DMA first */
    dma.autoinit = true;
    sb.format = (uint8) *format;
@@ -868,11 +858,17 @@ int thin_sb_init(int *sample_rate, int *buf_size, int *format)
 
    /* clamp buffer size to something sane */
    if ((uint16) *buf_size > sb.sample_rate)
+   {
       *buf_size = sb.sample_rate;
+      thin_printf("thin@sb: buffer size too big, dropping to %d bytes\n", *buf_size);
+   }
 
    /* allocate buffer / DOS memory */
    if (sb_allocate_buffers(*buf_size))
+   {
+      thin_printf("thin@sb: failed allocating sound buffers\n");
       return -1;
+   }
 
    /* set the new IRQ vector! */
    sb_setisr();
@@ -1085,17 +1081,21 @@ int thin_sb_start(sbmix_t fillbuf)
       else
       {
          thin_printf("thin@sb: One-shot DMA mode failed, sound will not be heard.\n");
+         thin_printf("thin@sb: DSP version: %d.%d baseio: %X IRQ: %d DMA: %d High: %d\n",
+                     sb.dsp_version >> 8, sb.dsp_version & 0xFF,
+                     sb.baseio, sb.irq, sb.dma, sb.dma16);
          return -1;
       }
    }
-   else
-   {
-      return 0;
-   }
+
+   return 0;
 }
 
 /*
 ** $Log: tl_sb.c,v $
+** Revision 1.11  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.10  2001/02/19 03:38:32  matt
 ** stereo buffer overrun
 **

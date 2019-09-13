@@ -3,6 +3,20 @@
 CHANGES file -- detailed list of all changes made...
 please see WHATSNEW instead for user-oriented information.
 
+0.9.9
+removed some unused code from mingw32.c, fixed some bugs there too
+fixed a bad sound bug in sdl.c
+eliminated sound pops at startup with SDL
+eliminaed compiletime error about SDL_DISABLE on SDL ver < 1.1.8
+integrated new fully-thinlib-based DOS code from Matthew Conte
+added surface locking to SDL code; maybe this will fix windows+fullscreen?
+fixed serious bug in savestate loading (call mem_updatemap on load)
+new asm -- significant speed boosts for color games on older machines
+removed SDL_HWSURFACE from SDL code - this should fix fullscreen on windows
+disabled surface locking calls for now
+properly initialize default path on DOS
+added SDL_ANYFORMAT to SDL flags so we can natively support all color depths
+
 0.9.8 (release)
 enabled support for dmg sprite sorting; not sure it works yet
 added "sprsort" rcvar to toggle this since it's usually not needed

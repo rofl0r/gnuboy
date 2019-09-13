@@ -20,7 +20,7 @@
 ** tl_aa.c
 **
 ** aalib thinlib driver
-** $Id: tl_aa.c,v 1.4 2001/02/01 06:28:26 matt Exp $
+** $Id: tl_aa.c,v 1.5 2001/03/12 06:06:55 matt Exp $
 */
 
 #include <stdio.h>
@@ -92,10 +92,11 @@ void thin_aa_shutdown(void)
    thin_bmp_destroy(&aa_screen);
 }
 
-int thin_aa_init(int width, int height)
+int thin_aa_init(int width, int height, int bpp)
 {
    UNUSED(width);
    UNUSED(height);
+   UNUSED(bpp);
 
    aacontext = aa_autoinit(&aa_defparams);
 
@@ -124,18 +125,19 @@ int thin_aa_init(int width, int height)
    return 0;
 }
 
-void thin_aa_setpalette(rgb_t *palette)
+void thin_aa_setpalette(rgb_t *palette, int index, int length)
 {
    int i;
 
-   for (i = 0; i < 256; i++)
-      aa_setpalette(aapalette, i, palette[i].r, palette[i].g, palette[i].b);
+   for (i = 0; i < length; i++)
+      aa_setpalette(aapalette, index + i, palette[i].r, palette[i].g, palette[i].b);
 }
 
-int thin_aa_setmode(int width, int height)
+int thin_aa_setmode(int width, int height, int bpp)
 {
    UNUSED(width);
    UNUSED(height);
+   UNUSED(bpp);
 
    return 0;
 }
@@ -144,6 +146,9 @@ int thin_aa_setmode(int width, int height)
 
 /*
 ** $Log: tl_aa.c,v $
+** Revision 1.5  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.4  2001/02/01 06:28:26  matt
 ** thinlib now works under NT/2000
 **

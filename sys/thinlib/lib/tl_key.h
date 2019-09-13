@@ -21,7 +21,7 @@
 **
 ** DOS keyboard handling defines / protos
 ** Thanks to Shawn Hargreaves and Allegro for most of this.
-** $Id: tl_key.h,v 1.2 2000/12/13 13:58:20 matt Exp $
+** $Id: tl_key.h,v 1.3 2001/03/12 06:06:56 matt Exp $
 */
 
 #ifndef _TL_KEY_H_
@@ -56,7 +56,7 @@
 #define  THIN_KEY_OPEN_BRACE     26
 #define  THIN_KEY_CLOSE_BRACE    27
 #define  THIN_KEY_ENTER          28
-#define  THIN_KEY_LEFT_CONTROL   29
+#define  THIN_KEY_LEFT_CTRL      29
 #define  THIN_KEY_A              30
 #define  THIN_KEY_S              31
 #define  THIN_KEY_D              32
@@ -66,7 +66,7 @@
 #define  THIN_KEY_J              36
 #define  THIN_KEY_K              37
 #define  THIN_KEY_L              38
-#define  THIN_KEY_COLON          39
+#define  THIN_KEY_SEMICOLON      39
 #define  THIN_KEY_QUOTE          40
 #define  THIN_KEY_TILDE          41
 #define  THIN_KEY_LEFT_SHIFT     42
@@ -82,8 +82,8 @@
 #define  THIN_KEY_PERIOD         52
 #define  THIN_KEY_SLASH          53
 #define  THIN_KEY_RIGHT_SHIFT    54
-#define  THIN_KEY_ASTERISK       55
-#define  THIN_KEY_ALT            56
+#define  THIN_KEY_NUMPAD_MULT    55
+#define  THIN_KEY_LEFT_ALT       56
 #define  THIN_KEY_SPACE          57
 #define  THIN_KEY_CAPS_LOCK      58
 #define  THIN_KEY_F1             59
@@ -98,50 +98,83 @@
 #define  THIN_KEY_F10            68
 #define  THIN_KEY_NUM_LOCK       69
 #define  THIN_KEY_SCROLL_LOCK    70
-#define  THIN_KEY_HOME           71
-#define  THIN_KEY_UP             72
-#define  THIN_KEY_PAGE_UP        73
-#define  THIN_KEY_KEYPAD_MINUS   74
-#define  THIN_KEY_LEFT           75
-#define  THIN_KEY_CENTER         76
-#define  THIN_KEY_RIGHT          77
-#define  THIN_KEY_KEYPAD_PLUS    78
-#define  THIN_KEY_END            79
-#define  THIN_KEY_DOWN           80
-#define  THIN_KEY_PAGE_DOWN      81
-#define  THIN_KEY_INSERT         82
-#define  THIN_KEY_DELETE         83
-#define  THIN_KEY_PRINT_SCREEN   84
+
 #define  THIN_KEY_F11            87
 #define  THIN_KEY_F12            88
+
+#define  THIN_KEY_NUMPAD_7       71
+#define  THIN_KEY_NUMPAD_8       72
+#define  THIN_KEY_NUMPAD_9       73
+#define  THIN_KEY_NUMPAD_MINUS   74
+#define  THIN_KEY_NUMPAD_4       75
+#define  THIN_KEY_NUMPAD_5       76
+#define  THIN_KEY_NUMPAD_6       77
+#define  THIN_KEY_NUMPAD_PLUS    78
+#define  THIN_KEY_NUMPAD_1       79
+#define  THIN_KEY_NUMPAD_2       80
+#define  THIN_KEY_NUMPAD_3       81
+#define  THIN_KEY_NUMPAD_0       82
+#define  THIN_KEY_NUMPAD_DECIMAL 83
+
+/*
+#define  THIN_KEY_PRINT_SCREEN   84
+*/
+
+/* TODO: are these correct? */
 #define  THIN_KEY_LEFT_WINDOWS   91
 #define  THIN_KEY_RIGHT_WINDOWS  92
 #define  THIN_KEY_MENU           93
-#define  THIN_KEY_PAD            100
-#define  THIN_KEY_RIGHT_CONTROL  120
-#define  THIN_KEY_ALTGR          121
 
-#define  THIN_NUM_KEYS           128
+/* extended keys */
+#define  THIN_KEY_RIGHT_ALT      100
+#define  THIN_KEY_RIGHT_CTRL     101
+#define  THIN_KEY_NUMPAD_DIV     102
+#define  THIN_KEY_NUMPAD_ENTER   103
+#define  THIN_KEY_UP             104
+#define  THIN_KEY_DOWN           105
+#define  THIN_KEY_LEFT           106
+#define  THIN_KEY_RIGHT          107
+#define  THIN_KEY_INSERT         108
+#define  THIN_KEY_HOME           109
+#define  THIN_KEY_PGUP           110
+#define  THIN_KEY_DELETE         111
+#define  THIN_KEY_END            112
+#define  THIN_KEY_PGDN           113
+
+#define  THIN_KEY_BREAK          114
+#define  THIN_KEY_SYSRQ          116
+
+/* PAUSE generates a ^X sequence... bleh */
+/*
+#define  THIN_KEY_PAUSE          115
+*/
+
+#define  THIN_MAX_KEYS           128
 
 enum
 {
-   THIN_KEY_BREAK = 0,
-   THIN_KEY_MAKE
+   THIN_CODE_BREAK = 0,
+   THIN_CODE_MAKE
 };
 
 typedef struct keydata_s
 {
-   int key, signal;
+   int key;
+   int signal;
 } keydata_t;
 
 extern int thin_key_init(void);
 extern void thin_key_shutdown(void);
+extern void thin_key_set_repeat(bool state);
 extern keydata_t *thin_key_dequeue(void);
 
 #endif /* !_TL_KEY_H_ */
 
 /*
 ** $Log: tl_key.h,v $
+** Revision 1.3  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.2  2000/12/13 13:58:20  matt
 ** cosmetic fixes
 **

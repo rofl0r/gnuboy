@@ -14,6 +14,8 @@
 
 #define ASM_PAT_UPDATEPIX
 
+#define ASM_BG_SCAN_COLOR
+
 
 
 #endif /* __ASM_H__ */

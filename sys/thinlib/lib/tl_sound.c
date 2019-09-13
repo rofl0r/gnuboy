@@ -20,12 +20,13 @@
 ** tl_sound.c
 **
 ** sound driver
-** $Id: tl_sound.c,v 1.2 2001/02/19 02:55:36 matt Exp $
+** $Id: tl_sound.c,v 1.3 2001/03/12 06:06:55 matt Exp $
 */
 
 #include "tl_types.h"
 #include "tl_sound.h"
 #include "tl_sb.h"
+#include "tl_log.h"
 /* TODO: make GuS driver... */
 
 typedef struct snddriver_s
@@ -53,17 +54,28 @@ static snddriver_t sb =
 static snddriver_t *driver_list[] =
 {
    &sb,
+   /* TODO: add more drivers here */
    NULL
 };
 
-static snddriver_t snddriver;
+static snddriver_t snddriver = 
+{
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+};
+
 
 int thin_sound_init(thinsound_t *sound_params)
 {
    snddriver_t **iter;
    int sample_rate, frag_size, format;
 
-   ASSERT(sound_params);
+   THIN_ASSERT(sound_params);
    
    sample_rate = sound_params->sample_rate;
    frag_size = sound_params->frag_size;
@@ -74,7 +86,6 @@ int thin_sound_init(thinsound_t *sound_params)
       if (0 == (*iter)->init(&sample_rate, &frag_size, &format))
       {
          snddriver = **iter;
-         //thin_printf("thin: found sound driver: %s\n", snddriver.name);
 
          /* copy the parameters back */
          sound_params->sample_rate = sample_rate;
@@ -84,39 +95,39 @@ int thin_sound_init(thinsound_t *sound_params)
          /* and set the callback */
          snddriver.callback = sound_params->callback;
 
-/*
-         if (snddriver.start(snddriver.callback))
-         {
-            thin_printf("thin: error starting audio output\n");
-            return -1;
-         }
-*/
          return 0;
       }
    }
 
    snddriver.name = NULL;
+
    thin_printf("thin: could not find any sound drivers.\n");
    return -1;
 }
 
 void thin_sound_shutdown(void)
 {
-   if (NULL != snddriver.name)
-   {
-      snddriver.shutdown();
-      memset(&snddriver, 0, sizeof(snddriver_t));
-   }
+   if (NULL == snddriver.name)
+      return;
+
+   snddriver.shutdown();
+   memset(&snddriver, 0, sizeof(snddriver_t));
 }
 
 void thin_sound_start(void)
 {
-   ASSERT(snddriver.callback);
+   if (NULL == snddriver.name)
+      return;
+
+   THIN_ASSERT(snddriver.callback);
    snddriver.start(snddriver.callback);
 }
 
 void thin_sound_stop(void)
 {
+   if (NULL == snddriver.name)
+      return;
+
    snddriver.stop();
 }
 
@@ -128,6 +139,9 @@ void thin_sound_setrate(int sample_rate)
 
 /*
 ** $Log: tl_sound.c,v $
+** Revision 1.3  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.2  2001/02/19 02:55:36  matt
 ** extern this, eh!
 **

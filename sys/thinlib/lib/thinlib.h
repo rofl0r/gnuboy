@@ -20,7 +20,7 @@
 ** thinlib.h
 **
 ** main library header
-** $Id: thinlib.h,v 1.6 2000/12/16 21:18:11 matt Exp $
+** $Id: thinlib.h,v 1.7 2001/03/12 06:06:56 matt Exp $
 */
 
 #ifndef _THINLIB_H_
@@ -59,8 +59,10 @@ extern "C" {
 #define  THIN_VIDEO     0x0020
 #define  THIN_SOUND     0x0040
 
+
 extern int thin_init(int devices);
 extern void thin_shutdown(void);
+
 
 #ifdef __cplusplus
 }
@@ -70,6 +72,9 @@ extern void thin_shutdown(void);
 
 /*
 ** $Log: thinlib.h,v $
+** Revision 1.7  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.6  2000/12/16 21:18:11  matt
 ** thinlib cleanups
 **

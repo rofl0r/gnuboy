@@ -68,6 +68,7 @@ void emu_run()
 	void *timer = sys_timer();
 	int delay;
 
+	vid_begin();
 	for (;;)
 	{
 		cpu_emulate(2280);

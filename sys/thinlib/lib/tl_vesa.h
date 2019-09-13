@@ -20,7 +20,7 @@
 ** tl_vesa.h
 **
 ** VESA code header
-** $Id: tl_vesa.h,v 1.3 2001/02/01 06:28:26 matt Exp $
+** $Id: tl_vesa.h,v 1.4 2001/03/12 06:06:55 matt Exp $
 */
 
 #ifndef _TL_VESA_H_
@@ -28,11 +28,10 @@
 
 #include "tl_bmp.h"
 
-extern int thin_vesa_init(int width, int height);
+extern int thin_vesa_init(int width, int height, int bpp);
 extern void thin_vesa_shutdown(void);
 
-extern int thin_vesa_setmode(int width, int height);
-extern void thin_vesa_setpalette(rgb_t *palette);
+extern int thin_vesa_setmode(int width, int height, int bpp);
 
 extern bitmap_t *thin_vesa_lockwrite(void);
 extern void thin_vesa_freewrite(int num_dirties, rect_t *dirty_rects);
@@ -41,6 +40,9 @@ extern void thin_vesa_freewrite(int num_dirties, rect_t *dirty_rects);
 
 /*
 ** $Log: tl_vesa.h,v $
+** Revision 1.4  2001/03/12 06:06:55  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.3  2001/02/01 06:28:26  matt
 ** thinlib now works under NT/2000
 **

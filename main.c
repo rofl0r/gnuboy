@@ -225,7 +225,9 @@ int main(int argc, char *argv[])
 
 	init_exports();
 
-	sys_initpath(argv[0]);
+	s = strdup(argv[0]);
+	sys_sanitize(s);
+	sys_initpath(s);
 
 	for (i = 0; defaultconfig[i]; i++)
 		rc_command(defaultconfig[i]);

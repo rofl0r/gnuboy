@@ -20,7 +20,7 @@
 ** tl_video.h
 **
 ** thinlib video routines
-** $Id: tl_video.h,v 1.2 2001/02/01 06:28:26 matt Exp $
+** $Id: tl_video.h,v 1.3 2001/03/12 06:06:56 matt Exp $
 */
 
 #ifndef _TL_VIDEO_H_
@@ -35,11 +35,11 @@
 
 extern int thin_vid_getcaps(void);
 
-extern int thin_vid_init(int width, int height);
+extern int thin_vid_init(int width, int height, int bpp);
 extern void thin_vid_shutdown(void);
 
-extern int thin_vid_setmode(int width, int height);
-extern void thin_vid_setpalette(rgb_t *palette);
+extern int thin_vid_setmode(int width, int height, int bpp);
+extern void thin_vid_setpalette(rgb_t *palette, int index, int length);
 extern int thin_vid_scanlines(bool scanlines_on);
 
 extern bitmap_t *thin_vid_lockwrite(void);
@@ -52,6 +52,9 @@ extern void thin_vid_customblit(bitmap_t *primary, int num_dirties,
 
 /*
 ** $Log: tl_video.h,v $
+** Revision 1.3  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.2  2001/02/01 06:28:26  matt
 ** thinlib now works under NT/2000
 **

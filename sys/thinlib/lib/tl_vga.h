@@ -20,7 +20,7 @@
 ** tl_vga.h
 **
 ** VGA-specific thinlib routines
-** $Id: tl_vga.h,v 1.4 2001/02/01 06:28:26 matt Exp $
+** $Id: tl_vga.h,v 1.5 2001/03/12 06:06:56 matt Exp $
 */
 
 #ifndef _TL_VGA_H_
@@ -29,11 +29,11 @@
 #include "tl_types.h"
 #include "tl_bmp.h"
 
-extern int thin_vga_init(int width, int height);
+extern int thin_vga_init(int width, int height, int bpp);
 extern void thin_vga_shutdown(void);
 
-extern int thin_vga_setmode(int width, int height);
-extern void thin_vga_setpalette(rgb_t *palette);
+extern int thin_vga_setmode(int width, int height, int bpp);
+extern void thin_vga_setpalette(rgb_t *palette, int index, int length);
 extern void thin_vga_waitvsync(void);
 extern void thin_vga_scanlines(bool scanlines_on);
 
@@ -44,6 +44,9 @@ extern void thin_vga_freewrite(int num_dirties, rect_t *dirty_rects);
 
 /*
 ** $Log: tl_vga.h,v $
+** Revision 1.5  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.4  2001/02/01 06:28:26  matt
 ** thinlib now works under NT/2000
 **

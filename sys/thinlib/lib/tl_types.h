@@ -20,7 +20,7 @@
 ** tl_types.h
 **
 ** type definitions for thinlib
-** $Id: tl_types.h,v 1.1 2000/11/05 16:32:15 matt Exp $
+** $Id: tl_types.h,v 1.2 2001/03/12 06:06:56 matt Exp $
 */
 
 #ifndef _TL_TYPES_
@@ -30,13 +30,13 @@
 
 #include "tl_log.h"
 
-#define  ASSERT(expr)      thin_assert((int) (expr), __LINE__, __FILE__, NULL)
-#define  ASSERT_MSG(msg)   thin_assert(false, __LINE__, __FILE__, (msg))
+#define  THIN_ASSERT(expr)    thin_assert((int) (expr), __LINE__, __FILE__, NULL)
+#define  THIN_ASSERT_MSG(msg) thin_assert(false, __LINE__, __FILE__, (msg))
 
 #else /* !THINLIB_DEBUG */
 
-#define  ASSERT(expr)
-#define  ASSERT_MSG(msg)
+#define  THIN_ASSERT(expr)
+#define  THIN_ASSERT_MSG(msg)
 
 #endif /* !THINLIB_DEBUG */
 
@@ -71,6 +71,9 @@ typedef enum
 
 /*
 ** $Log: tl_types.h,v $
+** Revision 1.2  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.1  2000/11/05 16:32:15  matt
 ** initial revision
 **

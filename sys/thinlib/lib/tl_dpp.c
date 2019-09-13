@@ -21,7 +21,7 @@
 **
 ** DOS DirectPad Pro scanning code, based on code from
 ** DirectPad Pro (www.ziplabel.com), written by Earle F. Philhower, III
-** $Id: tl_dpp.c,v 1.2 2000/11/05 16:32:36 matt Exp $
+** $Id: tl_dpp.c,v 1.3 2001/03/12 06:06:56 matt Exp $
 */
 
 #include <pc.h>
@@ -44,7 +44,7 @@ void thin_dpp_read(dpp_t *pad)
    int xor_val = xor_table[pad->pad_num];
    int port = pad->port;
 
-   ASSERT(pad);
+   THIN_ASSERT(pad);
 
    NES_OUT(NES_PWR);
    NES_OUT(NES_PWR + NES_LAT + NES_CLK);
@@ -114,6 +114,9 @@ void thin_dpp_shutdown(void)
 
 /*
 ** $Log: tl_dpp.c,v $
+** Revision 1.3  2001/03/12 06:06:56  matt
+** better keyboard driver, support for bit depths other than 8bpp
+**
 ** Revision 1.2  2000/11/05 16:32:36  matt
 ** thinlib round 2
 **
