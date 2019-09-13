@@ -64,6 +64,30 @@ refresh_2:
 	jnz .Lrefresh_2
 	_leave
 
+	.globl refresh_3
+refresh_3:
+	_enter
+	subl $2, %esi
+	leal (%ecx,%ecx,2), %edx
+	shrl $1, %ecx
+	addl %edx, %edi
+.Lrefresh_3:
+	movb (%esi,%ecx,2), %al
+	subl $6, %edi
+	movb 1(%esi,%ecx,2), %bl
+	movl (%ebp,%eax,4), %edx
+	movb %dl, (%edi)
+	movb 2(%ebp,%eax,4), %dl
+	movb %dh, 1(%edi)
+	movb %dl, 2(%edi)
+	movl (%ebp,%ebx,4), %edx
+	movb %dl, 3(%edi)
+	movb 2(%ebp,%ebx,4), %dl
+	movb %dh, 4(%edi)
+	movb %dl, 5(%edi)
+	decl %ecx
+	jnz .Lrefresh_3
+	_leave
 
 	.globl refresh_4
 refresh_4:
@@ -151,6 +175,84 @@ refresh_4_2x:
 
 
 
+
+	.globl refrsh_1_3x
+refresh_1_3x:	
+	_enter
+	leal (%ecx,%ecx,2), %edx
+	shrl $1, %ecx
+	addl %edx, %edi
+	subl $2, %esi
+.Lrefresh_1_3x:
+	movb (%esi,%ecx,2), %al
+	subl $6, %edi
+	movb 1(%esi,%ecx,2), %bl
+	movb (%ebp,%eax,2), %dl
+	movb %dl, (%edi)
+	movb %dl, 1(%edi)
+	movb %dl, 2(%edi)
+	movb (%ebp,%ebx,2), %dl
+	movb %dl, 3(%edi)
+	movb %dl, 4(%edi)
+	movb %dl, 5(%edi)
+	decl %ecx
+	jnz .Lrefresh_1_3x
+	_leave
+
+
+	.globl refresh_2_3x
+refresh_2_3x:
+	_enter
+	shll $1, %ecx
+	addl %ecx, %edi
+	addl %ecx, %edi
+	addl %ecx, %edi
+	shrl $2, %ecx
+	subl $2, %esi
+.Lrefresh_2_3x:
+	movb (%esi,%ecx,2), %al
+	subl $12, %edi
+	movb 1(%esi,%ecx,2), %bl
+	movw (%ebp,%eax,2), %dx
+	movw %dx, (%edi)
+	movw %dx, 2(%edi)
+	movw %dx, 4(%edi)
+	movw (%ebp,%ebx,2), %dx
+	movw %dx, 6(%edi)
+	movw %dx, 8(%edi)
+	movw %dx, 10(%edi)
+	decl %ecx
+	jnz .Lrefresh_2_3x
+	_leave
+
+
+
+	.globl refresh_4_3x
+refresh_4_3x:
+	_enter
+	shll $2, %ecx
+	addl %ecx, %edi
+	addl %ecx, %edi
+	addl %ecx, %edi
+	shrl $3, %ecx
+	subl $2, %esi
+.Lrefresh_4_3x:
+	movb (%esi,%ecx,2), %al
+	subl $24, %edi
+	movb 1(%esi,%ecx,2), %bl
+	movl (%ebp,%eax,4), %edx
+	movl %edx, (%edi)
+	movl %edx, 4(%edi)
+	movl %edx, 8(%edi)
+	movl (%ebp,%ebx,4), %edx
+	movl %edx, 12(%edi)
+	movl %edx, 16(%edi)
+	movl %edx, 20(%edi)
+	decl %ecx
+	jnz .Lrefresh_4_3x
+	_leave
+
+
 	.globl refresh_4_4x
 refresh_4_4x:
 	_enter
@@ -158,9 +260,9 @@ refresh_4_4x:
 	addl %ecx, %edi
 	shrl $5, %ecx
 	subl $2, %esi
-	subl $32, %edi
 .Lrefresh_4_4x:
 	movb (%esi,%ecx,2), %al
+	subl $32, %edi
 	movb 1(%esi,%ecx,2), %bl
 	movl (%ebp,%eax,4), %edx
 	movl %edx, (%edi)
@@ -172,7 +274,6 @@ refresh_4_4x:
 	movl %edx, 20(%edi)
 	movl %edx, 24(%edi)
 	movl %edx, 28(%edi)
-	subl $32, %edi
 	decl %ecx
 	jnz .Lrefresh_4_4x
 	_leave

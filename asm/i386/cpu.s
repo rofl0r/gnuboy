@@ -976,7 +976,7 @@ int_vec_table:
 	.macro _RLC reg=B, instr=rolb
 	xorl %eax, %eax
 	movb \reg, %al
-	xorb %cl, %cl
+	xorb %bl, %bl
 	\instr $1, %al
 	rcrb $4, %bl
 	movb %al, \reg
@@ -989,9 +989,9 @@ int_vec_table:
 	
 	.macro _RL reg=B, instr=rclb
 	xorl %eax, %eax
-	xorb %cl, %cl
+	andb $0x10, %bl
 	movb \reg, %al
-	rolb $4, %bl
+	rclb $4, %bl
 	\instr $1, %al
 	rcrb $4, %bl
 	movb %al, \reg
@@ -1021,7 +1021,7 @@ int_vec_table:
 
 	.macro _SWAP reg=B
 	movb \reg, %al
-	andb $0x0f, %bl
+	xorb %bl, %bl
 	rolb $4, %al
 	testb %al, %al
 	movb %al, \reg
@@ -1031,7 +1031,7 @@ int_vec_table:
 	.endm
 	
 	.macro _SWAP_A
-	andb $0x0f, %bl
+	xorb %bl, %bl
 	rolb $4, %bh
 	testb %bh, %bh
 	_endnz
@@ -1043,9 +1043,10 @@ int_vec_table:
 	movl HL, %eax
 	_readb
 	movb %al, %dl
-	andb $0x0f, %bl
+	xorb %bl, %bl
 	rolb $4, %dl
 	movl HL, %eax
+	testb %dl, %dl
 	jnz .Lnonzero\@
 	orb $0x80, %bl
 .Lnonzero\@:
@@ -2165,7 +2166,7 @@ __SRA_A:
 	_SRA %bh
 	_end
 __SWAP_A:
-	_SWAP %bh
+	_SWAP_A
 __SRL_A:
 	_SRL %bh
 	_end
@@ -2200,7 +2201,8 @@ __SET_7_A:	_SET 7, %bh
 	_make_cb_hl_op RR
 	_make_cb_hl_op SLA
 	_make_cb_hl_op SRA
-	_make_cb_hl_op SWAP
+__SWAP_$HL:	
+	_SWAP_MEM
 	_make_cb_hl_op SRL
 
 	_make_cb_hl_bit_op BIT, 0

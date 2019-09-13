@@ -44,4 +44,7 @@ Magnus Damm --
 YUV colorspace code
 SDL YUV hardware scaling support
 
+Gerd Knorr --
+fbtv, from which mga accel code was taken
+
 

@@ -8,6 +8,30 @@ versions; the CHANGES file is too technical and unorganized.
 
 
 
+RELEASE 0.9.13
+
+  NEW FEATURES
+
+Hardware scaling support on fbcon with matroxfb.
+
+  PERFORMANCE
+
+Now all software scaling code has assembly implementations.
+
+  COMPATIBILITY
+
+Invalid opcode crash in Montezuma's Return has been fixed.
+Visual glitches in Pokemon Yellow are now fixed.
+
+  BUGS FIXED
+
+Line refresh was taking place too late, causing visual glitch in Alleyway.
+Flags behavior on the RL, RR, RLC, and RRC opcodes was completely bogus in the
+asm cpu core. Miracle it didn't break more things. Should be correct now.
+The SWAP (HL) instruction in the asm cpu core was nonfunctional.
+
+
+
 RELEASE 0.9.12
 
   NEW FEATURES
