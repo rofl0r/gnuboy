@@ -74,7 +74,6 @@ static int cmd_source(int argc, char **argv)
 
 static int cmd_quit()
 {
-	sys_shutdown(0);
 	exit(0);
 	/* NOT REACHED */
 }

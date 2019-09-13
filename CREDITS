@@ -31,4 +31,10 @@ Matthew Conte --
 DOS sound code
 thinlib
 
+Markus F.X.J. Oberhumer --
+SDL fullscreen code
+
+mewse --
+Windows port (SDL+mingw32)
+
 

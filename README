@@ -11,6 +11,8 @@ a wide range of host systems, and has been tested successfully on:
 
   GNU/Linux
   FreeBSD
+  OpenBSD
+  BeOS
   Linux/390 (IBM S/390 Mainframe)
   SunOS/Sun Ultra60
   IRIX/SGI O2
@@ -86,6 +88,7 @@ file. Some of the more interesting variables are:
 
   rcpath      - search path for loading extra rc files
   savedir     - the directory where save files will be stored
+  savename    - base of filename to use for sram and savestates
   forcedmg    - set to 1/true/yes to force color roms to play mono
   framelen    - delay in microseconds between frames
   framecount  - run only the given number of frames, then exit
@@ -95,10 +98,11 @@ file. Some of the more interesting variables are:
   dmg_obp0    - and for sprite palette 0
   dmg_obp1    - and sprite palette 1
 
+  sprsort     - x-sort sprites for correctness on dmg roms
+
   syncrtc     - fake elapsed time on rtc since last session at startup
 
   trace       - output a complete cpu trace to stdout
-                (not supported with asm cpu core by default)
   sprdebug    - display bars indicating sprite count per line
 
 There are a few others which may or not be useful. Also, certain
@@ -124,11 +128,9 @@ searched. The following defaults will be used:
 
 If you don't like these, override them with gnuboy.rc.
 
-There are presently two *nix targets supported, X11 and Linux svgalib.
-The latter will also work with libraries that wrap/emulate svgalib, in
-case you want to use a framebuffer console or something. If there's
-sufficient interest, direct support for popular framebuffer devices
-(Linux, Sun, etc.) might be added.
+There are presently four *nix targets supported: X11, SDL, and Linux
+fbcon and svgalib. In the future other fb devices (such as the Sun
+console) should be supported as well.
 
 Unlike the other display targets, the svgalib one allows you to choose
 a video mode from among the available modes on your system. Simply set
@@ -228,17 +230,16 @@ features remain unimplemented, such as reduced length HBLANK depending
 on the number of sprites visible on the scanline, but the vast
 majority of display tricks used in current roms work fine.
 
-We do, however, lack information on proper HDMA/GDMA timings, which
-could theoretically cause problems for some rosm. If you can provide
-us with accurate information, please do!
+We do, however, lack information on proper GDMA timings, which could
+theoretically cause problems for some roms. If you can provide us with
+accurate information, please do!
 
 
   SOUND SUPPORT
 
-Sound is the present development focus of gnuboy. At this point all
-features are implemented and everything should be right, so any
-incorrect sound output should be treated as a bug, which we'll try to
-fix as soon as possible.
+At this point all features are implemented and everything should be
+right, so any incorrect sound output should be treated as a bug, which
+we'll try to fix as soon as possible.
 
 
   JOYSTICK AND GAMEPAD SUPPORT
@@ -266,7 +267,7 @@ cpu utilization, running at full 60 fps)...
   IBM S/390                      about 0.3%         (no asm)
 
 Note that these figures were computed before sound was implemented.
-Until the sound code is further optimized, gnuboy will run somewhat
+Until the sound code is further optimized, gnuboy may run somewhat
 slower than these numbers suggest.
 
 
@@ -289,9 +290,9 @@ from a place more similar to where you saved and it might work better.
 This is a serious problem since it can potentially result in unusable
 saves, so we'll be looking into it as soon as we get a lead.
 
-Sound mixing is way too slow. I have some ideas for fixing this, and I
-plan to write optimized assembly code for sound soon. If it's a
-problem try turning down the sample rate.
+Sound mixing is taking way too much cpu time. I have some ideas for
+fixing this, and I plan to write optimized assembly code for sound
+soon. If it's a problem try turning down the sample rate.
 
 Detecting X11 seems to be failing on some broken nonfree unices. I'll
 look into it sometime.

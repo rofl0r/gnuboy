@@ -44,6 +44,7 @@ byte patpix[4096][8][8];
 byte patdirty[1024];
 byte anydirty;
 
+static int sprsort = 1;
 static int sprdebug;
 
 #define DEF_PAL { 0x78f0f0, 0x58b8b8, 0x487878, 0x184848 }
@@ -56,6 +57,7 @@ rcvar_t lcd_exports[] =
 	RCV_VECTOR("dmg_wndp", dmg_pal[1], 4),
 	RCV_VECTOR("dmg_obp0", dmg_pal[2], 4),
 	RCV_VECTOR("dmg_obp1", dmg_pal[3], 4),
+	RCV_BOOL("sprsort", &sprsort),
 	RCV_BOOL("sprdebug", &sprdebug),
 	RCV_END
 };
@@ -448,11 +450,10 @@ void spr_enum()
 		VS[NS].buf = patpix[pat][v];
 		if (++NS == 10) break;
 	}
-	return; /* ignore this waste of time for now */
-	if (hw.cgb) return;
+	if (!sprsort || hw.cgb) return;
 	for (i = 0; i < NS; i++)
 	{
-		for (j = i; j < NS; j++)
+		for (j = i + 1; j < NS; j++)
 		{
 			if (VS[i].x > VS[j].x)
 			{

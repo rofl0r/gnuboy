@@ -76,6 +76,7 @@ void hw_hdma_cmd(byte c)
 	da = 0x8000 | ((int)(R_HDMA3&0x1f) << 8) | (R_HDMA4&0xf0);
 	cnt = ((int)c)+1;
 	/* FIXME - this should use cpu time! */
+	/*cpu_timers(102 * cnt);*/
 	cnt <<= 4;
 	while (cnt--)
 		writeb(da++, readb(sa++));
@@ -100,7 +101,6 @@ void hw_hdma()
 	sa = ((addr)R_HDMA1 << 8) | (R_HDMA2&0xf0);
 	da = 0x8000 | ((int)(R_HDMA3&0x1f) << 8) | (R_HDMA4&0xf0);
 	cnt = 16;
-	/* cpu.stall += 102; */
 	while (cnt--)
 		writeb(da++, readb(sa++));
 	R_HDMA1 = sa >> 8;

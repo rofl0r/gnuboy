@@ -47,10 +47,10 @@ debug:	.string "%08x\n"
 	movl patpix+4+(16*\k)(%ebp), %ebx
 	movl patpix+8+(16*\k)(%ebp), %ecx
 	movl patpix+12+(16*\k)(%ebp), %edx
-	bswapl %eax
-	bswapl %ebx
-	bswapl %ecx
-	bswapl %edx
+	bswap %eax
+	bswap %ebx
+	bswap %ecx
+	bswap %edx
 	movl %eax, patpix+1024*64+4+(16*\k)(%ebp)
 	movl %ebx, patpix+1024*64+(16*\k)(%ebp)
 	movl %ecx, patpix+1024*64+12+(16*\k)(%ebp)
@@ -204,18 +204,18 @@ refresh_1:
 	movb %dl, %al
 	movb %dh, %bl
 .Lrefresh_1:
-	bswapl %edx
+	bswap %edx
 	movb pal1(%eax), %cl
 	movb %dh, %al
 	movb pal1(%ebx), %ch
 	movb %dl, %bl
-	bswapl %ecx
+	bswap %ecx
 	movl buf+164(,%esi,4), %edx
 	movb pal1(%eax), %ch
 	movb %dl, %al
 	movb pal1(%ebx), %cl
 	movb %dh, %bl
-	bswapl %ecx
+	bswap %ecx
 	movl %ecx, (%edi,%esi,4)
 	incl %esi
 	jnz .Lrefresh_1
@@ -238,7 +238,7 @@ refresh_2:
 	movb %dh, %bl
 	movb %dl, %al
 .Lrefresh_2:
-	bswapl %edx
+	bswap %edx
 	movw pal2(,%ebx,2), %cx
 	movb %dl, %bl
 	roll $16, %ecx
@@ -277,7 +277,7 @@ refresh_4:
 	movb %dl, %al
 	movb %dh, %bl
 .Lrefresh_4:	
-	bswapl %edx
+	bswap %edx
 	movl pal4(,%eax,4),%ecx
 	movl pal4(,%ebx,4),%ebp
 	movb %dh, %al

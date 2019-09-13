@@ -11,7 +11,7 @@
  //            Martynas Kunigelis, 1996/13/05
  //            e-mail:  Martynas.Kunigelis@vm.ktu.lt
  //
-		.file	"keyboard.s"
+		.file	"kb.s"
  //
  // externals (optional):
  //
