@@ -51,9 +51,8 @@ void mem_updatemap()
 	}
 	else
 	{
-		n = R_VBK;
-		map[0x8] = lcd.vbank[n] - 0x8000;
-		map[0x9] = lcd.vbank[n] - 0x8000;
+		map[0x8] = lcd.vbank[R_VBK & 1] - 0x8000;
+		map[0x9] = lcd.vbank[R_VBK & 1] - 0x8000;
 	}
 	if (mbc.enableram && !(rtc.sel&8))
 	{
@@ -173,7 +172,7 @@ void ioreg_write(byte r, byte b)
 		stat_trigger();
 		break;
 	case RI_VBK:
-		REG(r) = b & 0x01;
+		REG(r) = b | 0xFE;
 		mem_updatemap();
 		break;
 	case RI_BCPS:
@@ -382,6 +381,51 @@ void mbc_write(int a, byte b)
 			break;
 		}
 		break;
+	case MBC_HUC1: /* FIXME - this is all guesswork -- is it right??? */
+		switch (ha & 0xE)
+		{
+		case 0x0:
+			mbc.enableram = ((b & 0x0F) == 0x0A);
+			break;
+		case 0x2:
+			if ((b & 0x1F) == 0) b = 0x01;
+			mbc.rombank = (mbc.rombank & 0x60) | (b & 0x1F);
+			break;
+		case 0x4:
+			if (mbc.model)
+			{
+				mbc.rambank = b & 0x03;
+				break;
+			}
+			mbc.rombank = (mbc.rombank & 0x1F) | ((int)(b&3)<<5);
+			break;
+		case 0x6:
+			mbc.model = b & 0x1;
+			break;
+		}
+		break;
+	case MBC_HUC3: /* FIXME - this is all guesswork -- is it right??? */
+		switch (ha & 0xE)
+		{
+		case 0x0:
+			mbc.enableram = ((b & 0x0F) == 0x0A);
+			break;
+		case 0x2:
+			if (!b) b = 1;
+			mbc.rombank = b;
+			break;
+		case 0x4:
+			if (mbc.model)
+			{
+				mbc.rambank = b & 0x03;
+				break;
+			}
+			break;
+		case 0x6:
+			mbc.model = b & 1;
+			break;
+		}
+		break;
 	}
 	/* printf("%02X\n", mbc.rombank); */
 	mbc.rombank &= (mbc.romsize - 1);
@@ -482,7 +526,7 @@ byte mem_read(int a)
 		return rom.bank[mbc.rombank][a & 0x3FFF];
 	case 0x8:
 		/* if ((R_STAT & 0x03) == 0x03) return 0xFF; */
-		return lcd.vbank[R_VBK][a & 0x1FFF];
+		return lcd.vbank[R_VBK&1][a & 0x1FFF];
 	case 0xA:
 		if (!mbc.enableram)
 			return 0xFF;

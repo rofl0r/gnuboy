@@ -140,8 +140,9 @@ void lcdc_trans()
 			stat_change(0);
 			if (hw.hdma & 0x80)
 				hw_hdma();
-			else
-				C += 102;
+			/* FIXME -- how much of the hblank does hdma use?? */
+			/* else */
+			C += 102;
 			break;
 		case 0:
 			if (++R_LY >= 144)

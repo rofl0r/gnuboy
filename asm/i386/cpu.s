@@ -2334,11 +2334,6 @@ opdone:
 
 
 .Ltimer:
-	pushl %edi
-	call timer_advance
-	popl %ecx
-	jmp .Lendtimer
-	
 	xorb $0xff, %cl
 	movl %edi, %eax
 	incb %cl

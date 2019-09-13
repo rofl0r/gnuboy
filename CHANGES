@@ -3,8 +3,17 @@
 CHANGES file -- detailed list of all changes made...
 please see WHATSNEW instead for user-oriented information.
 
-0.9.11
+0.9.12
+started adding HuC3 MBC support
+removed some code that was accidentally left in that broke dos/win builds
+fixed a bug in SDL joystick support -- thanks Ralf Hoffmann
+unused bits in VBK register should be 1, not 0 -- this broke Binary Chaos
+fixed bug that kept dmg palette from restoring properly after loading savestate
+integrated hardware YUV scaling w/SDL thanks to Magnus Damm
+SDL code now turns off fb.enabled when window is iconified
+HDMA timing correction back in 0.9.6 broke Wacky Races; it's disabled for now
 
+0.9.11
 fixed bug that kept video mode setting from working with svgalib
 implemented program counter skip after STOP instruction (konami collections)
 fixed SDL hardware surface support -- thanks Dave Kiddell

@@ -21,6 +21,7 @@
 
 struct fb fb;
 
+static int use_yuv = -1;
 static int fullscreen = 1;
 static int use_altenter = 1;
 static int use_joy = 1, sdl_joy_num;
@@ -30,12 +31,16 @@ static int xaxis_max, yaxis_max;
 static char Xstatus, Ystatus;
 
 static SDL_Surface *screen;
+static SDL_Overlay *overlay;
+static SDL_Rect overlay_rect;
 
 static int vmode[3] = { 0, 0, 16 };
 
 rcvar_t vid_exports[] =
 {
 	RCV_VECTOR("vmode", &vmode, 3),
+	RCV_BOOL("yuv", &use_yuv),
+	RCV_BOOL("fullscreen", &fullscreen),
 	RCV_BOOL("sdl_fullscreen", &fullscreen),
 	RCV_BOOL("sdl_altenter", &use_altenter),
 	RCV_END
@@ -66,10 +71,93 @@ static int mapscancode(SDLKey sym)
 	return 0;
 }
 
-void vid_init()
+
+static void joy_init()
 {
 	int i;
 	int joy_count;
+	
+	/* Initilize the Joystick, and disable all later joystick code if an error occured */
+	if (!use_joy) return;
+	
+	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK))
+		return;
+	
+	joy_count = SDL_NumJoysticks();
+	
+	if (!joy_count)
+		return;
+
+	/* now try and open one. If, for some reason it fails, move on to the next one */
+	for (i = 0; i < joy_count; i++)
+	{
+		sdl_joy = SDL_JoystickOpen(i);
+		if (sdl_joy)
+		{
+			sdl_joy_num = i;
+			break;
+		}	
+	}
+	
+	/* make sure that Joystick event polling is a go */
+	SDL_JoystickEventState(SDL_ENABLE);
+}
+
+static void overlay_init()
+{
+	if (!use_yuv) return;
+	
+	if (use_yuv < 0)
+		if (vmode[0] < 320 || vmode[1] < 288)
+			return;
+	
+	overlay = SDL_CreateYUVOverlay(320, 144, SDL_YUY2_OVERLAY, screen);
+
+	if (!overlay) return;
+
+	if (!overlay->hw_overlay || overlay->planes > 1)
+	{
+		SDL_FreeYUVOverlay(overlay);
+		overlay = 0;
+		return;
+	}
+
+	SDL_LockYUVOverlay(overlay);
+	
+	fb.w = 160;
+	fb.h = 144;
+	fb.pelsize = 4;
+	fb.pitch = overlay->pitches[0];
+	fb.ptr = overlay->pixels[0];
+	fb.yuv = 1;
+	fb.cc[0].r = fb.cc[1].r = fb.cc[2].r = fb.cc[3].r = 0;
+	fb.dirty = 1;
+	fb.enabled = 1;
+	
+	overlay_rect.x = 0;
+	overlay_rect.y = 0;
+	overlay_rect.w = vmode[0];
+	overlay_rect.h = vmode[1];
+
+	/* Color channels are 0=Y, 1=U, 2=V, 3=Y1 */
+	switch (overlay->format)
+	{
+		/* FIXME - support more formats */
+	case SDL_YUY2_OVERLAY:
+	default:
+		fb.cc[0].l = 0;
+		fb.cc[1].l = 24;
+		fb.cc[2].l = 8;
+		fb.cc[3].l = 16;
+		break;
+	}
+	
+	SDL_UnlockYUVOverlay(overlay);
+}
+
+void vid_init()
+{
+	int i;
 	int flags;
 
 	if (!vmode[0] || !vmode[1])
@@ -93,6 +181,12 @@ void vid_init()
 
 	SDL_ShowCursor(0);
 
+	joy_init();
+
+	overlay_init();
+	
+	if (fb.yuv) return;
+	
 	SDL_LockSurface(screen);
 	
 	fb.w = screen->w;
@@ -113,44 +207,6 @@ void vid_init()
 	fb.enabled = 1;
 	fb.dirty = 0;
 	
-	/* Initilize the Joystick, and disable all later joystick code if an error occured */
-	if (!use_joy) return;
-	
-	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK))
-	{
-		/* No warning output yet, we'll add verbosity levels later */
-		/* fprintf(stderr,"SDL: Couldn't initilize Joystick Subsystem: %s\n",SDL_GetError()); */
-		return;
-	}
-	
-	joy_count = SDL_NumJoysticks();
-	
-	if (!joy_count)
-	{
-		/* fprintf(stderr, "No joysticks available\n"); */
-		return;
-	}
-
-#if 0
-	/* print available joysticks to the console */		
-   	for (i = 0; i < joy_count; i++)
-		printf("Joystick %u, %s\n", i, SDL_JoystickName(i));
-#endif
-
-	/* now try and open one. If, for some reason it fails, move on to the next one */
-	for (i = 0; i < joy_count; i++)
-	{
-		sdl_joy = SDL_JoystickOpen(i);
-		if (sdl_joy)
-		{
-			sdl_joy_num = i;
-			/* printf("Opened Joystick %u of %u (%s)", sdl_joy_num+1, joy_count,SDL_JoystickName(sdl_joy_num)); */
-			break;
-		}	
-	}
-	
-	/* make sure that Joystick event polling is a go */
-	SDL_JoystickEventState(SDL_ENABLE);
 }
 
 
@@ -164,6 +220,10 @@ void ev_poll()
 	{
 		switch(event.type)
 		{
+		case SDL_ACTIVEEVENT:
+			if (event.active.state == SDL_APPACTIVE)
+				fb.enabled = event.active.gain;
+			break;
 		case SDL_KEYDOWN:
 			if ((event.key.keysym.sym == SDLK_RETURN) && (event.key.keysym.mod & KMOD_ALT))
 				SDL_WM_ToggleFullScreen(screen);
@@ -234,6 +294,7 @@ void ev_poll()
 					ev_postevent(&ev);
 				}	       
 				Xstatus=1;
+				break;
 				
 			case 1: /* Y axis*/ 
 				axisval = event.jaxis.value;
@@ -329,7 +390,12 @@ void vid_preinit()
 
 void vid_close()
 {
-	SDL_UnlockSurface(screen);
+	if (overlay)
+	{
+		SDL_UnlockYUVOverlay(overlay);
+		SDL_FreeYUVOverlay(overlay);
+	}
+	else SDL_UnlockSurface(screen);
 	SDL_Quit();
 	fb.enabled = 0;
 }
@@ -341,19 +407,29 @@ void vid_settitle(char *title)
 
 void vid_begin()
 {
+	if (overlay)
+	{
+		SDL_LockYUVOverlay(overlay);
+		fb.ptr = overlay->pixels[0];
+		return;
+	}
 	SDL_LockSurface(screen);
 	fb.ptr = screen->pixels;
 }
 
 void vid_end()
 {
+	if (overlay)
+	{
+		SDL_UnlockYUVOverlay(overlay);
+		if (fb.enabled)
+			SDL_DisplayYUVOverlay(overlay, &overlay_rect);
+		return;
+	}
 	SDL_UnlockSurface(screen);
-	SDL_Flip(screen);
+	if (fb.enabled) SDL_Flip(screen);
 }
 
-void vid_resize()
-{
-}
 
 
 

@@ -20,6 +20,7 @@ SDL port
 
 Ralf Hoffmann --
 Linux joystick code
+SDL joystick bugfix
 
 David Lau --
 SDL joystick code
@@ -38,5 +39,9 @@ SDL fullscreen code
 Dave Kiddell --
 Windows port (SDL+mingw32)
 SDL bugfixes
+
+Magnus Damm --
+YUV colorspace code
+SDL YUV hardware scaling support
 
 
