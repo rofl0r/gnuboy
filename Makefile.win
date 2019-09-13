@@ -7,7 +7,7 @@ CFLAGS = -O3 -I./asm/i386 -Dmain=SDL_main
 LDFLAGS = -s -lmingw32 -lSDLmain -lSDL
 ASFLAGS = -x assembler-with-cpp
 
-SYS_DEFS = -DIS_LITTLE_ENDIAN -DALT_PATH_SEP -DNO_AALIB -DUSE_ASM
+SYS_DEFS = -DIS_LITTLE_ENDIAN -DALT_PATH_SEP -DUSE_ASM
 ASM_OBJS = asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.o
 #SND_OBJS = sys/dummy/nosound.o
 

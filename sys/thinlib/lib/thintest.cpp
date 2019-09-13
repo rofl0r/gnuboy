@@ -1,5 +1,5 @@
 /*
-** thinlib (c) 2000 Matthew Conte (matt@conte.com)
+** thinlib (c) 2001 Matthew Conte (matt@conte.com)
 **
 **
 ** This program is free software; you can redistribute it and/or
@@ -28,6 +28,9 @@
 #include <math.h>
 #include "thinlib.h"
 
+//#define  TEST_STEREO
+#define  TEST_DPP
+
 class test
 {
 public:
@@ -39,7 +42,7 @@ private:
    enum
    {
       SAMPLE_RATE = 44100,
-      FRAGSIZE    = 1024,
+      FRAGSIZE    = 256,
       VID_WIDTH   = 320,
       VID_HEIGHT  = 240,
       VID_BPP     = 8
@@ -48,7 +51,7 @@ private:
    int testSound();
    int testVideo();
    int testTimer();
-   int testKeys();
+   int testEvents();
 };
 
 test::test()
@@ -63,14 +66,17 @@ test::~test()
    thin_shutdown();
 }
 
-static void fillbuf(void *buf, int size)
+static void fillbuf(void *user_data, void *buf, int size)
 {
    static int pos = 0;
-   int i;
+   UNUSED(user_data);
 
-   for (i = 0; i < size; i++)
+   while (size--)
    {
-      *((uint8 *) buf)++ = 127 + (uint8)(127.0 * sin(2 * PI * pos / 128));
+      *((uint8 *) buf)++ = 127 + (int8)(127.0 * sin(2 * PI * pos / 128));
+#ifdef TEST_STEREO
+      *((uint8 *) buf)++ = 127 + (int8)(127.0 * cos(2 * PI * pos / 128));
+#endif
       pos = (pos + 1) & 1023;
    }
 }
@@ -81,8 +87,13 @@ int test::testSound()
 
    params.sample_rate = SAMPLE_RATE;
    params.frag_size = FRAGSIZE;
+#ifdef TEST_STEREO
+   params.format = THIN_SOUND_STEREO | THIN_SOUND_8BIT;
+#else
    params.format = THIN_SOUND_MONO | THIN_SOUND_8BIT;
+#endif
    params.callback = fillbuf;
+   params.user_data = NULL;
 
    if (thin_sound_init(&params))
       return -1;
@@ -100,7 +111,7 @@ int test::testVideo()
    bitmap_t *buffer;
 
    /* set up video */
-   if (thin_vid_init(VID_WIDTH, VID_HEIGHT, VID_BPP))
+   if (thin_vid_init(VID_WIDTH, VID_HEIGHT, VID_BPP, 0/*THIN_VIDEO_HWSURFACE*/))
       return -1;
 
    buffer = thin_bmp_create(VID_WIDTH, VID_HEIGHT, VID_BPP, 0);
@@ -124,7 +135,7 @@ int test::testVideo()
          
       thin_vid_freewrite(-1, NULL);
    }
-   
+
    thin_vid_shutdown();
 
    if (1000 != i)
@@ -134,8 +145,9 @@ int test::testVideo()
 }
 
 static volatile int timer_ticks = 0;
-static void timer_handler(void)
+static void timer_handler(void *param)
 {
+   (void) param;
    timer_ticks++;
 }
 THIN_LOCKED_STATIC_FUNC(timer_handler)
@@ -148,7 +160,7 @@ int test::testTimer()
    THIN_LOCK_VAR(timer_ticks);
 
    /* one second intervals... */
-   if (thin_timer_init(60, timer_handler))
+   if (thin_timer_init(60, timer_handler, NULL))
       return -1;
 
    timer_ticks = last_ticks = 0;
@@ -166,19 +178,69 @@ int test::testTimer()
    return 0;
 }
 
-int test::testKeys()
+int test::testEvents()
 {
-   keydata_t *pKey;
+   thin_event_t event;
+   bool done = false;
 
-   thin_printf("keytest: press ESC...");
+   thin_mouse_init(80, 20, 1);
+   thin_joy_init();
+   thin_dpp_init();
+   thin_dpp_add(0x378, 0);
 
-   do
+   thin_printf("event test: press ESC...");
+
+   while (!done)
    {
-      pKey = thin_key_dequeue();
-   }
-   while (pKey == NULL || pKey->key != THIN_KEY_ESC);
+      thin_event_gather();
 
-   thin_printf("\nhey, thanks!\n");
+      while (thin_event_get(&event))
+      {
+         switch (event.type)
+         {
+         case THIN_KEY_PRESS:
+            if (event.data.keysym == THIN_KEY_ESC)
+               done = true;
+            thin_printf("key press\n");
+            break;
+
+         case THIN_KEY_RELEASE:
+            thin_printf("key release\n");
+            break;
+
+         case THIN_MOUSE_MOTION:
+            thin_printf("mouse motion\n");
+            break;
+
+         case THIN_MOUSE_BUTTON_PRESS:
+            thin_printf("mouse button press\n");
+            break;
+
+         case THIN_MOUSE_BUTTON_RELEASE:
+            thin_printf("mouse button release\n");
+            break;
+
+         case THIN_JOY_MOTION:
+            thin_printf("joy motion\n");
+            break;
+
+         case THIN_JOY_BUTTON_PRESS:
+            thin_printf("joy button press\n");
+            break;
+
+         case THIN_JOY_BUTTON_RELEASE:
+            thin_printf("joy button release\n");
+            break;
+
+         default:
+            break;
+         }
+      }
+   }
+
+   thin_dpp_shutdown();
+   thin_joy_shutdown();
+   thin_mouse_shutdown();
 
    return 0;
 }
@@ -194,17 +256,19 @@ void test::run()
    if (testTimer())
       return;
 
-   if (testKeys())
+   if (testEvents())
       return;
+
+   thin_printf("\ntest complete.\n");
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
-   test *t = new test;
+   test *pTest = new test;
 
-   t->run();
+   pTest->run();
 
-   delete t;
+   delete pTest;
 
    return 0;
 }

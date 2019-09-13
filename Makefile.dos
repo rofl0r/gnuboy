@@ -7,15 +7,15 @@ CFLAGS = -O3 -fstrength-reduce -fomit-frame-pointer -I./asm/i386
 ASFLAGS = -x assembler-with-cpp
 LDFLAGS = -s
 
-THIN_NAMES = tl_main tl_log tl_timer tl_key tl_mouse tl_joy \
-	tl_dpp tl_bmp tl_aa tl_vesa tl_vga tl_video tl_sb tl_sound
+THIN_NAMES = tl_main tl_log tl_timer tl_key tl_mouse tl_joy tl_dpp tl_event \
+	tl_bmp tl_vesa tl_vga tl_video tl_sb tl_sound tl_int
 THIN_OBJS = $(THIN_NAMES:%=sys/thinlib/lib/%.o)
 
-SYS_DEFS = -DIS_LITTLE_ENDIAN -DALLOW_UNALIGNED_IO -DALT_PATH_SEP -DUSE_ASM -DNO_AALIB
+SYS_DEFS = -DIS_LITTLE_ENDIAN -DALLOW_UNALIGNED_IO -DALT_PATH_SEP -DUSE_ASM
 
 SYS_INCS = -I./sys/dos -I./sys/thinlib/lib
 SYS_OBJS = sys/dos/dos.o sys/thinlib/thinlib.o sys/thinlib/keymap.o $(THIN_OBJS) \
-	sys/dummy/nojoy.o asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.o
+	asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.o
 
 all: gnuboy.exe
 

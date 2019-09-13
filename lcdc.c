@@ -54,7 +54,7 @@ static void stat_change(int stat)
 	R_STAT = (R_STAT & 0x7C) | stat;
 
 	if (stat != 1) hw_interrupt(0, IF_VBLANK);
-	//hw_interrupt((stat == 1) ? IF_VBLANK : 0, IF_VBLANK);
+	/* hw_interrupt((stat == 1) ? IF_VBLANK : 0, IF_VBLANK); */
 	stat_trigger();
 }
 

@@ -1,20 +1,5 @@
 /*
-** thinlib (c) 2000 Matthew Conte (matt@conte.com)
-**
-**
-** This program is free software; you can redistribute it and/or
-** modify it under the terms of version 2 of the GNU Library General 
-** Public License as published by the Free Software Foundation.
-**
-** This program is distributed in the hope that it will be useful, 
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-** Library General Public License for more details.  To obtain a 
-** copy of the GNU Library General Public License, write to the Free 
-** Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** Any permitted reproduction of these routines, in whole or in part,
-** must bear this legend.
+** thinlib (c) 2001 Matthew Conte (matt@conte.com)
 **
 **
 ** tl_sb.c
@@ -23,18 +8,19 @@
 **
 ** Note: the information in this file has been gathered from many
 **  Internet documents, and from source code written by Ethan Brodsky.
-** $Id: tl_sb.c,v 1.11 2001/03/12 06:06:55 matt Exp $
+**
+** $Id: $
 */
 
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <dos.h>
-#include <go32.h>
 #include <dpmi.h>
 
 #include "tl_types.h"
 #include "tl_djgpp.h"
+#include "tl_int.h"
 #include "tl_sb.h"
 #include "tl_log.h"
 
@@ -112,6 +98,9 @@
 #define  SILENCE_SIGNED       0x00
 #define  SILENCE_UNSIGNED     0x80
 
+/* get the irq vector number from an irq channel */
+#define  SB_IRQVEC(chan)      ((chan < 8) ? (0x08 + (chan)) : (0x70 + ((chan) - 8)))
+
 
 /* DOS low-memory buffer info */
 static struct
@@ -122,17 +111,6 @@ static struct
    uint32 page;
 } dos;
 
-/* Interrupt stuff */
-static struct
-{
-   _go32_dpmi_seginfo old_interrupt;
-   _go32_dpmi_seginfo new_interrupt;
-   uint8 irq_vector;
-   uint8 pic_rotateport;
-   uint8 pic_maskport;
-   uint8 irq_stopmask;
-   uint8 irq_startmask;
-} intr;
 
 /* DMA information */
 static struct
@@ -165,6 +143,7 @@ static struct
    uint32 buf_chunk;
    
    sbmix_t callback;
+   void *user_data;
 } sb;
 
 
@@ -277,7 +256,8 @@ static int parse_blaster_env(void)
       return -1;
    if (get_env_item(blaster, &sb.dma, 'D', 10, 8))
       return -1;
-   get_env_item(blaster, &sb.dma16, 'H', 10, 8);
+   if (get_env_item(blaster, &sb.dma16, 'H', 10, 8))
+      sb.dma16 = (uint8) INVALID;
 
    return 0;
 }
@@ -292,7 +272,7 @@ static int parse_blaster_env(void)
 static uint16 detect_baseio(void)
 {
    int i;
-   static uint16 port_val[] =
+   static const uint16 port_val[] =
    {
       0x210, 0x220, 0x230, 0x240,
       0x250, 0x260, 0x280, (uint16) INVALID
@@ -417,14 +397,11 @@ static void dsp_transfer(uint8 dma)
 */
 #define  NUM_IRQ_CHANNELS  5
 
-static _go32_dpmi_seginfo old_handler[NUM_IRQ_CHANNELS];
-static _go32_dpmi_seginfo new_handler[NUM_IRQ_CHANNELS];
 static const uint8 irq_channels[NUM_IRQ_CHANNELS] = { 2, 3, 5, 7, 10 };
-static const uint8 irq_vectors[NUM_IRQ_CHANNELS] = { 0x0A, 0x0B, 0x0D, 0x0F, 0x72 };
 static volatile bool irq_hit[NUM_IRQ_CHANNELS];
 
 #define  MAKE_IRQ_HANDLER(num) \
-static void chan##num##_handler(void) { irq_hit[num] = true; } \
+static int chan##num##_handler(void) { irq_hit[num] = true; return 0; } \
 THIN_LOCKED_STATIC_FUNC(chan##num##_handler)
 
 MAKE_IRQ_HANDLER(0)
@@ -432,19 +409,6 @@ MAKE_IRQ_HANDLER(1)
 MAKE_IRQ_HANDLER(2)
 MAKE_IRQ_HANDLER(3)
 MAKE_IRQ_HANDLER(4)
-
-static void set_handler(int handler, int index, int vector)
-{
-   new_handler[index].pm_offset = handler;
-   new_handler[index].pm_selector = _go32_my_cs();
-   _go32_dpmi_get_protected_mode_interrupt_vector(vector, &old_handler[index]);
-   _go32_dpmi_chain_protected_mode_interrupt_vector(vector, &new_handler[index]);
-}
-
-static void release_handler(int index, int vector)
-{
-   _go32_dpmi_set_protected_mode_interrupt_vector(vector, &old_handler[index]);
-}
 
 static void ack_interrupt(uint8 irq)
 {
@@ -457,7 +421,6 @@ static void ack_interrupt(uint8 irq)
 
 static uint8 detect_irq(void)
 {
-   int pic1_oldmask, pic2_oldmask;
    bool irq_mask[NUM_IRQ_CHANNELS];
    uint8 irq = (uint8) INVALID;
    int i;
@@ -469,23 +432,25 @@ static uint8 detect_irq(void)
    THIN_LOCK_FUNC(chan4_handler);
    THIN_LOCK_VAR(irq_hit);
 
+   THIN_DISABLE_INTS();
+
    /* install temp handlers */
-   set_handler((int) chan0_handler, 0, irq_vectors[0]);
-   set_handler((int) chan1_handler, 1, irq_vectors[1]);
-   set_handler((int) chan2_handler, 2, irq_vectors[2]);
-   set_handler((int) chan3_handler, 3, irq_vectors[3]);
-   set_handler((int) chan4_handler, 4, irq_vectors[4]);
+   thin_int_install(SB_IRQVEC(irq_channels[0]), chan0_handler);
+   thin_int_install(SB_IRQVEC(irq_channels[1]), chan1_handler);
+   thin_int_install(SB_IRQVEC(irq_channels[2]), chan2_handler);
+   thin_int_install(SB_IRQVEC(irq_channels[3]), chan3_handler);
+   thin_int_install(SB_IRQVEC(irq_channels[4]), chan4_handler);
 
+   /* enable IRQs */
    for (i = 0; i < NUM_IRQ_CHANNELS; i++)
+   {
+      thin_irq_enable(irq_channels[i]);
       irq_hit[i] = false;
+   }
 
-   /* save old IRQ mask and unmask IRQs */
-   pic1_oldmask = inportb(0x21);
-   outportb(0x21, pic1_oldmask & 0x53);
-   pic2_oldmask = inportb(0xA1);
-   outportb(0xA1, pic1_oldmask & 0xFB);
+   THIN_ENABLE_INTS();
 
-   /* wait to see what interrupts are triggered without sound */
+   /* wait to see which interrupts are triggered without sound */
    delay(100);
 
    /* mask out any interrupts triggered without sound */
@@ -507,6 +472,7 @@ static uint8 detect_irq(void)
       {
          irq = irq_channels[i];
          ack_interrupt(irq);
+         break;
       }
    }
 
@@ -525,6 +491,7 @@ static uint8 detect_irq(void)
          {
             irq = irq_channels[i];
             ack_interrupt(irq);
+            break;
          }
       }
    }
@@ -532,13 +499,16 @@ static uint8 detect_irq(void)
    /* reset DSP just in case */
    dsp_reset();
 
-   /* remask IRQs */
-   outportb(0x21, pic1_oldmask);
-   outportb(0xA1, pic2_oldmask);
+   THIN_DISABLE_INTS();
 
-   /* uninstall handlers */
+   /* restore IRQs to previous state, uninstall handlers */
    for (i = 0; i < NUM_IRQ_CHANNELS; i++)
-      release_handler(i, irq_vectors[i]);
+   {
+      thin_irq_restore(irq_channels[i]);
+      thin_int_remove(SB_IRQVEC(irq_channels[i]));
+   }
+
+   THIN_ENABLE_INTS();
 
    return irq;
 }
@@ -550,17 +520,16 @@ static int sb_detect(void)
    if ((uint16) INVALID == sb.baseio)
       return -1;
 
+   sb.irq = detect_irq();
+   if ((uint8) INVALID == sb.irq)
+      return -1;
+
    sb.dma = detect_dma(false);
    if ((uint8) INVALID == sb.dma)
       return -1;
 
+   /* may or may not exist */
    sb.dma16 = detect_dma(true);
-   if ((uint8) INVALID == sb.dma16)
-      return -1;
-
-   sb.irq = detect_irq();
-   if ((uint8) INVALID == sb.irq)
-      return -1;
 
    return 0;
 }
@@ -581,13 +550,13 @@ static int sb_probe(void)
    /* no blaster found */
    if (-1 == retval)
    {
-      thin_printf("thin@sb: no sound blaster found\n");
+      thin_printf("thinlib.sb: no sound blaster found\n");
       return -1;
    }
 
    if (dsp_reset())
    {
-      thin_printf("thin@sb: could not reset SB DSP: check BLASTER= variable\n");
+      thin_printf("thinlib.sb: could not reset SB DSP: check BLASTER= variable\n");
       return -1;
    }
 
@@ -599,7 +568,7 @@ static int sb_probe(void)
 ** Interrupt handler for 8/16-bit audio 
 */
 
-static void sb_isr(void)
+static int sb_isr(void)
 {
    uint32 address, offset;
 
@@ -628,8 +597,11 @@ static void sb_isr(void)
    else
       offset = 0;
 
-   sb.callback(sb.buffer + offset, sb.buf_size);
+   sb.callback(sb.user_data, sb.buffer + offset, sb.buf_size);
 
+   /* if we haven't enabled near pointers, we've written to a double
+   ** buffer, so transfer it to low DOS memory area
+   */
    if (0 == thinlib_nearptr)
       dosmemput(sb.buffer + offset, sb.buf_chunk, dos.bufaddr + offset);
 
@@ -637,6 +609,8 @@ static void sb_isr(void)
    if (sb.irq > 7)
       outportb(0xA0, 0x20);
    outportb(0x20, 0x20);
+
+   return 0;
 }
 THIN_LOCKED_STATIC_FUNC(sb_isr)
 
@@ -644,69 +618,25 @@ THIN_LOCKED_STATIC_FUNC(sb_isr)
 /* install the SB ISR */
 static void sb_setisr(void)
 {
-   /* lock variables, routines */
-   THIN_LOCK_VAR(dma);
-   THIN_LOCK_VAR(dos);
-   THIN_LOCK_VAR(sb);
-   THIN_LOCK_FUNC(sb_isr);
-
-   if (sb.format & SB_FORMAT_16BIT)
-   {
-      dma.ackport = sb.baseio + DSP_DMA_ACK_16BIT;
-      dma.addrport = DMA_ADDRBASE_16BIT + (4 * (sb.dma16 - 4));
-   }
-   else
-   {
-      dma.ackport = sb.baseio + DSP_DMA_ACK_8BIT;
-      dma.addrport = DMA_ADDRBASE_8BIT + (2 * sb.dma);
-   }
-
-   if (sb.irq < 8)
-   {
-      /* PIC 1 */
-      intr.irq_vector = 0x08 + sb.irq;
-      intr.pic_rotateport = 0x20;
-      intr.pic_maskport = 0x21;
-   }
-   else
-   {
-      /* PIC 2 */
-      intr.irq_vector = 0x70 + (sb.irq - 8);
-      intr.pic_rotateport = 0xA0;
-      intr.pic_maskport = 0xA1;
-   }
-
-   intr.irq_stopmask = 1 << (sb.irq & 7);
-   intr.irq_startmask = ~intr.irq_stopmask;
-
-   /* reset DMA count */
-   dma.count = 0;
-
    THIN_DISABLE_INTS();
 
-   outportb(intr.pic_maskport, inportb(intr.pic_maskport) | intr.irq_stopmask);
+   thin_int_install(SB_IRQVEC(sb.irq), sb_isr);
 
-   _go32_dpmi_get_protected_mode_interrupt_vector(intr.irq_vector, &intr.old_interrupt);
-   intr.new_interrupt.pm_offset = (int) sb_isr;
-   intr.new_interrupt.pm_selector = _go32_my_cs();
-   _go32_dpmi_allocate_iret_wrapper(&intr.new_interrupt);
-   _go32_dpmi_set_protected_mode_interrupt_vector(intr.irq_vector, &intr.new_interrupt);
-
-   /* unmask the PIC, get things ready to roll */
-   outportb(intr.pic_maskport, inportb(intr.pic_maskport) & intr.irq_startmask);
+   /* enable IRQ */
+   thin_irq_enable(sb.irq);
 
    THIN_ENABLE_INTS();
 }
 
-/* remove SB ISR, restore old */
-static void sb_resetisr(void)
+
+static void sb_restoreisr(void)
 {
    THIN_DISABLE_INTS();
 
-   outportb(intr.pic_maskport, inportb(intr.pic_maskport) | intr.irq_stopmask);
+   /* restore IRQ to previous state */
+   thin_irq_restore(sb.irq);
 
-   _go32_dpmi_set_protected_mode_interrupt_vector(intr.irq_vector, &intr.old_interrupt);
-   _go32_dpmi_free_iret_wrapper(&intr.new_interrupt);
+   thin_int_remove(SB_IRQVEC(sb.irq));
 
    THIN_ENABLE_INTS();
 }
@@ -717,6 +647,9 @@ static int sb_allocate_buffers(int buf_size)
    int double_bufsize;
 
    sb.buf_size = buf_size;
+
+//   if (sb.format & SB_FORMAT_STEREO)
+//      sb.buf_size *= 2;
 
    if (sb.format & SB_FORMAT_16BIT)
       sb.buf_chunk = sb.buf_size * sizeof(uint16);
@@ -744,7 +677,7 @@ static int sb_allocate_buffers(int buf_size)
 
    if (thinlib_nearptr)
    {
-      sb.buffer = (uint8 *) THIN_PHYS_ADDR(dos.bufaddr);
+      sb.buffer = (uint8 *) THIN_PHYSICAL_ADDR(dos.bufaddr);
    }
    else
    {
@@ -754,7 +687,7 @@ static int sb_allocate_buffers(int buf_size)
    }
 
    /* clear out the buffers */
-   if (sb.format & SB_FORMAT_16BIT)
+   if (sb.format & SB_FORMAT_SIGNED)
       memset(sb.buffer, SILENCE_SIGNED, double_bufsize);
    else
       memset(sb.buffer, SILENCE_UNSIGNED, double_bufsize);
@@ -765,7 +698,7 @@ static int sb_allocate_buffers(int buf_size)
    return 0;
 }
 
-/* free them buffers */
+/* free buffers */
 static void sb_free_buffers(void)
 {
    sb.callback = NULL;
@@ -789,7 +722,9 @@ void thin_sb_shutdown(void)
       sb.initialized = false;
 
       dsp_reset();
-      sb_resetisr();
+
+      sb_restoreisr();
+      
       sb_free_buffers();
    }
 }
@@ -804,6 +739,12 @@ int thin_sb_init(int *sample_rate, int *buf_size, int *format)
    /* don't init twice! */
    if (true == sb.initialized)
       return 0;
+
+   /* lock variables, routines */
+   THIN_LOCK_VAR(dma);
+   THIN_LOCK_VAR(dos);
+   THIN_LOCK_VAR(sb);
+   THIN_LOCK_FUNC(sb_isr);
 
    memset(&sb, 0, sizeof(sb));
    
@@ -853,20 +794,20 @@ int thin_sb_init(int *sample_rate, int *buf_size, int *format)
    if ((sb.format & SB_FORMAT_16BIT) && ((uint8) INVALID == sb.dma16))
    {
       sb.format &= ~SB_FORMAT_16BIT;
-      thin_printf("thin@sb: 16-bit DMA channel not available, dropping to 8-bit\n");
+      thin_printf("thinlib.sb: 16-bit DMA channel not available, dropping to 8-bit\n");
    }
 
    /* clamp buffer size to something sane */
    if ((uint16) *buf_size > sb.sample_rate)
    {
       *buf_size = sb.sample_rate;
-      thin_printf("thin@sb: buffer size too big, dropping to %d bytes\n", *buf_size);
+      thin_printf("thinlib.sb: buffer size too big, dropping to %d bytes\n", *buf_size);
    }
 
    /* allocate buffer / DOS memory */
    if (sb_allocate_buffers(*buf_size))
    {
-      thin_printf("thin@sb: failed allocating sound buffers\n");
+      thin_printf("thinlib.sb: failed allocating sound buffers\n");
       return -1;
    }
 
@@ -947,6 +888,7 @@ static void start_transfer(void)
    uint8 dma_mode, start_command, mode_command;
    int dma_length;
 
+   /* reset DMA count */
    dma.count = 0;
 
    dma_length = sb.buf_size * 2;
@@ -969,7 +911,6 @@ static void start_transfer(void)
 
       dma_mode |= dma_base; 
       start_command |= DSP_DMA_START_16BIT;
-      mode_command = DSP_DMA_SIGNED;
 
       outportb(DMA_MASKPORT_16BIT, DMA_STOPMASK_BASE | dma_base);
       outportb(DMA_MODEPORT_16BIT, dma_mode);
@@ -980,12 +921,14 @@ static void start_transfer(void)
       outportb(DMA_COUNTBASE_16BIT + (4 * dma_base), HIGH_BYTE(dma_length - 1));
       outportb(dma16_ports[dma_base], dos.page);
       outportb(DMA_MASKPORT_16BIT, DMA_STARTMASK_BASE | dma_base);
+
+      dma.ackport = sb.baseio + DSP_DMA_ACK_16BIT;
+      dma.addrport = DMA_ADDRBASE_16BIT + (4 * (sb.dma16 - 4));
    }
    else
    {
       dma_mode |= sb.dma;
       start_command |= DSP_DMA_START_8BIT;
-      mode_command = DSP_DMA_UNSIGNED;
 
       outportb(DMA_MASKPORT_8BIT, DMA_STOPMASK_BASE + sb.dma);
       outportb(DMA_MODEPORT_8BIT, dma_mode);
@@ -996,7 +939,16 @@ static void start_transfer(void)
       outportb(DMA_COUNTBASE_8BIT + (2 * sb.dma), HIGH_BYTE(dma_length - 1));
       outportb(dma8_ports[sb.dma], dos.page);
       outportb(DMA_MASKPORT_8BIT, DMA_STARTMASK_BASE + sb.dma);
+
+      dma.ackport = sb.baseio + DSP_DMA_ACK_8BIT;
+      dma.addrport = DMA_ADDRBASE_8BIT + (2 * sb.dma);
    }
+
+   /* check signed/unsigned */
+   if (sb.format & SB_FORMAT_SIGNED)
+      mode_command = DSP_DMA_SIGNED;
+   else
+      mode_command = DSP_DMA_UNSIGNED;
 
    /* check stereo */
    if (sb.format & SB_FORMAT_STEREO)
@@ -1039,8 +991,9 @@ static void start_transfer(void)
    }
 }
 
+/* TODO: this gets totally wacked when we change the timer rate!!! */
 /* start playing the output buffer */
-int thin_sb_start(sbmix_t fillbuf)
+int thin_sb_start(sbmix_t fillbuf, void *user_data)
 {
    clock_t count;
    int projected_dmacount;
@@ -1054,6 +1007,7 @@ int thin_sb_start(sbmix_t fillbuf)
 
    /* set the callback routine */
    sb.callback = fillbuf;
+   sb.user_data = user_data;
 
    /* calculate how many DMAs we should have in one second 
    ** and scale it down just a tad
@@ -1066,22 +1020,22 @@ int thin_sb_start(sbmix_t fillbuf)
    start_transfer();
    count = clock();
    while ((clock() - count) < CLOCKS_PER_SEC && dma.count < projected_dmacount)
-	; /* spin */
+      ; /* spin */
 
    if (dma.count < projected_dmacount)
    {
       if (true == dma.autoinit)
       {
-         thin_printf("thin@sb: Autoinit DMA failed, trying one-shot mode.\n");
+         thin_printf("thinlib.sb: Autoinit DMA failed, trying one-shot mode.\n");
          dsp_reset();
          dma.autoinit = false;
          dma.count = 0;
-         return (thin_sb_start(fillbuf));
+         return (thin_sb_start(fillbuf, user_data));
       }
       else
       {
-         thin_printf("thin@sb: One-shot DMA mode failed, sound will not be heard.\n");
-         thin_printf("thin@sb: DSP version: %d.%d baseio: %X IRQ: %d DMA: %d High: %d\n",
+         thin_printf("thinlib.sb: One-shot DMA mode failed, sound will not be heard.\n");
+         thin_printf("thinlib.sb: DSP version: %d.%d baseio: %X IRQ: %d DMA: %d High: %d\n",
                      sb.dsp_version >> 8, sb.dsp_version & 0xFF,
                      sb.baseio, sb.irq, sb.dma, sb.dma16);
          return -1;
@@ -1092,38 +1046,5 @@ int thin_sb_start(sbmix_t fillbuf)
 }
 
 /*
-** $Log: tl_sb.c,v $
-** Revision 1.11  2001/03/12 06:06:55  matt
-** better keyboard driver, support for bit depths other than 8bpp
-**
-** Revision 1.10  2001/02/19 03:38:32  matt
-** stereo buffer overrun
-**
-** Revision 1.9  2001/02/01 06:28:26  matt
-** thinlib now works under NT/2000
-**
-** Revision 1.8  2001/01/15 05:25:52  matt
-** i hate near pointers
-**
-** Revision 1.7  2000/12/17 21:49:24  matt
-** whose idea was it to have functions returning bool all over the place?
-**
-** Revision 1.6  2000/12/16 21:18:11  matt
-** thinlib cleanups
-**
-** Revision 1.5  2000/12/13 14:14:27  matt
-** DJGPP_USE_NEARPTR -> THINLIB_NEARPTR
-**
-** Revision 1.4  2000/12/11 12:32:25  matt
-** buffer allocation size miscalculation
-**
-** Revision 1.3  2000/11/25 20:27:48  matt
-** typo
-**
-** Revision 1.2  2000/11/05 16:32:36  matt
-** thinlib round 2
-**
-** Revision 1.1  2000/11/05 06:29:03  matt
-** initial revision
-**
+** $Log: $
 */

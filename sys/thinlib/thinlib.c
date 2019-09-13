@@ -8,12 +8,17 @@
 
 struct pcm pcm;
 
-static byte *backbuf;
 static volatile int audio_int;
 
 static int samplerate = 44100;
 static int sound = 1;
 static int stereo = 0;
+
+static int joystick = 1;
+
+static int dpp = 0;
+static int dpp_pad = 0;
+static int dpp_port = 0x378;
 
 struct fb fb;
 
@@ -34,16 +39,58 @@ rcvar_t pcm_exports[] =
 	RCV_END
 };
 
-/* hardware audio buffer fill */
-static void _audio_callback(void *buf, int len)
+rcvar_t joy_exports[] =
 {
-	memcpy(buf, backbuf, len);
+	RCV_BOOL("joystick", &joystick),
+	RCV_BOOL("dpp", &dpp),
+	RCV_INT("dpp_pad", &dpp_pad),
+	RCV_INT("dpp_port", &dpp_port),
+	RCV_END
+};
+
+void joy_init()
+{
+	if (joystick)
+	{
+		if (thin_joy_init())
+		joystick = 0;
+	}
+
+	if (dpp)
+	{
+		if (thin_dpp_init())
+			dpp = 0;
+		else
+			thin_dpp_add(dpp_port, dpp_pad);
+	}
+}
+
+void joy_close()
+{
+	if (joystick)
+		thin_joy_shutdown();
+	if (dpp)
+		thin_dpp_shutdown();
+}
+
+void joy_poll()
+{
+	/* handled by event polling */
+}
+
+
+/* hardware audio buffer fill */
+static void _audio_callback(void *user_data, void *buf, int len)
+{
+	/* user_data unused */
+	memcpy(buf, pcm.buf, len);
 	audio_int = 1;
 }
 
 void pcm_init()
 {
 	thinsound_t params;
+	int i;
 
 	if (!sound)
 	{
@@ -57,7 +104,9 @@ void pcm_init()
 
 	params.sample_rate = samplerate;
 	params.frag_size = samplerate / 60;
-	params.format = THIN_SOUND_8BIT;
+	for (i = 1; i < params.frag_size; i <<= 1);
+	params.frag_size = i;
+	params.format = THIN_SOUND_8BIT | THIN_SOUND_UNSIGNED;
 	if (stereo)
 		params.format |= THIN_SOUND_STEREO;
 	else
@@ -80,12 +129,6 @@ void pcm_init()
 	memset(pcm.buf, 0, pcm.len);
 	pcm.pos = 0;
 
-	backbuf = (byte *) malloc(pcm.len);
-	if (!backbuf)
-		die("failed to allocate sound backbuffer\n");
-
-	memset(backbuf, 0, pcm.len);
-
 	thin_sound_start();
 }
 
@@ -99,9 +142,6 @@ void pcm_close()
 
 	if (pcm.buf)
 		free(pcm.buf);
-	if (backbuf)
-		free(backbuf);
-	backbuf = 0;
 
 	memset(&pcm, 0, sizeof pcm);
 }
@@ -120,7 +160,6 @@ int pcm_submit()
 	while (!audio_int)
 		; /* spin */
 
-	memcpy(backbuf, pcm.buf, pcm.len);
 	audio_int = 0;
 	pcm.pos = 0;
 
@@ -132,8 +171,8 @@ int pcm_submit()
 
 /* keymap - mappings of the form { scancode, localcode } - from keymap.c */
 extern int keymap[][2];
+static int scanmap[256];
 
-/* TODO: this is terrible. */
 static int mapscancode(int scan)
 {
 	int i;
@@ -143,26 +182,93 @@ static int mapscancode(int scan)
 	return 0;
 }
 
+static void buildscanmap()
+{
+	int key, i;
+
+	memset(scanmap, 0, sizeof(scanmap));
+
+	for (key = 0; key < 256; key++)
+		scanmap[key] = mapscancode(key);
+}
 
 void ev_poll()
 {
-	int i;
-	keydata_t *key;
+	thin_event_t event;
 	event_t ev;
-	
-	key = thin_key_dequeue();
-	while (key)
-	{
-		ev.type = key->signal ? EV_PRESS : EV_RELEASE;
-		ev.code = mapscancode(key->key);
-		ev_postevent(&ev);
 
-		key = thin_key_dequeue();
+	thin_event_gather();
+	
+	while (thin_event_get(&event))
+	{
+		switch (event.type)
+		{
+		case THIN_KEY_PRESS:
+			ev.type = EV_PRESS;
+			ev.code = scanmap[event.data.keysym];
+			ev_postevent(&ev);
+			break;
+
+		case THIN_KEY_RELEASE:
+			ev.type = EV_RELEASE;
+			ev.code = scanmap[event.data.keysym];
+			ev_postevent(&ev);
+			break;
+
+		case THIN_JOY_MOTION:
+			ev.type = event.data.joy_motion.state ? EV_PRESS : EV_RELEASE;
+			switch (event.data.joy_motion.dir)
+			{
+			case THIN_JOY_LEFT:
+				ev.code = K_JOYLEFT;
+				break;
+
+			case THIN_JOY_RIGHT:
+				ev.code = K_JOYRIGHT;
+				break;
+
+			case THIN_JOY_UP:
+				ev.code = K_JOYUP;
+				break;
+
+			case THIN_JOY_DOWN:
+				ev.code = K_JOYDOWN;
+				break;
+			}
+         
+			ev_postevent(&ev);
+			break;
+
+		case THIN_JOY_BUTTON_PRESS:
+			ev.type = EV_PRESS;
+			ev.code = K_JOY0 + event.data.joy_button;
+			ev_postevent(&ev);
+			break;
+
+		case THIN_JOY_BUTTON_RELEASE:
+			ev.type = EV_RELEASE;
+			ev.code = K_JOY0 + event.data.joy_button;
+			ev_postevent(&ev);
+			break;
+
+		default:
+			break;
+		}
 	}
 }
 
 void vid_preinit()
 {
+	int gotmask = thin_init(THIN_VIDEO | THIN_SOUND | THIN_KEY);
+	if ((THIN_VIDEO | THIN_KEY) != (gotmask & (THIN_VIDEO | THIN_KEY)))
+		die("thinlib initialization failed.");
+	thin_key_set_repeat(false);
+	buildscanmap();
+
+	/* don't spam the graphics screen if we don't have soundcard */
+	thin_setlogfunc(NULL);
+
+	joy_init();
 }
 
 void vid_init()
@@ -170,15 +276,7 @@ void vid_init()
 	int red_length, green_length, blue_length;
 	int red_offset, green_offset, blue_offset;
 
-	int gotmask = thin_init(THIN_VIDEO | THIN_SOUND | THIN_KEY);
-	if ((THIN_VIDEO | THIN_KEY) != (gotmask & (THIN_VIDEO | THIN_KEY)))
-		die("thinlib initialization failed.");
-	thin_key_set_repeat(false);
-
-	/* don't spam the graphics screen if we don't have soundcard */
-	thin_setlogfunc(NULL);
-
-	if (thin_vid_init(vmode[0], vmode[1], vmode[2]))
+	if (thin_vid_init(vmode[0], vmode[1], vmode[2], THIN_VIDEO_HWSURFACE))
 		die("could not set video mode");
 
 	screen = thin_vid_lockwrite();
@@ -243,6 +341,7 @@ void vid_init()
 void vid_close()
 {
 	fb.enabled = 0;
+	joy_close();
 	thin_shutdown();
 }
 

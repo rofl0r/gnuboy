@@ -52,7 +52,7 @@ static int rgb332;
 static int sprsort;
 static int sprdebug;
 
-#define DEF_PAL { 0x78f0f0, 0x58b8b8, 0x487878, 0x184848 }
+#define DEF_PAL { 0x98d0e0, 0x68a0b0, 0x60707C, 0x2C3C3C }
 
 static int dmg_pal[4][4] = { DEF_PAL, DEF_PAL, DEF_PAL, DEF_PAL };
 

@@ -1,10 +1,32 @@
 
 * WHAT'S NEW *
 
-Here you will find a summary of the changes made in each released
-version of gnuboy, organized from an end-user perspective.
-Webmasters, please use this file as a basis for announcing new
-versions; the CHANGES file is too technical and unorganized.
+  Here you will find a summary of the changes made in each released
+  version of gnuboy, organized from an end-user perspective.
+  Webmasters, please use this file as a basis for announcing new
+  versions; the CHANGES file is too technical and unorganized.
+
+
+
+RELEASE 1.0.0
+
+  NEW FEATURES
+
+Auto-loading rc files on a per-rom basis.
+Less intense yellow in the default mono palette.
+Default keybindings no longer use modifier keys.
+Lots of new documentation.
+Hardware scaling on matroxfb now looks better.
+
+  BUGS FIXED
+
+Disabled some useless optimizations to work around a bug in gcc 2.96, which
+despite being a broken compiler has become rather popular since Redhat
+decided to package it without sufficient testing. This will fix the problems
+lots of people have reported when compiling.
+Added --disable-arch option to configure to prevent the binaries built from
+being dependent on the exact host cpu they're built on. This will allow
+distro maintainers to build packages that work even on older cpus.
 
 
 

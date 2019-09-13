@@ -4,75 +4,75 @@ HACKING ON THE GNUBOY SOURCE TREE
 
   BASIC INFO
 
-in preparation for the first release, i'm putting together a simple
+In preparation for the first release, I'm putting together a simple
 document to aid anyone interested in playing around with or improving
-the gnuboy source. first of all, before working on anything, you
-should know my policies as maintainer. i'm happy to accept contributed
+the gnuboy source. First of all, before working on anything, you
+should know my policies as maintainer. I'm happy to accept contributed
 code, but there are a few guidelines:
 
-* obviously, all code must be able to be distributed under the gnu
-gpl. this means that your terms of use for the code must be equivalent
-to or weaker than those of the gpl. public domain and mit-style
+* Obviously, all code must be able to be distributed under the GNU
+GPL. This means that your terms of use for the code must be equivalent
+to or weaker than those of the GPL. Public domain and MIT-style
 licenses are perfectly fine for new code that doesn't incorporate
 existing parts of gnuboy, e.g. libraries, but anything derived from or
-built upon the gpl'd code can only be distributed under gpl. when in
+built upon the GPL'd code can only be distributed under GPL. When in
 doubt, read COPYING.
 
-* please stick to a coding and naming convention similar to the
-existing code. i can reformat contributions if i need to when
+* Please stick to a coding and naming convention similar to the
+existing code. I can reformat contributions if I need to when
 integrating them, but it makes it much easier if that's already done
-by the coder. in particular, indentions are a single tab (char 9), and
+by the coder. In particular, indentions are a single tab (char 9), and
 all symbols are all lowercase, except for macros which are all
 uppercase.
 
-* all code must be completely deterministic and consistent across all
+* All code must be completely deterministic and consistent across all
 platforms. this results in the two following rules...
 
-* no floating point code whatsoever. use fixed point or better yet
+* No floating point code whatsoever. Use fixed point or better yet
 exact analytical integer methods as opposed to any approximation.
 
-* no threads. emulation with threads is a poor approximation if done
+* No threads. Emulation with threads is a poor approximation if done
 sloppily, and it's slow anyway even if done right since things must be
-kept synchronous. also, threads are not portable. just say no to
+kept synchronous. Also, threads are not portable. Just say no to
 threads.
 
-* all non-portable code belongs in the sys/ or asm/ trees. #ifdef
+* All non-portable code belongs in the sys/ or asm/ trees. #ifdef
 should be avoided except for general conditionally-compiled code, as
 opposed to little special cases for one particular cpu or operating
 system. (i.e. #ifdef USE_ASM is ok, #ifdef __i386__ is NOT!)
 
-* that goes for *nix code too. gnuboy is written in ansi c, and i'm
-not going to go adding k&r function declarations or #ifdef's to make
-sure the standard library is functional. if your system is THAT
+* That goes for *nix code too. gnuboy is written in ANSI C, and I'm
+not going to go adding K&R function declarations or #ifdef's to make
+sure the standard library is functional. If your system is THAT
 broken, fix the system, don't "fix" the emulator.
 
-* please no feature-creep. if something can be done through an
+* Please no feature-creep. If something can be done through an
 external utility or front-end, or through clever use of the rc
 subsystem, don't add extra code to the main program.
 
-* on that note, the modules in the sys/ tree serve the singular
+* On that note, the modules in the sys/ tree serve the singular
 purpose of implementing calls necessary to get input and display
-graphics (and eventually sound). unlike in poorly-designed emulators,
+graphics (and eventually sound). Unlike in poorly-designed emulators,
 they are not there to give every different target platform its own gui
 and different set of key bindings.
 
-* furthermore, the main loop is not in the platform-specific code, and
-it will never be. windows people, put your code that would normally go
+* Furthermore, the main loop is not in the platform-specific code, and
+it will never be. Windows people, put your code that would normally go
 in a message loop in ev_refresh and/or sys_sleep!
 
-* commented code is welcome but not required.
+* Commented code is welcome but not required.
 
-* i prefer asm in at&t syntax (the style used by *nix assemblers and
-likewise djgpp) as opposed to intel/nasm/etc style. if you really must
-use a different style, i can convert it, but i don't want to add extra
-dependencies on nonstandard assemblers to the build process. also,
-portable c versions of all code should be available.
+* I prefer asm in AT&T syntax (the style used by *nix assemblers and
+likewise DJGPP) as opposed to Intel/NASM/etc style. If you really must
+use a different style, I can convert it, but I don't want to add extra
+dependencies on nonstandard assemblers to the build process. Also,
+portable C versions of all code should be available.
 
-* have fun with it. if my demands stifle your creativity, feel free to
-fork your own projects. i can always adapt and merge code later if
+* Have fun with it. If my demands stifle your creativity, feel free to
+fork your own projects. I can always adapt and merge code later if
 your rouge ideas are good enough. :)
 
-ok, enough of that. now for the fun part...
+OK, enough of that. Now for the fun part...
 
 
   THE SOURCE TREE STRUCTURE
@@ -93,6 +93,7 @@ configure* - script for generating *nix makefiles
 sys/*/* - hardware and software platform-specific code
 asm/*/* - optimized asm versions of some code, not used yet
 asm/*/asm.h - header specifying which functions are replaced by asm
+asm/i386/asmnames.h - #defines to fix _ prefix brain damage on DOS/Windows
 
 [main emulator stuff]
 main.c - entry point, event handler...basically a mess
@@ -101,6 +102,7 @@ emu.c - another mess, basically the frame loop that calls state.c
 debug.c - currently just cpu trace, eventually interactive debugging
 hw.c - interrupt generation, gamepad state, dma, etc.
 mem.c - memory mapper, read and write operations
+fastmem.h - short static functions that will inline for fast memory io
 regs.h - macros for accessing hardware registers
 save.c - savestate handling
 
@@ -135,19 +137,16 @@ split.c - general purpose code to split strings into argv-style arrays
 
   OVERVIEW OF PROGRAM FLOW
 
-The initial entry point main() is in the appropriate part of the sys/
-tree. This is intended to handle strange systems with special startup
-needs, not to provide a place for bloat. main() should call
-real_main(), which is in main.c, as soon as possible, and which in
-turn will process the command line, call the system/video
-initialization routines, load the rom/sram, and pass control to the
-main loop in emu.c.
+The initial entry point main() main.c, which will process the command
+line, call the system/video initialization routines, load the
+rom/sram, and pass control to the main loop in emu.c. Note that the
+system-specific main() hook has been removed since it is not needed.
 
 There have been significant changes to gnuboy's main loop since the
 original 0.8.0 release. The former state.c is no more, and the new
 code that takes its place, in lcdc.c, is now called from the cpu loop,
 which although slightly unfortunate for performance reasons, is
-necessary to specially handle some strange special cases.
+necessary to handle some strange special cases.
 
 Still, unlike some emulators, gnuboy's main loop is not the cpu
 emulation loop. Instead, a main loop in emu.c which handles video
@@ -161,8 +160,8 @@ needs this information. The cpu code now takes care of all timer and
 lcdc events in its main loop, so the caller no longer needs to be
 aware of such things.
 
-Note that all cycle counts are measured in CGB double speed *machine*
-cycles (2**21 Hz), not hardware clock cycles (2**23 Hz). This is
+Note that all cycle counts are measured in CGB double speed MACHINE
+cycles (2**21 Hz), NOT hardware clock cycles (2**23 Hz). This is
 necessary because the cpu speed can be switched between single and
 double speed during a single call to cpu_emulate.  When running in
 single speed or DMG mode, all instruction lengths are doubled.
@@ -194,12 +193,13 @@ place in normal operation:
            |_ cpu_emulate                               cpu.c
            |   |_ div_advance                           cpu.c *
            |   |_ timer_advance                         cpu.c *
-           |   \_ lcdc_advance                          cpu.c *
-           |       \_ lcdc_trans                        lcdc.c
-           |           |_ lcd_refreshline               lcd.c
-           |           |_ stat_change                   lcdc.c
-           |           |   \_ lcd_begin                 lcd.c
-           |           \_ stat_trigger                  lcdc.c
+           |   |_ lcdc_advance                          cpu.c *
+           |   |   \_ lcdc_trans                        lcdc.c
+           |   |       |_ lcd_refreshline               lcd.c
+           |   |       |_ stat_change                   lcdc.c
+           |   |       |   \_ lcd_begin                 lcd.c
+           |   |       \_ stat_trigger                  lcdc.c
+           |   \_ sound_advance                         cpu.c *
            |_ vid_end                                   sys/
            |_ sys_elapsed                               sys/
            |_ sys_sleep                                 sys/
@@ -271,19 +271,18 @@ present in a monolithic rendering loop lies in (host cpu) cache misses
 and the possibility that we might (tile pattern) cache a tile that has
 changed but that will never actually be used, or that will only be
 used in one orientation (horizontally and vertically flipped versions
-of all tiles are cached as well -- this decision may be a mistake).
-Such tile caching issues could be addressed in the long term if they
-cause a problem, but I don't see it hurting performance too
-significantly at the present. As for host cpu cache miss issues, I
-find that putting multiple data decoding and rendering steps together
-in a single loop harms performance much more significantly than
-building a 256k (pattern) cache table, on account of interfering with
-branch prediction, register allocation, and so on.
+of all tiles are cached as well). Such tile caching issues could be
+addressed in the long term if they cause a problem, but I don't see it
+hurting performance too significantly at the present. As for host cpu
+cache miss issues, I find that putting multiple data decoding and
+rendering steps together in a single loop harms performance much more
+significantly than building a 256k (pattern) cache table, on account
+of interfering with branch prediction, register allocation, and so on.
 
 Well, with those justifications given, let's proceed to the steps
 involved in rendering a scanline:
 
-pat_updatepix() - updates tile pattern cache.
+updatepatpix() - updates tile pattern cache.
 
 tilebuf() - reads gb tile memory according to its complicated tile
 addressing system which can be changed via the LCDC register, and
@@ -379,7 +378,9 @@ the new samples, then copy them.
 For special sound output implementations like write-to-file or the
 dummy sound device, pcm_submit should write the data immediately and
 return 0, indicating to the caller that other methods must be used for
-timing.
+timing. On real sound devices that are presently functional,
+pcm_submit should return 1, regardless of whether it buffered or
+actually wrote the sound data.
 
 And yes, for unices without OSS, we hope to add piped audio output
 soon. Perhaps Sun audio device and a few others as well.
@@ -406,59 +407,56 @@ condensed as much as possible and not quite self-explanatory.
 
   PORTING
 
-on all systems on which it is available, the gnu compiler should
-probably be used. writing code specific to non-free compilers makes it
-impossible for free software users to actively contribute. on the
+On all systems on which it is available, the gnu compiler should
+probably be used. Writing code specific to non-free compilers makes it
+impossible for free software users to actively contribute. On the
 other hand, compiler-specific code should always be kept to a minimum,
 to make porting to or from non-gnu compilers easier.
 
-porting to new cpu architectures should not be necessary. just make
+Porting to new cpu architectures should not be necessary. Just make
 sure you unset IS_LITTLE_ENDIAN in the makefiles to enable the big
-endian default if the target system is big endian. if you do have
-problems building on certain cpus, however, let us know. eventually,
+endian default if the target system is big endian. If you do have
+problems building on certain cpus, however, let us know. Eventually,
 we will also want asm cpu and graphics code for popular host cpus, but
 this can wait, since the c code should be sufficiently fast on most
 platforms.
 
-the bulk of porting efforts will probably be spent on adding support
+The bulk of porting efforts will probably be spent on adding support
 for new operating systems, and on systems with multiple video (or
 sound, once that's implemented) architectures, new interfaces for
-those. in general, the operating system interface code goes in a
+those. In general, the operating system interface code goes in a
 directory under sys/ named for the os (e.g. sys/nix/ for *nix
 systems), and display interfaces likewise go in their respective
 directories under sys/ (e.g. sys/x11/ for the x window system
-interface). presently this rule isn't strictly followed for dos, on
-which we only have plain vga support at this point, but eventually
-there'll be separate directories for raw pc vga/keyboard handling and
-for the new allegro code, planned to be introduced at a later time.
+interface).
 
-for guidelines in writing new system and display interface modules, i
+For guidelines in writing new system and display interface modules, i
 recommend reading the files in the sys/dos/, sys/svga/, and sys/nix/
-directories. these are some of the simpler versions (aside from the
+directories. These are some of the simpler versions (aside from the
 tricky dos keyboard handling), as opposed to all the mess needed for
 x11 support.
 
-also, please be aware that the existing system and display interface
-modules are very primitive; they are designed to be as quick and
-sloppy as possible while still functioning properly. eventually they
-will be greatly improved or replaced.
+Also, please be aware that the existing system and display interface
+modules are somewhat primitive; they are designed to be as quick and
+sloppy as possible while still functioning properly. Eventually they
+will be greatly improved.
 
-finally, remember your obligations under the GNU GPL. if you produce
+Finally, remember your obligations under the GNU GPL. If you produce
 any binaries that are compiled strictly from the source you received,
 and you intend to release those, you *must* also release the exact
-sources you used to produce those binaries. this is not pseudo-free
-software like snes9x where binaries usually appear before the latest
+sources you used to produce those binaries. This is not pseudo-free
+software like Snes9x where binaries usually appear before the latest
 source, and where the source only compiles on one or two platforms;
 this is true free software, and the source to all binaries always
 needs to be available at the same time or sooner than the
-corresponding binaries, if binaries are to be released at all. this of
+corresponding binaries, if binaries are to be released at all. This of
 course applies to all releases, not just new ports, but from
 experience i find that ports people usually need the most reminding.
 
 
   EPILOGUE
 
-that's it for now. more info will eventually follow. happy hacking.
+That's it for now. More info will eventually follow. Happy hacking!
 
 
 

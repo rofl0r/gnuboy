@@ -25,10 +25,11 @@ static char *defaultconfig[] =
 	"bind down +down",
 	"bind left +left",
 	"bind right +right",
-	"bind alt +a",
-	"bind ctrl +b",
+	"bind d +a",
+	"bind s +b",
 	"bind enter +start",
 	"bind space +select",
+	"bind tab +select",
 	"bind joyup +up",
 	"bind joydown +down",
 	"bind joyleft +left",
@@ -56,13 +57,13 @@ static char *defaultconfig[] =
 
 static void banner()
 {
-	fprintf(stderr, "\ngnuboy " VERSION "\n");
+	printf("\ngnuboy " VERSION "\n");
 }
 
 static void copyright()
 {
 	banner();
-	fprintf(stderr,"Copyright (C) 2000-2001 Laguna and Gilgamesh
+	printf("Copyright (C) 2000-2001 Laguna and Gilgamesh
 Portions contributed by other authors; see CREDITS for details.
 
 This program is free software; you can redistribute it and/or modify
@@ -85,7 +86,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 static void usage(char *name)
 {
 	copyright();
-	fprintf(stderr, "Type %s --help for detailed help.\n\n", name);
+	printf("Type %s --help for detailed help.\n\n", name);
 	exit(1);
 }
 
@@ -98,8 +99,8 @@ static void copying()
 static void help(char *name)
 {
 	banner();
-	fprintf(stderr, "Usage: %s [options] romfile\n", name);
-	fprintf(stderr, "
+	printf("Usage: %s [options] romfile\n", name);
+	printf("
       --source FILE             read rc commands from FILE
       --bind KEY COMMAND        bind KEY to perform COMMAND
       --VAR=VALUE               set rc variable VAR to VALUE
@@ -117,7 +118,7 @@ static void help(char *name)
 
 static void version(char *name)
 {
-	fprintf(stderr, "%s-" VERSION "\n", name);
+	printf("%s-" VERSION "\n", name);
 	exit(0);
 }
 
@@ -127,7 +128,6 @@ void doevents()
 	event_t ev;
 	int st;
 
-	//ev_refresh();
 	ev_poll();
 	while (ev_getevent(&ev))
 	{
@@ -232,6 +232,13 @@ int main(int argc, char *argv[])
 
 	for (i = 0; defaultconfig[i]; i++)
 		rc_command(defaultconfig[i]);
+
+	cmd = malloc(strlen(rom) + 11);
+	sprintf(cmd, "source %s", rom);
+	s = strchr(cmd, '.');
+	if (s) *s = 0;
+	strcat(cmd, ".rc");
+	rc_command(cmd);
 
 	for (i = 1; i < argc; i++)
 	{
