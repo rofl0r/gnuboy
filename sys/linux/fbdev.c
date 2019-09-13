@@ -88,7 +88,7 @@ static void overlay_switch()
 	/* dest */
 	a = (vi.xres - vmode[0])>>1;
 	b = vi.xres - a - 1;
-	wrio4(BESHCOORD,  (a << 16) | b - 1);
+	wrio4(BESHCOORD,  (a << 16) | (b - 1));
 	
 	/* scale horiz */
 	wrio4(BESHISCAL,   320*131072/(b-a) & 0x001ffffc);
@@ -99,7 +99,7 @@ static void overlay_switch()
 	/* dest */
 	a = (vi.yres - vmode[1])>>1;
 	b = vi.yres - a - 1;
-	wrio4(BESVCOORD,  (a << 16) | b - 1);
+	wrio4(BESVCOORD,  (a << 16) | (b - 1));
 	
 	/* scale vert */
 	wrio4(BESVISCAL,   144*65536/(b-a) & 0x001ffffc);

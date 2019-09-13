@@ -40,6 +40,14 @@ void stat_trigger()
 	hw_interrupt(flag, IF_STAT);
 }
 
+void stat_write(byte b)
+{
+	R_STAT = (R_STAT & 0x07) | (b & 0x78);
+	if (!hw.cgb && !(R_STAT & 2)) /* DMG STAT write bug => interrupt */
+		hw_interrupt(IF_STAT, IF_STAT);
+	stat_trigger();
+}
+
 
 /*
  * stat_change is called when a transition results in a change to the

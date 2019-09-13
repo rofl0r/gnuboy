@@ -57,8 +57,9 @@ void sys_initpath(char *exe)
 	if (p) *p = 0;
 	else
 	{
-		rc_setvar("rcpath", ".");
-		rc_setvar("savedir", ".");
+		buf = ".";
+		rc_setvar("rcpath", 1, &buf);
+		rc_setvar("savedir", 1, &buf);
 		return;
 	}
 	buf = malloc(strlen(home) + 8);

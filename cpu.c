@@ -230,7 +230,7 @@ label: op(b); break;
 #define RET ( POP(PC) )
 
 #define EI ( IMA = 1 )
-#define DI ( IMA = IME = 0 )
+#define DI ( cpu.halt = IMA = IME = 0 )
 
 
 
@@ -320,6 +320,11 @@ int cpu_idle(int max)
 	int cnt, unit;
 
 	if (!(cpu.halt && IME)) return 0;
+	if (R_IF & R_IE)
+	{
+		cpu.halt = 0;
+		return 0;
+	}
 
 	/* Make sure we don't miss lcdc status events! */
 	if ((R_IE & (IF_VBLANK | IF_STAT)) && (max > cpu.lcdc))

@@ -88,6 +88,7 @@ struct svar svars[] =
 	I4("S1c ", &snd.ch[0].cnt),
 	I4("S1ec", &snd.ch[0].encnt),
 	I4("S1sc", &snd.ch[0].swcnt),
+	I4("S1sf", &snd.ch[0].swfreq),
 
 	I4("S2on", &snd.ch[1].on),
 	I4("S2p ", &snd.ch[1].pos),
@@ -102,6 +103,8 @@ struct svar svars[] =
 	I4("S4p ", &snd.ch[3].pos),
 	I4("S4c ", &snd.ch[3].cnt),
 	I4("S4ec", &snd.ch[3].encnt),
+	
+	I4("wav ", &wavofs),
 	
 	I4("hdma", &hw.hdma),
 	
@@ -120,7 +123,6 @@ struct svar svars[] =
 	/* the following are obsolete as of 0x104 */
 	
 	I4("hram", &hramofs),
-	I4("wav ", &wavofs),
 	
 	R(P1), R(SB), R(SC),
 	R(DIV), R(TIMA), R(TMA), R(TAC),
@@ -189,11 +191,13 @@ void loadstate(FILE *f)
 
 	/* obsolete as of version 0x104 */
 	if (hramofs) memcpy(ram.hi+128, buf+hramofs, 127);
-	if (wavofs) memcpy(ram.hi+48, buf+wavofs, 16);
 	
 	if (hiofs) memcpy(ram.hi, buf+hiofs, sizeof ram.hi);
 	if (palofs) memcpy(lcd.pal, buf+palofs, sizeof lcd.pal);
 	if (oamofs) memcpy(lcd.oam.mem, buf+oamofs, sizeof lcd.oam);
+
+	if (wavofs) memcpy(snd.wave, buf+wavofs, sizeof snd.wave);
+	else memcpy(snd.wave, ram.hi+0x30, 16); /* patch data from older files */
 
 	fseek(f, iramblock<<12, SEEK_SET);
 	fread(ram.ibank, 4096, irl, f);
@@ -215,10 +219,11 @@ void savestate(FILE *f)
 	int vrl = hw.cgb ? 4 : 2;
 	int srl = mbc.ramsize << 1;
 
-	ver = 0x104;
+	ver = 0x105;
 	iramblock = 1;
 	vramblock = 1+irl;
 	sramblock = 1+irl+vrl;
+	wavofs = 4096 - 784;
 	hiofs = 4096 - 768;
 	palofs = 4096 - 512;
 	oamofs = 4096 - 256;
@@ -246,6 +251,7 @@ void savestate(FILE *f)
 	memcpy(buf+hiofs, ram.hi, sizeof ram.hi);
 	memcpy(buf+palofs, lcd.pal, sizeof lcd.pal);
 	memcpy(buf+oamofs, lcd.oam.mem, sizeof lcd.oam);
+	memcpy(buf+wavofs, snd.wave, sizeof snd.wave);
 
 	fseek(f, 0, SEEK_SET);
 	fwrite(buf, 4096, 1, f);

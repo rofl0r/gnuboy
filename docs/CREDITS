@@ -14,6 +14,7 @@ design
 main program
 asm optimizations
 documentation
+publicity
 
 Damian M Gryski --
 SDL port
@@ -47,4 +48,9 @@ SDL YUV hardware scaling support
 Gerd Knorr --
 fbtv, from which mga accel code was taken
 
+Jonathan Gevaryahu AKA Lord Nightmare --
+tons of help improving sound emulation!
+
+Neil Stevens --
+collecting samples for sound channel 4 (noise)
 

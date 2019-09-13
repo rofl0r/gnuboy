@@ -41,7 +41,7 @@ rcvar_t pcm_exports[] =
 	RCV_BOOL("sound", &sound),
 	RCV_INT("stereo", &stereo),
 	RCV_INT("samplerate", &samplerate),
-	RCV_INT("oss_device", &dsp_device),
+	RCV_STRING("oss_device", &dsp_device),
 	RCV_END
 };
 

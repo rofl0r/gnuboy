@@ -56,9 +56,9 @@ void sys_initpath(char *exe)
 	if (p) *p = 0;
 	else
 	{
-		/* FIXME dbk: this isnt working */
-		rc_setvar("rcpath",1, ".");
-		rc_setvar("savedir",1, ".");
+		buf = ".";
+		rc_setvar("rcpath", 1, &buf);
+		rc_setvar("savedir", 1, &buf);
 		return;
 	}
 	buf = malloc(strlen(home) + 8);
