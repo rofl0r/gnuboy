@@ -13,21 +13,23 @@ ASFLAGS = $(CFLAGS)
 
 TARGETS = @TARGETS@
 
+ASM_OBJS = @ASM_OBJS@
+
 SYS_DEFS = @DEFS@ @ENDIAN@ @ASM@ @SYS_DEFS@
-SYS_OBJS = sys/nix/nix.o @ASM_OBJS@ @SOUND@
+SYS_OBJS = sys/nix/nix.o $(ASM_OBJS)
 SYS_INCS = -I/usr/local/include @XINCS@ -I./sys/nix
 
-FB_OBJS = @FB_OBJS@ @JOY@
+FB_OBJS = @FB_OBJS@ @JOY@ @SOUND@
 FB_LIBS = 
 
-SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o @JOY@
+SVGA_OBJS = sys/svga/svgalib.o sys/pc/keymap.o @JOY@ @SOUND@
 SVGA_LIBS = -L/usr/local/lib -lvga
 
 SDL_OBJS = sys/sdl/sdl.o sys/sdl/keymap.o
 SDL_LIBS = @SDL_LIBS@
 SDL_CFLAGS = @SDL_CFLAGS@
 
-X11_OBJS = sys/x11/xlib.o sys/x11/keymap.o @JOY@
+X11_OBJS = sys/x11/xlib.o sys/x11/keymap.o @JOY@ @SOUND@
 X11_LIBS = @XLIBS@ -lX11 -lXext
 
 all: $(TARGETS)

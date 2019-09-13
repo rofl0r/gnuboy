@@ -11,9 +11,6 @@
 char keystates[MAX_KEYS];
 int nkeysdown;
 
-static int reptimers[MAX_KEYS];
-static int repdelay = 200, reprate = 30;
-
 #define MAX_EVENTS 32
 
 static event_t eventqueue[MAX_EVENTS];
@@ -28,8 +25,6 @@ int ev_postevent(event_t *ev)
 		return 0;
 	eventqueue[eventhead] = *ev;
 	eventhead = nextevent;
-	if (ev->type == EV_PRESS)
-		reptimers[ev->code] = sys_msecs()+repdelay;
 	return 1;
 }
 
@@ -56,23 +51,6 @@ int ev_getevent(event_t *ev)
 	return 1;
 }
 
-void ev_repeatkeys(int cnt)
-{
-	int i;
-	int t;
-	event_t ev;
-
-	t = sys_msecs();
-	ev.type = EV_REPEAT;
-	for (i = 0; i < MAX_KEYS; i++)
-	{
-		if (t < reptimers[i] || !keystates[i])
-			continue;
-		ev.code = i;
-		ev_postevent(&ev);
-		reptimers[i] = t + reprate;
-	}
-}
 
 
 

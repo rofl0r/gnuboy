@@ -92,14 +92,14 @@ void rtc_tick()
 	}
 	0 && printf("%d %d %d %02d %02d %02d %02d -- %d\n",
 		rtc.carry, rtc.stop, rtc.d, rtc.h, rtc.m, rtc.s, rtc.t,
-		sys_realtime());
+		time(0));
 }
 
 void rtc_save_internal(FILE *f)
 {
 	fprintf(f, "%d %d %d %02d %02d %02d %02d\n%d\n",
 		rtc.carry, rtc.stop, rtc.d, rtc.h, rtc.m, rtc.s, rtc.t,
-		sys_realtime());
+		time(0));
 }
 
 void rtc_load_internal(FILE *f)
@@ -116,7 +116,7 @@ void rtc_load_internal(FILE *f)
 	while (rtc.d >= 365) rtc.d -= 365;
 	rtc.stop &= 1;
 	rtc.carry &= 1;
-	if (rt) rt = (sys_realtime() - rt) * 60;
+	if (rt) rt = (time(0) - rt) * 60;
 	if (syncrtc) while (rt-- > 0) rtc_tick();
 }
 

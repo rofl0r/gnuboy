@@ -51,7 +51,8 @@ static int romsize_table[256] =
 
 static int ramsize_table[256] =
 {
-	1, 1, 1, 4, 16
+	1, 1, 1, 4, 16,
+	4 /* FIXME - what value should this be?! */
 };
 
 
@@ -75,7 +76,7 @@ static void initmem(void *mem, int size)
 {
 	if (memrand >= 0)
 	{
-		srand(memrand ? memrand : sys_msecs());
+		srand(memrand ? memrand : time(0));
 		while(size--) *(((char *)mem)++) = rand();
 	}
 	else if (memfill >= 0)
@@ -88,7 +89,8 @@ int rom_load()
 	FILE *f;
 	byte c, header[16384];
 
-	f = fopen(romfile, "rb");
+	if (strcmp(romfile, "-")) f = fopen(romfile, "rb");
+	else f = stdin;
 	if (!f) die("cannot open rom file: %s\n", romfile);
 
 	memset(header, 0xff, 16384);
@@ -105,6 +107,9 @@ int rom_load()
 	rtc.batt = rtc_table[c];
 	mbc.romsize = romsize_table[header[0x0148]];
 	mbc.ramsize = ramsize_table[header[0x0149]];
+
+	if (!mbc.romsize) die("unknown ROM size %02X\n", header[0x0148]);
+	if (!mbc.ramsize) die("unknown SRAM size %02X\n", header[0x0149]);
 
 	rom.bank = malloc(16384 * mbc.romsize);
 	memset(rom.bank, 0xff, 16384 * mbc.romsize);
@@ -124,7 +129,7 @@ int rom_load()
 	c = header[0x0143];
 	hw.cgb = ((c == 0x80) || (c == 0xc0)) && !forcedmg;
 
-	fclose(f);
+	if (strcmp(romfile, "-")) fclose(f);
 
 	return 0;
 }
@@ -255,6 +260,13 @@ static char *ldup(char *s)
 	return n;
 }
 
+static void cleanup()
+{
+	sram_save();
+	rtc_save();
+	/* IDEA - if error, write emergency savestate..? */
+}
+
 void loader_init(char *s)
 {
 	char *name, *p;
@@ -270,7 +282,7 @@ void loader_init(char *s)
 			name = ldup(rom.name);
 		else name = strdup(savename);
 	}
-	else if (romfile && *base(romfile))
+	else if (romfile && *base(romfile) && strcmp(romfile, "-"))
 	{
 		name = strdup(base(romfile));
 		p = strchr(name, '.');
@@ -291,13 +303,8 @@ void loader_init(char *s)
 	
 	sram_load();
 	rtc_load();
-}
 
-void cleanup(int err)
-{
-	sram_save();
-	rtc_save();
-	/* IDEA - if error, write savestate..? */
+	atexit(cleanup);
 }
 
 rcvar_t loader_exports[] =

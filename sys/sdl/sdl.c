@@ -3,6 +3,8 @@
  * sdl interfaces -- based on svga.c 
  *
  * (C) 2001 Damian Gryski <dgryski@uwaterloo.ca>
+ * Joystick code contributed by David Lau
+ * Sound code added by Laguna
  *
  * Licensed under the GPLv2, or later.
  */
@@ -19,7 +21,9 @@
 
 struct fb fb;
 
-static char use_sdl_joy = 1, sdl_joy_num;
+static int fullscreen = 1;
+static int use_altenter = 1;
+static int use_joy = 1, sdl_joy_num;
 static SDL_Joystick * sdl_joy = NULL;
 static const int joy_commit_range = 3276;
 static int xaxis_max, yaxis_max;
@@ -29,12 +33,15 @@ static SDL_Surface *screen;
 
 rcvar_t vid_exports[] =
 {
-           RCV_END
+	RCV_BOOL("sdl_fullscreen", &fullscreen),
+	RCV_BOOL("sdl_altenter", &use_altenter),
+	RCV_END
 };
 
 rcvar_t joy_exports[] =
 {
-           RCV_END
+	RCV_BOOL("joy", &use_joy),
+	RCV_END
 };
 
 /* keymap - mappings of the form { scancode, localcode } - from sdl/keymap.c */
@@ -49,6 +56,8 @@ static int mapscancode(SDLKey sym)
 	for (i = 0; keymap[i][0]; i++)
 		if (keymap[i][0] == sym)
 			return keymap[i][1];
+	if (sym >= '0' && sym <= '9')
+		return sym;
 	if (sym >= 'a' && sym <= 'z')
 		return sym;
 	return 0;
@@ -61,33 +70,40 @@ void vid_init()
 	
 	int video_flags = SDL_HWSURFACE | SDL_HWPALETTE;
 
+	if (fullscreen)
+		video_flags |= SDL_FULLSCREEN;
+
 	if (SDL_Init(SDL_INIT_VIDEO))
 		die("SDL: Couldn't initialize SDL: %s\n", SDL_GetError());
 
 	if ((screen = SDL_SetVideoMode(160, 144, 16, video_flags)) == NULL)
 		die("SDL: can't set video mode: %s\n", SDL_GetError());
 
+	SDL_ShowCursor(SDL_DISABLE);
+
+	fb.w = screen->w;
+	fb.h = screen->h;
+	fb.pelsize = screen->format->BytesPerPixel;
+	fb.pitch = screen->pitch;
+	fb.indexed = fb.pelsize == 1;
 	fb.ptr = screen->pixels;
-	fb.w = 160;
-	fb.h = 144;
-	fb.pelsize = 2;
-	fb.pitch = 160*2;
-	fb.indexed = 0;
-	fb.cc[0].l = 11; fb.cc[0].r = 3;
-	fb.cc[1].l = 5;  fb.cc[1].r = 2;
-	fb.cc[2].l = 0;  fb.cc[2].r = 3;
+	fb.cc[0].r = screen->format->Rloss;
+	fb.cc[0].l = screen->format->Rshift;
+	fb.cc[1].r = screen->format->Gloss;
+	fb.cc[1].l = screen->format->Gshift;
+	fb.cc[2].r = screen->format->Bloss;
+	fb.cc[2].l = screen->format->Bshift;
 
 	fb.enabled = 1;
 	fb.dirty = 0;
 	
 	/* Initilize the Joystick, and disable all later joystick code if an error occured */
-	if (!use_sdl_joy) return;
+	if (!use_joy) return;
 	
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK))
 	{
 		/* No warning output yet, we'll add verbosity levels later */
 		/* fprintf(stderr,"SDL: Couldn't initilize Joystick Subsystem: %s\n",SDL_GetError()); */
-		use_sdl_joy = 0;
 		return;
 	}
 	
@@ -96,7 +112,6 @@ void vid_init()
 	if (!joy_count)
 	{
 		/* fprintf(stderr, "No joysticks available\n"); */
-		use_sdl_joy=0;
 		return;
 	}
 
@@ -134,6 +149,8 @@ void ev_poll()
 		switch(event.type)
 		{
 		case SDL_KEYDOWN:
+			if ((event.key.keysym.sym == SDLK_RETURN) && (event.key.keysym.mod & KMOD_ALT))
+				SDL_WM_ToggleFullScreen(screen);
 			ev.type = EV_PRESS;
 			ev.code = mapscancode(event.key.keysym.sym);
 			ev_postevent(&ev);
@@ -273,7 +290,6 @@ void ev_poll()
 			ev_postevent(&ev);
 			break;
 		case SDL_QUIT:
-			sys_shutdown(1);
 			exit(1);
 			break;
 		default:
@@ -318,3 +334,85 @@ void vid_end()
 void vid_resize()
 {
 }
+
+
+
+
+#include "pcm.h"
+
+
+struct pcm pcm;
+
+
+static int sound = 1;
+static int samplerate = 44100;
+static int stereo = 1;
+static volatile int audio_done;
+
+rcvar_t pcm_exports[] =
+{
+	RCV_BOOL("sound", &sound),
+	RCV_INT("stereo", &stereo),
+	RCV_INT("samplerate", &samplerate),
+	RCV_END
+};
+
+
+static void audio_callback(void *blah, byte *stream, int len)
+{
+	memcpy(stream, pcm.buf, len);
+	audio_done = 1;
+}
+
+
+void pcm_init()
+{
+	int i;
+	SDL_AudioSpec as;
+
+	if (!sound) return;
+	
+	SDL_InitSubSystem(SDL_INIT_AUDIO);
+	as.freq = samplerate;
+	as.format = AUDIO_U8;
+	as.channels = 1 + stereo;
+	as.samples = samplerate / 60;
+	for (i = 1; i < as.samples; i<<=1);
+	as.samples = i;
+	as.callback = audio_callback;
+	as.userdata = 0;
+	if (SDL_OpenAudio(&as, 0) == -1)
+		return;
+	
+	pcm.hz = as.freq;
+	pcm.stereo = as.format - 1;
+	pcm.len = as.size;
+	pcm.buf = malloc(pcm.len);
+	pcm.pos = 0;
+
+	SDL_PauseAudio(0);
+}
+
+int pcm_submit()
+{
+	if (!pcm.buf) return 0;
+	if (pcm.pos < pcm.len) return 1;
+	while (!audio_done)
+	{
+		SDL_Delay(4);
+	}
+	audio_done = 0;
+	pcm.pos = 0;
+	return 1;
+}
+
+void pcm_close()
+{
+	if (sound) SDL_CloseAudio();
+}
+
+
+
+
+
+

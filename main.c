@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdarg.h>
+#include <signal.h>
+
 #include "input.h"
 #include "rc.h"
 
@@ -111,6 +114,7 @@ static void help(char *name)
 	exit(0);
 }
 
+
 static void version(char *name)
 {
 	fprintf(stderr, "%s-" VERSION "\n", name);
@@ -135,6 +139,51 @@ void doevents()
 }
 
 
+
+
+static void shutdown()
+{
+	vid_close();
+	pcm_close();
+}
+
+void die(char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	exit(1);
+}
+
+static int bad_signals[] =
+{
+	/* These are all standard, so no need to #ifdef them... */
+	SIGINT, SIGSEGV, SIGTERM, SIGFPE, SIGABRT, SIGILL,
+#ifdef SIGQUIT
+	SIGQUIT,
+#endif
+#ifdef SIGPIPE
+	SIGPIPE,
+#endif
+	0
+};
+
+static void fatalsignal(int s)
+{
+	die("Signal %d\n", s);
+}
+
+static void catch_signals()
+{
+	int i;
+	for (i = 0; bad_signals[i]; i++)
+		signal(bad_signals[i], fatalsignal);
+}
+
+
+
 static char *base(char *s)
 {
 	char *p;
@@ -144,7 +193,7 @@ static char *base(char *s)
 }
 
 
-int real_main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int i, j, c;
 	char *opt, *arg, *cmd, *s, *rom = 0;
@@ -162,12 +211,11 @@ int real_main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "--source")) i++;
 		else if (!strcmp(argv[i], "--showvars"))
 		{
-			sys_dropperms();
 			show_exports();
 			exit(0);
 		}
 		else if (argv[i][0] == '-' && argv[i][1] == '-');
-		else if (argv[i][0] == '-');
+		else if (argv[i][0] == '-' && argv[i][1]);
 		else rom = argv[i];
 	}
 	
@@ -230,11 +278,14 @@ int real_main(int argc, char *argv[])
 			free(cmd);
 			free(opt);
 		}
-		else if (argv[i][0] == '-');  /* short options not yet implemented */
+		/* short options not yet implemented */
+		else if (argv[i][0] == '-' && argv[i][1]);
 	}
 
+	/* FIXME - make interface modules responsible for atexit() */
+	atexit(shutdown);
+	catch_signals();
 	vid_init();
-	sys_init();
 	pcm_init();
 
 	rom = strdup(rom);

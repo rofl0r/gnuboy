@@ -138,9 +138,6 @@ void sound_mix()
 
 	for (; cpu.snd >= RATE; cpu.snd -= RATE)
 	{
-		if (pcm.pos >= pcm.len)
-			pcm_submit();
-
 		l = r = 0;
 
 		if (S1.on)
@@ -242,12 +239,17 @@ void sound_mix()
 		if (r > 127) r = 127;
 		else if (r < -128) r = -128;
 
-		if (pcm.stereo)
+		if (pcm.buf)
 		{
-			pcm.buf[pcm.pos++] = l+128;
-			pcm.buf[pcm.pos++] = r+128;
+			if (pcm.pos >= pcm.len)
+				pcm_submit();
+			if (pcm.stereo)
+			{
+				pcm.buf[pcm.pos++] = l+128;
+				pcm.buf[pcm.pos++] = r+128;
+			}
+			else pcm.buf[pcm.pos++] = ((l+r)>>1)+128;
 		}
-		else pcm.buf[pcm.pos++] = ((l+r)>>1)+128;
 	}
 	R_NR52 = (R_NR52&0xf0) | S1.on | (S2.on<<1) | (S3.on<<2) | (S4.on<<3);
 }

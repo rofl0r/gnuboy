@@ -55,7 +55,8 @@ static void stat_change(int stat)
 	stat &= 3;
 	R_STAT = (R_STAT & 0x7C) | stat;
 
-	hw_interrupt((stat == 1) ? IF_VBLANK : 0, IF_VBLANK);
+	if (stat != 1) hw_interrupt(0, IF_VBLANK);
+	//hw_interrupt((stat == 1) ? IF_VBLANK : 0, IF_VBLANK);
 	stat_trigger();
 }
 
@@ -104,10 +105,14 @@ void lcdc_trans()
 		switch ((byte)(R_STAT & 3))
 		{
 		case 1:
+			if (!(hw.ilines & IF_VBLANK))
+			{
+				C += 208;
+				hw_interrupt(IF_VBLANK, IF_VBLANK);
+			}
 			if (R_LY == 0)
 			{
 				lcd_begin();
-				/* lcd_refreshline(); */
 				stat_change(2);
 				C += 40;
 				break;
@@ -140,19 +145,17 @@ void lcdc_trans()
 			C += 102;
 			break;
 		case 0:
-			if (++R_LY == 144)
+			if (++R_LY >= 144)
 			{
-				stat_change(0);
-				C += 228;
-				break;
-			}
-			if (R_LY == 145)
-			{
+				if (cpu.halt)
+				{
+					hw_interrupt(IF_VBLANK, IF_VBLANK);
+					C += 228;
+				}
+				else C += 20;
 				stat_change(1);
-				C += 228;
 				break;
 			}
-			/* lcd_refreshline(); */
 			stat_change(2);
 			C += 40;
 			break;

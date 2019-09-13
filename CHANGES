@@ -1,13 +1,28 @@
 
 
-note: there seems to have been some confusion in the past about new
-features in releases, since some of the changes were listed under
-never-released versions numbers used only for internal testing and
-progress points. i am now labelling each version number as a release
-or internal version. i hope this helps clarify things for web sites
-explainining what's new and such. perhaps soon i'll switch to having
-two changelogs -- a formal detailed one like we have now, and a simple
-user-oriented "what's new" list...
+CHANGES file -- detailed list of all changes made...
+please see WHATSNEW instead for user-oriented information.
+
+0.9.8 (release)
+enabled support for dmg sprite sorting; not sure it works yet
+added "sprsort" rcvar to toggle this since it's usually not needed
+fixed a potential crash that could happen if sound init failed on dos
+added native SDL sound support
+fixed lots of bugs in the SDL port
+removed stupid sys_realtime() function in favor of the simple ANSI C time()
+roms can now be loaded from stdin by specifying - as the rom name
+removed lots of useless bloat from system interface modules
+take advantage of ANSI atexit() to simplify termination logic
+hide mouse cursor with SDL
+SDL fullscreen mode
+optional alt+enter fullscreen toggle for SDL
+SDL rcvars sdl_fullscreen and sdl_altenter to control these features
+changed bswapl to bswap in asm to make it work on mingw32
+added ram size code 05 for 4 banks, this seems to make Pokemon Crystal work
+backed out hack for Altered Space and W&W because it broke other games
+new code to make them work, hopefully this time it's right
+now we give an error on unknown rom/ram size to prevent crashing
+integrated Windows port by mewse
 
 0.9.7 (release)
 added support for mono sound

@@ -307,7 +307,7 @@ void sound_advance(int cnt)
 	cpu.snd += cnt;
 }
 
-void do_timers(int cnt)
+void cpu_timers(int cnt)
 {
 	div_advance(cnt);
 	timer_advance(cnt);
@@ -328,7 +328,7 @@ int cpu_idle(int max)
 	/* If timer interrupt cannot happen, this is very simple! */
 	if (!((R_IE & IF_TIMER) && (R_TAC & 0x04)))
 	{
-		do_timers(max);
+		cpu_timers(max);
 		return max;
 	}
 
@@ -340,7 +340,7 @@ int cpu_idle(int max)
 	if (max < cnt)
 		cnt = max;
 	
-	do_timers(cnt);
+	cpu_timers(cnt);
 	return cnt;
 }
 

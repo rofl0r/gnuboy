@@ -13,37 +13,8 @@
 #include <signal.h>
 #include <time.h>
 
-#define US(n) (unsigned long) ( (1000000.0/UCLOCKS_PER_SEC) * (n) )
+#define US(n) ( ((long long)(n)) * 1000000 / UCLOCKS_PER_SEC )
 
-
-static struct timeval tv_init;
-static int inittimeok;
-static char *progname;
-
-static void inittime()
-{
-	gettimeofday(&tv_init, NULL);
-	inittimeok = 1;
-}
-
-int sys_msecs()
-{
-	struct timeval tv;
-	int secs, usecs;
-	
-	if (!inittimeok) inittime();
-	gettimeofday(&tv, NULL);
-	secs = tv.tv_sec - tv_init.tv_sec;
-	usecs = tv.tv_usec - tv_init.tv_usec;
-	return secs*1000 + usecs/1000;
-}
-
-int sys_realtime()
-{
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return tv.tv_sec;
-}
 
 void *sys_timer()
 {
@@ -105,74 +76,6 @@ void sys_sanitize(char *s)
 		if (s[i] == '\\') s[i] = '/';
 }
 
-void sys_shutdown(int err)
-{
-	cleanup(err);
-	vid_close();
-	pcm_close();
-}
-
-void die(char *fmt, ...)
-{
-	va_list ap;
-	
-	sys_shutdown(1);
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	exit(1);
-}
-
-
-static void fatalsignal(int s)
-{
-	char *signame;
-	switch (s)
-	{
-	case SIGINT:
-		signame = "SIGINT";
-		break;
-	case SIGQUIT:
-		signame = "SIGQUIT";
-		break;
-	case SIGTERM:
-		signame = "SIGTERM";
-		break;
-	case SIGSEGV:
-		signame = "SIGSEGV";
-		break;
-	case SIGPIPE:
-		signame = "SIGSEGV";
-		break;
-	case SIGFPE:
-		signame = "SIGFPE";
-		break;
-	default:
-		signame = "???";
-		break;
-	}
-	die("fatal signal: %s\n", signame);
-}
-
-void sys_init()
-{
-	signal(SIGINT, fatalsignal);
-	signal(SIGQUIT, fatalsignal);
-	signal(SIGTERM, fatalsignal);
-	signal(SIGSEGV, fatalsignal);
-	signal(SIGPIPE, fatalsignal);
-	signal(SIGFPE, fatalsignal);
-}
-
-void sys_dropperms()
-{
-}
-
-int main(int argc, char *argv[])
-{
-	progname = argv[0];
-	return real_main(argc, argv);
-}
 
 
 

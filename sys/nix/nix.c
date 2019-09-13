@@ -10,16 +10,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
 #include <errno.h>
-
-static struct timeval tv_init;
-static int inittimeok;
 
 #define DOTDIR ".gnuboy"
 
@@ -32,49 +27,6 @@ static void usleep(unsigned long us)
 	select(0, NULL, NULL, NULL, &tv);
 }
 #endif
-
-void sys_shutdown(int err)
-{
-	cleanup(err);
-	vid_close();
-	pcm_close();
-}
-
-void die(char *fmt, ...)
-{
-	va_list ap;
-
-	sys_shutdown(1);
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	exit(1);
-}
-
-static void inittime()
-{
-	gettimeofday(&tv_init, NULL);
-	inittimeok = 1;
-}
-
-int sys_msecs()
-{
-	struct timeval tv;
-	int secs, usecs;
-	
-	if (!inittimeok) inittime();
-	gettimeofday(&tv, NULL);
-	secs = tv.tv_sec - tv_init.tv_sec;
-	usecs = tv.tv_usec - tv_init.tv_usec;
-	return secs*1000 + usecs/1000;
-}
-
-int sys_realtime()
-{
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return tv.tv_sec;
-}
 
 void *sys_timer()
 {
@@ -158,57 +110,6 @@ void sys_initpath()
 
 void sys_sanitize(char *s)
 {
-}
-
-static void fatalsignal(int s)
-{
-	char *signame;
-	switch (s)
-	{
-	case SIGINT:
-		signame = "SIGINT";
-		break;
-	case SIGQUIT:
-		signame = "SIGQUIT";
-		break;
-	case SIGTERM:
-		signame = "SIGTERM";
-		break;
-	case SIGSEGV:
-		signame = "SIGSEGV";
-		break;
-	case SIGPIPE:
-		signame = "SIGSEGV";
-		break;
-	case SIGFPE:
-		signame = "SIGFPE";
-		break;
-	default:
-		signame = "???";
-		break;
-	}
-	die("fatal signal: %s\n", signame);
-}
-
-void sys_init()
-{
-	signal(SIGINT, fatalsignal);
-	signal(SIGQUIT, fatalsignal);
-	signal(SIGTERM, fatalsignal);
-	signal(SIGSEGV, fatalsignal);
-	signal(SIGPIPE, fatalsignal);
-	signal(SIGFPE, fatalsignal);
-}
-
-void sys_dropperms()
-{
-	if (setgid(getgid())) die("failed to drop perms!\n");
-	if (setuid(getuid())) die("failed to drop perms!\n");
-}
-
-int main(int argc, char *argv[])
-{
-	return real_main(argc, argv);
 }
 
 
