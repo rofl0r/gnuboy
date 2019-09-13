@@ -231,6 +231,7 @@ void ioreg_write(byte r, byte b)
 	case RI_HDMA4:
 	case RI_HDMA5:
 		/* printf("HDMA %d: %02X\n", r - RI_HDMA1 + 1, b); */
+		break;
 	}
 	/* printf("reg %02X => %02X (%02X)\n", r, REG(r), b); */
 }
