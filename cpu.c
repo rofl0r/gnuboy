@@ -8,7 +8,6 @@
 #include "cpu.h"
 #include "mem.h"
 #include "fastmem.h"
-#include "debug.h"
 #include "cpuregs.h"
 #include "cpucore.h"
 
@@ -259,6 +258,7 @@ void cpu_reset()
 	HL = 0x014D;
 	
 	if (hw.cgb) A = 0x11;
+	if (hw.gba) B = 0x01;
 }
 
 
@@ -351,6 +351,8 @@ int cpu_idle(int max)
 
 #ifndef ASM_CPU_EMULATE
 
+extern int debug_trace;
+
 int cpu_emulate(int cycles)
 {
 	int i;
@@ -359,7 +361,6 @@ int cpu_emulate(int cycles)
 	static union reg acc;
 	static byte b;
 	static word w;
-	static int addr;
 
 	i = cycles;
 next:

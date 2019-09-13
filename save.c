@@ -20,9 +20,9 @@
 #define LIL(x) ((x<<24)|((x&0xff00)<<8)|((x>>8)&0xff00)|(x>>24))
 #endif
 
-#define I1(s, p) { 1, (s), (p) }
-#define I2(s, p) { 2, (s), (p) }
-#define I4(s, p) { 4, (s), (p) }
+#define I1(s, p) { 1, s, p }
+#define I2(s, p) { 2, s, p }
+#define I4(s, p) { 4, s, p }
 #define R(r) I1(#r, &R_##r)
 #define NOSAVE { -1, "\0\0\0\0", 0 }
 #define END { 0, "\0\0\0\0", 0 }
@@ -61,6 +61,7 @@ struct svar svars[] =
 	I1("ints", &hw.ilines),
 	I1("pad ", &hw.pad),
 	I4("cgb ", &hw.cgb),
+	I4("gba ", &hw.gba),
 	
 	I4("mbcm", &mbc.model),
 	I4("romb", &mbc.rombank),
@@ -104,8 +105,6 @@ struct svar svars[] =
 	I4("S4c ", &snd.ch[3].cnt),
 	I4("S4ec", &snd.ch[3].encnt),
 	
-	I4("wav ", &wavofs),
-	
 	I4("hdma", &hw.hdma),
 	
 	I4("sram", &sramblock),
@@ -114,7 +113,8 @@ struct svar svars[] =
 	I4("hi  ", &hiofs),
 	I4("pal ", &palofs),
 	I4("oam ", &oamofs),
-
+	I4("wav ", &wavofs),
+	
 	/* NOSAVE is a special code to prevent the rest of the table
 	 * from being saved, used to support old stuff for backwards
 	 * compatibility... */

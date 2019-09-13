@@ -46,8 +46,10 @@ int keymap[][2] = {
 	{ SDLK_BACKSLASH, K_BSLASH },
 	{ SDLK_BACKQUOTE, K_TILDE },
 	{ SDLK_SEMICOLON, K_SEMI },
+	{ SDLK_QUOTE, K_QUOTE },
+	{ SDLK_QUOTEDBL, K_QUOTE },
 	{ SDLK_COMMA, ',' },
-	{ SDLK_PERIOD, ',' },
+	{ SDLK_PERIOD, '.' },
 	{ SDLK_SLASH, '/' },
 	
 	{ SDLK_F1, K_F1 },

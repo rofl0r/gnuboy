@@ -27,7 +27,7 @@ struct hw
 {
 	byte ilines;
 	byte pad;
-	int cgb;
+	int cgb, gba;
 	int hdma;
 };
 

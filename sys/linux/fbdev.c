@@ -1,8 +1,16 @@
 
+/*
+ * Support for the Linux framebuffer device
+ * Copyright 2001 Laguna
+ * MGA BES code derived from fbtv
+ * Copyright Gerd Knorr
+ * This file may be distributed under the terms of the GNU GPL.
+ */
 
 
 #include <stdlib.h>
 #include <string.h>
+char *strdup();
 #include <unistd.h>
 #include <sys/mman.h>
 #include <linux/fb.h>
@@ -245,7 +253,13 @@ void vid_settitle(char *title)
 void vid_setpal(int i, int r, int g, int b)
 {
 	unsigned short rr = r<<8, gg = g<<8, bb = b<<8;
-	struct fb_cmap cmap = { i, 1, &rr, &gg, &bb };
+	struct fb_cmap cmap;
+	memset(&cmap, 0, sizeof cmap);
+	cmap.start = i;
+	cmap.len = 1;
+	cmap.red = &rr;
+	cmap.green = &gg;
+	cmap.blue = &bb;
 	ioctl(fbfd, FBIOPUTCMAP, &cmap);
 }
 

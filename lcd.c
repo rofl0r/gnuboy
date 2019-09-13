@@ -49,12 +49,19 @@ static int density = 0;
 
 static int rgb332;
 
-static int sprsort;
+static int sprsort = 1;
 static int sprdebug;
 
 #define DEF_PAL { 0x98d0e0, 0x68a0b0, 0x60707C, 0x2C3C3C }
 
 static int dmg_pal[4][4] = { DEF_PAL, DEF_PAL, DEF_PAL, DEF_PAL };
+
+static int usefilter, filterdmg;
+static int filter[3][4] = {
+	{ 195,  25,   0,  35 },
+	{  25, 170,  25,  35 },
+	{  25,  60, 125,  40 }
+};
 
 rcvar_t lcd_exports[] =
 {
@@ -67,6 +74,11 @@ rcvar_t lcd_exports[] =
 	RCV_VECTOR("dmg_obp1", dmg_pal[3], 4),
 	RCV_BOOL("sprsort", &sprsort),
 	RCV_BOOL("sprdebug", &sprdebug),
+	RCV_BOOL("colorfilter", &usefilter),
+	RCV_BOOL("filterdmg", &filterdmg),
+	RCV_VECTOR("red", filter[0], 4),
+	RCV_VECTOR("green", filter[1], 4),
+	RCV_VECTOR("blue", filter[2], 4),
 	RCV_END
 };
 
@@ -274,7 +286,7 @@ void wnd_scan()
 		*(dest++) = *(src++);
 }
 
-void blendcpy(byte *dest, byte *src, byte b, int cnt)
+static void blendcpy(byte *dest, byte *src, byte b, int cnt)
 {
 	while (cnt--) *(dest++) = *(src++) | b;
 }
@@ -421,8 +433,9 @@ void spr_enum()
 {
 	int i, j;
 	struct obj *o;
-	struct vissprite ts;
+	struct vissprite ts[10];
 	int v, pat;
+	int l, x;
 
 	NS = 0;
 	if (!(R_LCDC & 0x02)) return;
@@ -463,18 +476,23 @@ void spr_enum()
 		if (++NS == 10) break;
 	}
 	if (!sprsort || hw.cgb) return;
+	/* not quite optimal but it finally works! */
 	for (i = 0; i < NS; i++)
 	{
-		for (j = i + 1; j < NS; j++)
+		l = 0;
+		x = VS[0].x;
+		for (j = 1; j < NS; j++)
 		{
-			if (VS[i].x > VS[j].x)
+			if (VS[j].x < x)
 			{
-				ts = VS[i];
-				VS[i] = VS[j];
-				VS[j] = ts;
+				l = j;
+				x = VS[j].x;
 			}
 		}
+		ts[i] = VS[l];
+		VS[l].x = 160;
 	}
+	memcpy(VS, ts, sizeof VS);
 }
 
 void spr_scan()
@@ -493,8 +511,8 @@ void spr_scan()
 	for (; ns; ns--, vs--)
 	{
 		x = vs->x;
-		if (x > 160) continue;
-		if (x < -7) continue;
+		if (x >= 160) continue;
+		if (x <= -8) continue;
 		if (x < 0)
 		{
 			src = vs->buf - x;
@@ -530,6 +548,7 @@ void spr_scan()
 			}
 		}
 		else while (i--) if (src[i]) dest[i] = pal|src[i];
+		/* else while (i--) if (src[i]) dest[i] = 31 + ns; */
 	}
 	if (sprdebug) for (i = 0; i < NS; i++) BUF[i<<1] = 36;
 }
@@ -702,7 +721,7 @@ void lcd_refreshline()
 
 static void updatepalette(int i)
 {
-	int c, r, g, b, y, u, v;
+	int c, r, g, b, y, u, v, rr, gg;
 
 	c = (lcd.pal[i<<1] | ((int)lcd.pal[(i<<1)|1] << 8)) & 0x7FFF;
 	r = (c & 0x001F) << 3;
@@ -711,6 +730,15 @@ static void updatepalette(int i)
 	r |= (r >> 5);
 	g |= (g >> 5);
 	b |= (b >> 5);
+
+	if (usefilter && (filterdmg || hw.cgb))
+	{
+		rr = ((r * filter[0][0] + g * filter[0][1] + b * filter[0][2]) >> 8) + filter[0][3];
+		gg = ((r * filter[1][0] + g * filter[1][1] + b * filter[1][2]) >> 8) + filter[1][3];
+		b = ((r * filter[2][0] + g * filter[2][1] + b * filter[2][2]) >> 8) + filter[2][3];
+		r = rr;
+		g = gg;
+	}
 	
 	if (fb.yuv)
 	{
@@ -773,6 +801,7 @@ void pal_write_dmg(int i, int mapnum, byte d)
 
 	if (hw.cgb) return;
 
+	/* if (mapnum >= 2) d = 0xe4; */
 	for (j = 0; j < 8; j += 2)
 	{
 		c = cmap[(d >> j) & 3];
@@ -786,7 +815,7 @@ void pal_write_dmg(int i, int mapnum, byte d)
 	}
 }
 
-void vram_write(addr a, byte b)
+void vram_write(int a, byte b)
 {
 	lcd.vbank[R_VBK&1][a] = b;
 	if (a >= 0x1800) return;

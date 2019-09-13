@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *strdup();
 
 static int mbc_table[256] =
 {
@@ -83,36 +84,84 @@ static char *savedir;
 static int saveslot;
 
 static int forcebatt, nobatt;
-static int forcedmg;
+static int forcedmg, gbamode;
 
 static int memfill = -1, memrand = -1;
 
 
 static void initmem(void *mem, int size)
 {
+	char *p = mem;
 	if (memrand >= 0)
 	{
 		srand(memrand ? memrand : time(0));
-		while(size--) *(((char *)mem)++) = rand();
+		while(size--) *(p++) = rand();
 	}
 	else if (memfill >= 0)
-		memset(mem, memfill, size);
+		memset(p, memfill, size);
+}
+
+static byte *loadfile(FILE *f, int *len)
+{
+	int c, l = 0, p = 0;
+	byte *d = 0, buf[512];
+
+	for(;;)
+	{
+		c = fread(buf, 1, sizeof buf, f);
+		if (c <= 0) break;
+		l += c;
+		d = realloc(d, l);
+		if (!d) return 0;
+		memcpy(d+p, buf, c);
+		p += c;
+	}
+	*len = l;
+	return d;
+}
+
+static byte *inf_buf;
+static int inf_pos, inf_len;
+
+static void inflate_callback(byte b)
+{
+	if (inf_pos >= inf_len)
+	{
+		inf_len += 512;
+		inf_buf = realloc(inf_buf, inf_len);
+		if (!inf_buf) die("out of memory inflating file @ %d bytes\n", inf_pos);
+	}
+	inf_buf[inf_pos++] = b;
+}
+
+static byte *decompress(byte *data, int *len)
+{
+	unsigned long pos = 0;
+	if (data[0] != 0x1f || data[1] != 0x8b)
+		return data;
+	inf_buf = 0;
+	inf_pos = inf_len = 0;
+	if (unzip(data, &pos, inflate_callback) < 0)
+		return data;
+	*len = inf_pos;
+	return inf_buf;
 }
 
 
 int rom_load()
 {
 	FILE *f;
-	byte c, header[16384];
+	byte c, *data, *header;
+	int len = 0, rlen;
 
 	if (strcmp(romfile, "-")) f = fopen(romfile, "rb");
 	else f = stdin;
 	if (!f) die("cannot open rom file: %s\n", romfile);
 
-	memset(header, 0xff, 16384);
-	fread(header, 16384, 1, f);
-
-	strncpy(rom.name, header+0x0134, 16);
+	data = loadfile(f, &len);
+	header = data = decompress(data, &len);
+	
+	memcpy(rom.name, header+0x0134, 16);
 	if (rom.name[14] & 0x80) rom.name[14] = 0;
 	if (rom.name[15] & 0x80) rom.name[15] = 0;
 	rom.name[16] = 0;
@@ -127,23 +176,21 @@ int rom_load()
 	if (!mbc.romsize) die("unknown ROM size %02X\n", header[0x0148]);
 	if (!mbc.ramsize) die("unknown SRAM size %02X\n", header[0x0149]);
 
-	rom.bank = malloc(16384 * mbc.romsize);
-	memset(rom.bank, 0xff, 16384 * mbc.romsize);
-	memcpy(rom.bank, header, 16384);
-	fread(rom.bank+1, 16384, mbc.romsize-1, f);
+	rlen = 16384 * mbc.romsize;
+	rom.bank = realloc(data, rlen);
+	if (rlen > len) memset(rom.bank[0]+len, 0xff, rlen - len);
 	
 	ram.sbank = malloc(8192 * mbc.ramsize);
 
-	if (!ram.loaded)  /* just in case... */
-		initmem(ram.sbank, 8192 * mbc.ramsize);
+	initmem(ram.sbank, 8192 * mbc.ramsize);
 	initmem(ram.ibank, 4096 * 8);
-	/* initmem(ram.hi, 256); */
 
 	mbc.rombank = 1;
 	mbc.rambank = 0;
 
 	c = header[0x0143];
 	hw.cgb = ((c == 0x80) || (c == 0xc0)) && !forcedmg;
+	hw.gba = (hw.cgb && gbamode);
 
 	if (strcmp(romfile, "-")) fclose(f);
 
@@ -288,7 +335,7 @@ void loader_init(char *s)
 {
 	char *name, *p;
 
-	sys_checkdir(savedir);
+	sys_checkdir(savedir, 1); /* needs to be writable */
 
 	romfile = s;
 	rom_load();
@@ -332,6 +379,7 @@ rcvar_t loader_exports[] =
 	RCV_BOOL("forcebatt", &forcebatt),
 	RCV_BOOL("nobatt", &nobatt),
 	RCV_BOOL("forcedmg", &forcedmg),
+	RCV_BOOL("gbamode", &gbamode),
 	RCV_INT("memfill", &memfill),
 	RCV_INT("memrand", &memrand),
 	RCV_END

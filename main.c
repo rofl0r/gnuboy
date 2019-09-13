@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *strdup();
+
 #include <stdarg.h>
 #include <signal.h>
 
@@ -63,24 +65,24 @@ static void banner()
 static void copyright()
 {
 	banner();
-	printf("Copyright (C) 2000-2001 Laguna and Gilgamesh
-Portions contributed by other authors; see CREDITS for details.
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-");
+	printf(
+"Copyright (C) 2000-2001 Laguna and Gilgamesh\n"
+"Portions contributed by other authors; see CREDITS for details.\n"
+"\n"
+"This program is free software; you can redistribute it and/or modify\n"
+"it under the terms of the GNU General Public License as published by\n"
+"the Free Software Foundation; either version 2 of the License, or\n"
+"(at your option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will be useful,\n"
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"GNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public License\n"
+"along with this program; if not, write to the Free Software\n"
+"Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\n"
+"\n");
 }
 
 static void usage(char *name)
@@ -100,18 +102,17 @@ static void help(char *name)
 {
 	banner();
 	printf("Usage: %s [options] romfile\n", name);
-	printf("
-      --source FILE             read rc commands from FILE
-      --bind KEY COMMAND        bind KEY to perform COMMAND
-      --VAR=VALUE               set rc variable VAR to VALUE
-      --VAR                     set VAR to 1 (turn on boolean options)
-      --no-VAR                  set VAR to 0 (turn off boolean options)
-      --showvars                list all available rc variables
-      --help                    display this help and exit
-      --version                 output version information and exit
-      --copying                 show copying permissions
-
-");
+	printf("\n"
+"      --source FILE             read rc commands from FILE\n"
+"      --bind KEY COMMAND        bind KEY to perform COMMAND\n"
+"      --VAR=VALUE               set rc variable VAR to VALUE\n"
+"      --VAR                     set VAR to 1 (turn on boolean options)\n"
+"      --no-VAR                  set VAR to 0 (turn off boolean options)\n"
+"      --showvars                list all available rc variables\n"
+"      --help                    display this help and exit\n"
+"      --version                 output version information and exit\n"
+"      --copying                 show copying permissions\n"
+"");
 	exit(0);
 }
 

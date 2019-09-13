@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *strdup();
+
 #include "defs.h"
 #include "rc.h"
 #include "input.h"
