@@ -1,14 +1,12 @@
 
 
-#include <stdlib.h>
-
 /*
- * getarg is a destructive argument parser, much like a very primitive
+ * splitline is a destructive argument parser, much like a very primitive
  * form of a shell parser. it supports quotes for embedded spaces and
  * literal quotes with the backslash escape.
  */
 
-char *getarg(char **pos)
+char *splitnext(char **pos)
 {
 	char *a, *d, *s;
 
@@ -42,15 +40,15 @@ char *getarg(char **pos)
 	return a;
 }
 
-int getargs(char **argv, int max, char *line)
+int splitline(char **argv, int max, char *line)
 {
 	char *s;
 	int i;
 
 	s = line;
 	for (i = 0; *s && i < max + 1; i++)
-		argv[i] = getarg(&s);
-	argv[i] = NULL;
+		argv[i] = splitnext(&s);
+	argv[i] = 0;
 	return i;
 }
 

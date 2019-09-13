@@ -32,15 +32,15 @@ void mem_updatemap()
 	
 	map = mbc.rmap;
 	map[0x0] = rom.bank[0];
-	map[0x1] = rom.bank[0] + 0x1000;
-	map[0x2] = rom.bank[0] + 0x2000;
-	map[0x3] = rom.bank[0] + 0x3000;
+	map[0x1] = rom.bank[0];
+	map[0x2] = rom.bank[0];
+	map[0x3] = rom.bank[0];
 	if (mbc.rombank < mbc.romsize)
 	{
-		map[0x4] = rom.bank[mbc.rombank];
-		map[0x5] = rom.bank[mbc.rombank] + 0x1000;
-		map[0x6] = rom.bank[mbc.rombank] + 0x2000;
-		map[0x7] = rom.bank[mbc.rombank] + 0x3000;
+		map[0x4] = rom.bank[mbc.rombank] - 0x4000;
+		map[0x5] = rom.bank[mbc.rombank] - 0x4000;
+		map[0x6] = rom.bank[mbc.rombank] - 0x4000;
+		map[0x7] = rom.bank[mbc.rombank] - 0x4000;
 	}
 	else map[0x4] = map[0x5] = map[0x6] = map[0x7] = NULL;
 	if (R_STAT & 0x03 == 0x03)
@@ -51,35 +51,35 @@ void mem_updatemap()
 	else
 	{
 		n = R_VBK;
-		map[0x8] = lcd.vbank[n];
-		map[0x9] = lcd.vbank[n] + 0x1000;
+		map[0x8] = lcd.vbank[n] - 0x8000;
+		map[0x9] = lcd.vbank[n] - 0x8000;
 	}
 	if (mbc.enableram && mbc.rambank < mbc.ramsize)
 	{
-		map[0xA] = ram.sbank[mbc.rambank];
-		map[0xB] = ram.sbank[mbc.rambank] + 0x1000;
+		map[0xA] = ram.sbank[mbc.rambank] - 0xA000;
+		map[0xB] = ram.sbank[mbc.rambank] - 0xA000;
 	}
 	else map[0xA] = map[0xB] = NULL;
-	map[0xC] = ram.ibank[0];
+	map[0xC] = ram.ibank[0] - 0xC000;
 	n = R_SVBK & 0x07;
-	map[0xD] = ram.ibank[n?n:1];
-	map[0xE] = ram.ibank[0];
+	map[0xD] = ram.ibank[n?n:1] - 0xD000;
+	map[0xE] = ram.ibank[0] - 0xE000;
 	map[0xF] = NULL;
-
+	
 	map = mbc.wmap;
 	map[0x0] = map[0x1] = map[0x2] = map[0x3] = NULL;
 	map[0x4] = map[0x5] = map[0x6] = map[0x7] = NULL;
 	map[0x8] = map[0x9] = NULL;
 	if (mbc.enableram)
 	{
-		map[0xA] = ram.sbank[mbc.rambank];
-		map[0xB] = ram.sbank[mbc.rambank] + 0x1000;
+		map[0xA] = ram.sbank[mbc.rambank] - 0xA000;
+		map[0xB] = ram.sbank[mbc.rambank] - 0xA000;
 	}
 	else map[0xA] = map[0xB] = NULL;
-	map[0xC] = ram.ibank[0];
+	map[0xC] = ram.ibank[0] - 0xC000;
 	n = R_SVBK & 0x07;
-	map[0xD] = ram.ibank[n?n:1];
-	map[0xE] = ram.ibank[0];
+	map[0xD] = ram.ibank[n?n:1] - 0xD000;
+	map[0xE] = ram.ibank[0] - 0xE000;
 	map[0xF] = NULL;
 }
 
@@ -216,7 +216,6 @@ void ioreg_write(byte r, byte b)
 		REG(r) = b & 0xF0;
 		break;
 	case RI_HDMA5:
-		REG(r) = b;
 		hw_hdma_cmd(b);
 		break;
 	}
@@ -229,8 +228,6 @@ byte ioreg_read(byte r)
 	switch(r)
 	{
 	case RI_P1:
-		//printf("read P1\n");
-		//return REG(r);
 	case RI_SB:
 	case RI_SC:
 	case RI_DIV:
@@ -387,7 +384,7 @@ void mem_write(addr a, byte b)
 	int n;
 	byte ha = (a>>8) & 0xE0;
 	
-	/* printf("write to 0x%04X: 0x%02X (map @ 0x%08X)\n", a, b, mbc.wmap); */
+	/* printf("write to 0x%04X: 0x%02X\n", a, b); */
 	switch (ha)
 	{
 	case 0x00:

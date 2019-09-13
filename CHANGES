@@ -1,5 +1,28 @@
 
 
+0.8.4
+updated README to cover new features
+fixed off-by-one-line visual error introduced in 0.8.2
+gbspec.txt is wrong, ram size code 0 != no ram, big suprise... (!)
+workaround for undocumented 512 byte ram size, won't necessarily work
+changes in saved state format
+slight improvements to asm cpu core
+cleaned up HDMA code
+removed outdated comments
+more changes to lcdc/cpu timing interaction, fixing harmless bugs
+this may slightly impact performance, i'll compensate later
+hopefully fixed bug in svgalib interface that corrupted console on exit
+updated HACKING to reflect new code, detail more internals
+workaround for a bug that would never happen but could lock the emulator
+fixed another visual glitch introduced in 0.8.2
+optimized i386 cpu.s to keep PC in a register at all times
+
+0.8.3
+changed install dir from $prefix/games to $prefix/bin
+fixed major bug in ramsize lookup table (!)
+updated HACKING to note that it's outdated
+implemented saved states!
+
 0.8.2
 rewrote lcdc state behavior completely, fixed lots of compat issues
 implemented serial io failure for roms that need it, fixed more compat

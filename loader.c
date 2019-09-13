@@ -42,7 +42,7 @@ static int romsize_table[256] =
 
 static int ramsize_table[256] =
 {
-	1, 1, 4, 16
+	1, 1, 1, 4, 16
 };
 
 
@@ -53,6 +53,8 @@ static char *saveprefix;
 
 static char *savename;
 static char *savedir;
+
+static int saveslot;
 
 static int forcebatt, nobatt;
 static int forcedmg;
@@ -75,7 +77,7 @@ static void initmem(void *mem, int size)
 int rom_load()
 {
 	FILE *f;
-	static byte c, header[16384];
+	byte c, header[16384];
 
 	f = fopen(romfile, "rb");
 	if (!f) die("cannot open rom file: %s\n", romfile);
@@ -149,6 +151,47 @@ int sram_save()
 	return 0;
 }
 
+
+void state_save(int n)
+{
+	FILE *f;
+	char *name;
+
+	if (n < 0) n = saveslot;
+	if (n < 0) n = 0;
+	name = malloc(strlen(saveprefix) + 5);
+	sprintf(name, "%s.%03d", saveprefix, n);
+
+	if ((f = fopen(name, "wb")))
+	{
+		savestate(f);
+		fclose(f);
+	}
+	free(name);
+}
+
+
+void state_load(int n)
+{
+	FILE *f;
+	char *name;
+
+	if (n < 0) n = saveslot;
+	if (n < 0) n = 0;
+	name = malloc(strlen(saveprefix) + 5);
+	sprintf(name, "%s.%03d", saveprefix, n);
+
+	if ((f = fopen(name, "rb")))
+	{
+		loadstate(f);
+		fclose(f);
+		vram_dirty();
+		pal_dirty();
+	}
+	free(name);
+}
+
+
 static void unload()
 {
 	sram_save();
@@ -219,6 +262,7 @@ rcvar_t loader_exports[] =
 {
 	RCV_STRING("savedir", &savedir),
 	RCV_STRING("savename", &savename),
+	RCV_INT("saveslot", &saveslot),
 	RCV_BOOL("forcebatt", &forcebatt),
 	RCV_BOOL("nobatt", &nobatt),
 	RCV_BOOL("forcedmg", &forcedmg),

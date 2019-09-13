@@ -41,6 +41,9 @@ keybindings are as follows:
   ctrl        - b
   space       - select
   enter       - start
+  0-9         - select savestate slot
+  ins         - save current state
+  del         - return to saved state
 
 If you want to change these or other options, you should create a
 gnuboy.rc file. See the system-specific info below for where to put
@@ -56,6 +59,8 @@ respects. You have commands and variables. First, the commands:
   bind        - bind keys
   unbind      - remove a keybinding
   unbindall   - remove all keybindings
+  savestate   - save current state
+  loadstate   - return to saved state
 
 Additionally, each gameboy pad button has two commands, one to press
 it, and another to release it -- for example, +start and -start. When
@@ -141,7 +146,8 @@ called gnuboy.rc in c:/gnuboy.
 
   COMPATIBILITY
 
-(FIXME - Fill in compat rate info.)
+Eventually I'll put detailed information here. For now, just see known
+bugs for the few cases where roms fails.
 
 
   SUPPORTED MEMORY BANK CONTROLLERS (MBCS)
@@ -222,14 +228,20 @@ DKC and a few other CGB roms have major tile glitches.
 
 The portal between the temple and the Talon in FFL3 is glitched and
 the game freezes for a second or two building the incorrect animation
-when entering those screens. This seems unrelated to the former bugs.
+when entering those screens.
+
+Lemmings Color freezes right before getting into the actual gameplay.
+This might be an issue with HDMA and/or GDMA.
 
 The MBC3 realtime clock is not implemented.
 
-LCDC STAT periods might be the wrong length immediately following
-transitions between LCDC on/off. This is a pain to fix and it doesn't
-seem to be causing any problems, so it will be ignored for the time
-being.
+GDMA finishes instantly, whereas it should take time. Making it take
+time breaks Wacky Races, last I checked, so apparently the documents I
+have on GDMA timing are incorrect. Good information would be much
+appreciated.
+
+The main loop in emu_run is very sloppy and not quite right, but it
+works.
 
 Things might run a little too fast on DOS and maybe slightly too slow
 on *nix. The timing code isn't quite perfect yet. Perhaps once there's

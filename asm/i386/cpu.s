@@ -24,6 +24,7 @@
 	.set halt, cpu+36
 	.set div, cpu+40
 	.set tim, cpu+44
+	.set lcdc, cpu+48
 
 	.set regs, hw
 
@@ -39,8 +40,6 @@
 	.set IE, hw+0xff
 	.set KEY1, hw+0x4d
 
-	.set ilines, hw+256
-	
 
 	.section .rodata
 
@@ -516,10 +515,10 @@ int_mask_table:
 	.byte  ~8, ~1, ~2, ~1, ~4, ~1, ~2, ~1
 
 int_vec_table:
-	.short 0x00, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
-	.short 0x58, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
-	.short 0x60, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
-	.short 0x58, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
+	.long 0x00, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
+	.long 0x58, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
+	.long 0x60, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
+	.long 0x58, 0x40, 0x48, 0x40, 0x50, 0x40, 0x48, 0x40
 
 timer_table:
 	.byte 0, 6, 4, 2
@@ -544,10 +543,10 @@ timer_table:
 	pushl %ecx
 	pushl %edx
 	movl %ebx, AF
+	movl %ebp, PC
 	movl $1, %eax
 	pushl %eax
-	movzwl PC, %eax
-	pushl %eax
+	pushl %ebp
 	call debug_disassemble
 	addl $8, %esp
 	popl %edx
@@ -558,26 +557,24 @@ timer_table:
 	
 
 	// all macros preserve %ebp, %ebx, %esi, and %edi
-	// unless otherwise noted
 	
 
 	// write to addr %eax, upper bytes must be zero
 	// source byte passed in %dl
-	// clobbers %ebp
 	.macro _writeb
 	movl %eax, %ecx
 	shrl $12, %eax
-	movl wmap(,%eax,4), %ebp
-	testl %ebp,%ebp
-	jnz .Lusemap\@
 	pushl %edx
+	movl wmap(,%eax,4), %edx
+	testl %edx,%edx
+	jnz .Lusemap\@
 	pushl %ecx
 	call mem_write
 	addl $8,%esp
 	jmp .Lfinish\@
 .Lusemap\@:
-	andl $0xfff, %ecx
-	movb %dl, (%ebp,%ecx)
+	popl %eax
+	movb %al, (%edx,%ecx)
 .Lfinish\@:
 	.endm
 	
@@ -594,7 +591,6 @@ timer_table:
 	popl %ecx
 	jmp .Lfinish\@
 .Lusemap\@:
-	andl $0xfff, %ecx
 	movb (%edx,%ecx),%al
 .Lfinish\@:
 	.endm
@@ -602,10 +598,10 @@ timer_table:
 	// fetch from PC
 	// result in %al, upper bytes filled with 0 automagically
 	.macro _fetch
-	movl PC, %eax
-	movl PC, %ecx
+	movl %ebp, %eax
+	movl %ebp, %ecx
 	shrl $12, %eax
-	incw PC
+	incw %bp
 	movl rmap(,%eax,4), %edx
 	testl %edx,%edx
 	jnz .Lusemap\@
@@ -614,7 +610,6 @@ timer_table:
 	popl %ecx
 	jmp .Lfinish\@
 .Lusemap\@:
-	andl $0xfff, %ecx
 	movb (%edx,%ecx),%al
 .Lfinish\@:	
 	.endm
@@ -694,28 +689,20 @@ timer_table:
 	.endm
 
 	.macro _JR
-	movl PC, %eax
+	movl %ebp, %eax
 	_readb
 	movsbl %al, %eax
 	incl %eax
-	addl PC, %eax
-	movw %ax, PC
+	addw %ax, %bp
 	.endm
 
 	.macro _JP
-	movl PC, %eax
-	_readb
-	push %eax
-	movl PC, %eax
-	incw %ax
-	_readb
-	movb %al, PC+1
-	pop %eax
-	movb %al, PC
+	_fetchw
+	movl %eax, %ebp
 	.endm
 
 	.macro _CALL
-	movl PC, %eax
+	movl %ebp, %eax
 	addl $2, %eax
 	_push
 	_JP
@@ -723,21 +710,21 @@ timer_table:
 
 	.macro _RET
 	_pop
-	movl %eax, PC
+	movl %eax, %ebp
 	.endm
 
 	.macro _NOJR
-	incw PC
+	incw %bp
 	decl %edi
 	.endm
 
 	.macro _NOJP
-	addw $2, PC
+	addw $2, %bp
 	decl %edi
 	.endm
 
 	.macro _NOCALL
-	addw $2, PC
+	addw $2, %bp
 	subl $3, %edi
 	.endm
 
@@ -789,8 +776,7 @@ timer_table:
 
 	.macro _ADC instr=adcb, table=addflagtable
 	movb %bl, %dl
-	andb $0x10, %dl
-	addb $0xf0, %dl
+	rolb $4, %dl
 	_ADD \instr, \table
 	.endm
 
@@ -1820,18 +1806,16 @@ __DI:
 
 __PUSH_BC:
 	movl BC, %eax
-	_push
-	_end
+	jmp __PUSH
 __PUSH_DE:
 	movl DE, %eax
-	_push
-	_end
+	jmp __PUSH
 __PUSH_HL:
 	movl HL, %eax
-	_push
-	_end
+	jmp __PUSH
 __PUSH_AF:
 	movl %ebx, %eax
+__PUSH:	
 	_push
 	_end
 
@@ -1855,10 +1839,6 @@ __POP_AF:
 	
 
 	
-
-__JR:
-	_JR
-	_end
 	
 __JR_NZ:
 	testb $0x80, %bl
@@ -1884,15 +1864,15 @@ __JR_C:
 	_NOJR
 	_end
 
+__JR:
+	_JR
+	_end
+
 
 	
 __JP_HL:
 	movl HL, %eax
-	movl %eax, PC
-	_end
-
-__JP:
-	_JP
+	movl %eax, %ebp
 	_end
 
 __JP_NZ:
@@ -1919,11 +1899,11 @@ __JP_C:
 	_NOJP
 	_end
 
-
-	
-__CALL:
-	_CALL
+__JP:
+	_JP
 	_end
+
+
 
 __CALL_NZ:
 	testb $0x80, %bl
@@ -1948,17 +1928,13 @@ __CALL_C:
 	jnz __CALL
 	_NOCALL
 	_end
+	
+__CALL:
+	_CALL
+	_end
 
 	
 
-
-__RETI:
-	movl $1, %eax
-	movl %eax, IME
-	movl %eax, IMA
-__RET:
-	_RET
-	_end
 
 __RET_NZ:
 	testb $0x80, %bl
@@ -1982,6 +1958,14 @@ __RET_C:
 	testb $0x10, %bl
 	jnz __RET
 	_NORET
+	_end
+
+__RETI:
+	movl $1, %eax
+	movl %eax, IME
+	movl %eax, IMA
+__RET:
+	_RET
 	_end
 
 	
@@ -2010,10 +1994,9 @@ __RST_38:
 	movl $0x38, %eax
 __RST:
 	pushl %eax
-	movl PC, %eax
+	movl %ebp, %eax
 	_push
-	popl %eax
-	movl %eax, PC
+	popl %ebp
 	_end
 
 
@@ -2153,6 +2136,7 @@ cpu_emulate:
 	pushl %edi
 
 	movl AF, %ebx
+	movl PC, %ebp
 	movl 20(%esp), %esi
 	cmpl $0, %esi
 	jle .Ldone
@@ -2189,9 +2173,9 @@ cpu_emulate:
 	movl %edx, IMA
 	andb %ch, %cl
 	movb %cl, IF
-	movl int_vec_table(,%eax,2), %edx
-	movl PC, %eax
-	movw %dx, PC
+	movl int_vec_table(,%eax,4), %edx
+	movl %ebp, %eax
+	movl %edx, %ebp
 	_push
 .Lnoint:
 	// update interrupt master enable
@@ -2235,8 +2219,14 @@ opdone:
 	movb TAC, %cl
 	testb $0x04, %cl
 	jnz .Ltimer
-
 .Lendtimer:
+
+	// advance lcdc
+	subl %edi, lcdc
+	jg .Lnolcdc
+	call lcdc_trans
+.Lnolcdc:	
+	
 	// count off cycles used
 	subl %edi, %esi
 	jg .Lnext
@@ -2279,6 +2269,7 @@ opdone:
 
 .Ldone:
 	movl %ebx, AF
+	movl %ebp, PC
 	movl 20(%esp), %eax
 	subl %esi, %eax
 	

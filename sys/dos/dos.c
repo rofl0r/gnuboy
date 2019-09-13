@@ -102,11 +102,11 @@ void die(char *fmt, ...)
 {
 	va_list ap;
 	
-	shutdown();
 	vid_disable();
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
+	shutdown();
 	exit(1);
 }
 

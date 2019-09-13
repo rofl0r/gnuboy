@@ -44,15 +44,8 @@ struct lcd
 	byte pal[128];
 };
 
-struct lcdc
-{
-	int cycles;
-	int ns;
-};
-
 extern struct lcd lcd;
 extern struct scan scan;
-extern struct lcdc lcdc;
 
 
 

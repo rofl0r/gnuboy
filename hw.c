@@ -53,40 +53,26 @@ void hw_dma(byte b)
 		lcd.oam.mem[i] = READB(a);
 }
 
-/*
- * hw_hdma_cmd is called from ioreg_write after the HDMA5 register has
- * been written, to setup the information needed for HDMA if
- * requested, or to actually carry out GDMA. In the latter case, it
- * must stall the cpu (via incrementing cpu.stall) for the appropriate
- * amount of time.
- */
 
-void hw_hdma_cmd()
+
+void hw_hdma_cmd(byte c)
 {
 	int cnt;
 	addr sa, da;
 	byte b;
 
-	/* Cancel HDMA */
-	if (hw.hdma && !(R_HDMA5 & 0x80))
+	/* Begin or cancel HDMA */
+	if ((R_HDMA5|c) & 0x80)
 	{
-		hw.hdma = 0;
-		return;
-	}
-
-	/* Begin HDMA */
-	if (R_HDMA5 & 0x80)
-	{
-		hw.hdma = 1;
+		R_HDMA5 = c;
 		return;
 	}
 	
 	/* Perform GDMA */
 	sa = ((addr)R_HDMA1 << 8) | R_HDMA2;
 	da = 0x8000 | ((addr)R_HDMA3 << 8) | R_HDMA4;
-	cnt = ((int)R_HDMA5 & 0x7F)+1;
-	/* FIXME - figure out what this should be */
-	/* cpu.stall += 102;// * cnt; */
+	cnt = ((int)c)+1;
+	/* FIXME - this should use cpu time! */
 	cnt <<= 4;
 	while (cnt--)
 	{
@@ -101,12 +87,6 @@ void hw_hdma_cmd()
 	R_HDMA5 = 0;
 }
 
-/*
- * hw_hdma is called at hblank on each scan line to perform HDMA. If
- * HDMA is not in progress, it returns immediately; otherwise it
- * copies the appropriate data and stalls the cpu for the duration of
- * hblank.
- */
 
 void hw_hdma()
 {
@@ -114,7 +94,7 @@ void hw_hdma()
 	addr sa, da;
 	byte b;
 	
-	if (!hw.hdma || !(R_LCDC & 0x80))
+	if (!(R_LCDC & 0x80))
 		return;
 
 	sa = ((addr)R_HDMA1 << 8) | R_HDMA2;
@@ -132,12 +112,6 @@ void hw_hdma()
 	R_HDMA3 = 0x1F & (da >> 8);
 	R_HDMA4 = da & 0xF0;
 	R_HDMA5--;
-	
-	if ((R_HDMA5 & 0x7F) == 0x7F)
-	{
-		hw.hdma = 0;
-		return;
-	}
 }
 
 
@@ -194,7 +168,7 @@ void pad_set(byte k, int st)
 
 void hw_reset()
 {
-	hw.ilines = hw.pad = hw.hdma = 0;
+	hw.ilines = hw.pad = 0;
 
 	memset(hw.regs, 0, sizeof hw.regs);
 

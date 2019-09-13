@@ -29,8 +29,8 @@ it this way.
 
 Running make should produce the binaries xgnuboy and/or sgnuboy,
 depending on the availability of X11 and svgalib on your host.
-The install target will install these to /usr/local/games; if you
-prefer another location, copy them yourself.
+The install target will install these to $(prefix)/bin, where prefix
+is specified to configure in the usual way.
 
 
   WINDOWS

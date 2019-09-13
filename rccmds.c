@@ -86,6 +86,18 @@ static int cmd_reset()
 	return 0;
 }
 
+static int cmd_savestate(int argc, char **argv)
+{
+	state_save(argc > 1 ? atoi(argv[1]) : -1);
+	return 0;
+}
+
+static int cmd_loadstate(int argc, char **argv)
+{
+	state_load(argc > 1 ? atoi(argv[1]) : -1);
+	return 0;
+}
+
 
 
 /*
@@ -101,6 +113,8 @@ rccmd_t rccmds[] =
 	RCC("source", cmd_source),
 	RCC("reset", cmd_reset),
 	RCC("quit", cmd_quit),
+	RCC("savestate", cmd_savestate),
+	RCC("loadstate", cmd_loadstate),
 	
 	RCC("+up", cmd_up),
 	RCC("-up", cmd_up),
@@ -134,7 +148,7 @@ int rc_command(char *line)
 	linecopy = malloc(strlen(line)+1);
 	strcpy(linecopy, line);
 	
-	argc = getargs(argv, (sizeof argv)/(sizeof argv[0]), linecopy);
+	argc = splitline(argv, (sizeof argv)/(sizeof argv[0]), linecopy);
 	if (!argc)
 	{
 		free(linecopy);
