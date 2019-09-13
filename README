@@ -198,6 +198,29 @@ ways of configuring scaling may change considerably in the next few
 releases.
 
 
+  HARDWARE ACCELERATED YUV-SPACE SCREEN SCALING
+
+If you're using the SDL display target and your video card/driver
+supports it, hardware screen scaling is available. This feature
+provides scaling to any size with almost no cpu usage! It's enabled by
+default if the screen resolution is set to 320x288 or higher; manually
+set the "yuv" rcvar to 0 or 1 to force it off or on, respectively.
+
+Scaling will be performed to fill the entire requested video mode.
+For example, to scale to 640x480, either add the following line to
+your gnuboy.rc:
+
+  set vmode 640 480
+
+or put --vmode=640,480 on the command line. A better alternative is to
+just request a particular scale, for example with:
+
+  set scale 4
+
+or --scale=4 on the command line; this way the gameboy's near 1:1
+aspect ratio won't become distorted.
+
+
   SOUND SUPPORT
 
 At this point all features are implemented and everything should be
@@ -274,26 +297,24 @@ bugs for the few cases where roms fails.
 
   KNOWN BUGS
 
-The homebrew game Binary Chaos has serious graphical glitches, which
-seem to occur on a good number of emulators, if not all of them.
-Hopefully we'll figure out why this happens soon, and perhaps be the
-first emulator to correctly emulate this impressive game.
-
 The portal between the temple and the Talon in FFL3 is glitched and
 the game freezes for a second or two building the incorrect animation
 when entering those screens.
 
 GDMA finishes instantly, whereas it should take time. Making it take
 time breaks Wacky Races, last I checked, so apparently the documents I
-have on GDMA timing are incorrect. Good information would be much
-appreciated.
+have on GDMA timing are incorrect. Same goes for HDMA. Good
+information would be much appreciated.
 
 The main loop in emu_run is very sloppy and not quite right, but it
 works.
 
 Sound mixing is taking way too much cpu time. I have some ideas for
 fixing this, and I plan to write optimized assembly code for sound
-soon. If it's a problem try turning down the sample rate.
+eventually. If it's a problem try turning down the sample rate.
+
+YUV-space hardware scaling only supports the common "YUY2" mode so
+far. More modes will be added in the future.
 
 
   REPORTING OR FIXING BUGS

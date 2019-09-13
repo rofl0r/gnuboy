@@ -8,6 +8,28 @@ versions; the CHANGES file is too technical and unorganized.
 
 
 
+RELEASE 0.9.12
+
+  NEW FEATURES
+
+Hardware YUV scaling with full interpolation on systems that support it,
+using SDL -- thanks goes to Magnus Damm.
+
+  COMPATIBILITY
+
+Binary Chaos no longer has graphical glitches, and is fully playable.
+Wacky Races now displays correctly again (broken since 0.9.7).
+
+  BUGS FIXED
+
+Some test code was left in cpu.s, breaking DOS/Windows builds and
+slowing things down across the board.
+SDL joystick code was generating bogus release events.
+Unused bits of VBK register were 0's; they should be 1's.
+DMG palette was not being restored correctly after loading savestates.
+
+
+
 RELEASE 0.9.11
 
   NEW FEATURES

@@ -18,7 +18,8 @@ struct fb
 	struct
 	{
 		int l, r;
-	} cc[3];
+	} cc[4];
+	int yuv;
 	int enabled;
 	int dirty;
 };

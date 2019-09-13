@@ -702,7 +702,7 @@ void lcd_refreshline()
 
 static void updatepalette(int i)
 {
-	int c, r, g, b;
+	int c, r, g, b, y, u, v;
 
 	c = (lcd.pal[i<<1] | ((int)lcd.pal[(i<<1)|1] << 8)) & 0x7FFF;
 	r = (c & 0x001F) << 3;
@@ -711,6 +711,19 @@ static void updatepalette(int i)
 	r |= (r >> 5);
 	g |= (g >> 5);
 	b |= (b >> 5);
+	
+	if (fb.yuv)
+	{
+		y = (((r *  263) + (g * 516) + (b * 100)) >> 10) + 16;
+		u = (((r *  450) - (g * 377) - (b *  73)) >> 10) + 128;
+		v = (((r * -152) - (g * 298) + (b * 450)) >> 10) + 128;
+		if (y < 0) y = 0; if (y > 255) y = 255;
+		if (u < 0) u = 0; if (u > 255) u = 255;
+		if (v < 0) v = 0; if (v > 255) v = 255;
+		PAL4[i] = (y<<fb.cc[0].l) | (y<<fb.cc[3].l)
+			| (u<<fb.cc[1].l) | (v<<fb.cc[2].l);
+		return;
+	}
 	
 	if (fb.indexed)
 	{
@@ -775,9 +788,9 @@ void pal_write_dmg(int i, int mapnum, byte d)
 
 void vram_write(addr a, byte b)
 {
-	lcd.vbank[R_VBK][a] = b;
+	lcd.vbank[R_VBK&1][a] = b;
 	if (a >= 0x1800) return;
-	patdirty[(R_VBK<<9)+(a>>4)] = 1;
+	patdirty[((R_VBK&1)<<9)+(a>>4)] = 1;
 	anydirty = 1;
 }
 
@@ -790,16 +803,15 @@ void vram_dirty()
 void pal_dirty()
 {
 	int i;
-	if (hw.cgb)
-		for (i = 0; i < 64; i++)
-			updatepalette(i);
-	else
+	if (!hw.cgb)
 	{
 		pal_write_dmg(0, 0, R_BGP);
 		pal_write_dmg(8, 1, R_BGP);
 		pal_write_dmg(64, 2, R_OBP0);
 		pal_write_dmg(72, 3, R_OBP1);
 	}
+	for (i = 0; i < 64; i++)
+		updatepalette(i);
 }
 
 void lcd_reset()
