@@ -1858,8 +1858,8 @@ else
 fi
 done
 
-XINCS="-I$x_includes"
-XLIBS="-L$x_libraries"
+test "$x_includes" && XINCS="-I$x_includes"
+test "$x_libraries" && XLIBS="-L$x_libraries"
 fi
 
 # Check whether --enable-debug or --disable-debug was given.
