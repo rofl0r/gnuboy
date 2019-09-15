@@ -50,23 +50,23 @@ static void banner()
 static void copyright()
 {
 	banner();
-	fprintf(stderr,"Copyright (C) 2000-2001 the gnuboy team
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-");
+	fprintf(stderr,
+"Copyright (C) 2000-2001 the gnuboy team\n"
+"\n"
+"This program is free software; you can redistribute it and/or modify\n"
+"it under the terms of the GNU General Public License as published by\n"
+"the Free Software Foundation; either version 2 of the License, or\n"
+"(at your option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will be useful,\n"
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"GNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public License\n"
+"along with this program; if not, write to the Free Software\n"
+"Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\n"
+"\n");
 }
 
 static void usage(char *name)
@@ -89,15 +89,14 @@ static void help(char *name)
 	vid_disable();
 	banner();
 	fprintf(stderr, "Usage: %s [options] romfile\n", name);
-	fprintf(stderr, "
-      --source FILE             read rc commands from FILE
-      --bind KEY COMMAND        bind KEY to perform COMMAND
-      --VAR=VALUE               set rc variable VAR to VALUE
-      --help                    display this help and exit
-      --version                 output version information and exit
-      --copying                 show copying permissions
-
-");
+	fprintf(stderr, "\n"
+"      --source FILE             read rc commands from FILE\n"
+"      --bind KEY COMMAND        bind KEY to perform COMMAND\n"
+"      --VAR=VALUE               set rc variable VAR to VALUE\n"
+"      --help                    display this help and exit\n"
+"      --version                 output version information and exit\n"
+"      --copying                 show copying permissions\n"
+"");
 	exit(0);
 }
 
