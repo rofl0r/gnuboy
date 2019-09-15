@@ -59,7 +59,6 @@ void mem_write(addr a, byte b);
 byte mem_read(addr a);
 
 
-extern int forcedmg;
 
 #define READB(a) ( mbc.rmap[(a)>>12] \
 ? mbc.rmap[(a)>>12][(a)&0xFFF] \
