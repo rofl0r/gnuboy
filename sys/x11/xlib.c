@@ -235,21 +235,10 @@ void vid_preinit()
 	/* do nothing; only needed on systems where we must drop perms */
 }
 
-void vid_init()
+static int vid_check_depth(int start)
 {
 	int i;
-	
-	if (initok) return;
-
-	x_displayname = getenv("DISPLAY");
-	if (!x_displayname)
-		die("DISPLAY environment variable not set\n");
-	x_display = XOpenDisplay(NULL);
-	if (!x_display)
-		die("failed to connect to X display\n");
-	x_screen = DefaultScreen(x_display);
-
-	for (i = 0; x_vissup[i].bits; i++)
+	for (i = start; x_vissup[i].bits; i++)
 	{
 		if (XMatchVisualInfo(
 			x_display, x_screen,
@@ -261,9 +250,30 @@ void vid_init()
 				x_pseudo = 0;
 			x_bits = x_vissup[i].bits;
 			x_bytes = x_vissup[i].bytes;
-			break;
+			return 1;
 		}
 	}
+	return 0;
+}
+
+void vid_init()
+{
+	int i, dd;
+
+	if (initok) return;
+
+	x_displayname = getenv("DISPLAY");
+	if (!x_displayname)
+		die("DISPLAY environment variable not set\n");
+	x_display = XOpenDisplay(NULL);
+	if (!x_display)
+		die("failed to connect to X display\n");
+	x_screen = DefaultScreen(x_display);
+
+	dd = XDefaultDepth(x_display, x_screen);
+	for (i = 0; x_vissup[i].bits && x_vissup[i].bits != dd; i++);
+	if (!vid_check_depth(i)) vid_check_depth(0);
+
 	if (!x_bits) die("no suitable X visuals\n");
 	x_vis = x_visinfo.visual;
 	if (!x_vis) die("X visual is NULL");
