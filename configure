@@ -1335,7 +1335,7 @@ Optional Packages:
   --with-fb                       build framebuffer device interface
   --with-svgalib                  build Linux svgalib interface
   --with-sdl                      build SDL interface
-  --with-sound=no,oss,sdl         select sound interface
+  --with-sound=no,oss,sdl,ao      select sound interface
   --with-x                use the X Window System
 
 Some influential environment variables:
@@ -3747,7 +3747,36 @@ fi
 SOUND=""
 JOY=""
 
-if test "$with_sound" = "yes" || test "$with_sound" = "oss" ; then
+if test "$with_sound" != "no" ; then
+if test "$with_sound" = "yes" || test "$with_sound" = "ao" ; then
+for ac_header in ao/ao.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "ao/ao.h" "ac_cv_header_ao_ao_h" "$ac_includes_default"
+if test "x$ac_cv_header_ao_ao_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_AO_AO_H 1
+_ACEOF
+ SOUND=sys/ao/ao.o ; LIBS="$LIBS -lao"
+fi
+
+done
+
+fi
+if test -z "$SOUND" && ( test "$with_sound" = "yes" || test "$with_sound" = "sdl" ) ; then
+for ac_header in SDL/SDL.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "SDL/SDL.h" "ac_cv_header_SDL_SDL_h" "$ac_includes_default"
+if test "x$ac_cv_header_SDL_SDL_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SDL_SDL_H 1
+_ACEOF
+ SOUND=sys/sdl/sdl-audio.o ; LIBS="$LIBS -lSDL"
+fi
+
+done
+
+fi
+if test -z "$SOUND" && ( test "$with_sound" = "yes" || test "$with_sound" = "oss" ) ; then
 for ac_header in sys/soundcard.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "sys/soundcard.h" "ac_cv_header_sys_soundcard_h" "$ac_includes_default"
@@ -3795,19 +3824,7 @@ fi
 
 done
 
-elif test "$with_sound" = "sdl" ; then
-for ac_header in SDL/SDL.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "SDL/SDL.h" "ac_cv_header_SDL_SDL_h" "$ac_includes_default"
-if test "x$ac_cv_header_SDL_SDL_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SDL_SDL_H 1
-_ACEOF
- SOUND=sys/sdl/sdl-audio.o ; LIBS="$LIBS -lSDL"
 fi
-
-done
-
 fi
 
 case `uname -s` in

@@ -30,7 +30,7 @@ LIBS="$LIBS -L/usr/local/lib -L/usr/X11R6/lib"
 AC_ARG_WITH(fb,      [  --with-fb                       build framebuffer device interface], [], [with_fb=yes])
 AC_ARG_WITH(svgalib, [  --with-svgalib                  build Linux svgalib interface], [], [with_svgalib=yes])
 AC_ARG_WITH(sdl,     [  --with-sdl                      build SDL interface], [], [with_sdl=yes])
-AC_ARG_WITH(sound,   [  --with-sound=no,oss,sdl         select sound interface], [], [with_sound=yes])
+AC_ARG_WITH(sound,   [  --with-sound=no,oss,sdl,ao      select sound interface], [], [with_sound=yes])
 
 
 
@@ -38,7 +38,14 @@ AC_ARG_WITH(sound,   [  --with-sound=no,oss,sdl         select sound interface],
 SOUND=""
 JOY=""
 
-if test "$with_sound" = "yes" || test "$with_sound" = "oss" ; then
+if test "$with_sound" != "no" ; then
+if test "$with_sound" = "yes" || test "$with_sound" = "ao" ; then
+AC_CHECK_HEADERS(ao/ao.h, [SOUND=sys/ao/ao.o ; LIBS="$LIBS -lao"])
+fi
+if test -z "$SOUND" && ( test "$with_sound" = "yes" || test "$with_sound" = "sdl" ) ; then
+AC_CHECK_HEADERS(SDL/SDL.h, [SOUND=sys/sdl/sdl-audio.o ; LIBS="$LIBS -lSDL"])
+fi
+if test -z "$SOUND" && ( test "$with_sound" = "yes" || test "$with_sound" = "oss" ) ; then
 AC_CHECK_HEADERS(sys/soundcard.h, [SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DHAVE_SYS_SOUNDCARD_H"], [
  AC_CHECK_HEADERS(machine/soundcard.h, [SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DHAVE_MACHINE_SOUNDCARD_H"], [
   AC_CHECK_HEADERS(soundcard.h, [SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DHAVE_SOUNDCARD_H"], [
@@ -46,8 +53,7 @@ AC_CHECK_HEADERS(sys/soundcard.h, [SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DH
   ])
  ])
 ])
-elif test "$with_sound" = "sdl" ; then
-AC_CHECK_HEADERS(SDL/SDL.h, [SOUND=sys/sdl/sdl-audio.o ; LIBS="$LIBS -lSDL"])
+fi
 fi
 
 case `uname -s` in

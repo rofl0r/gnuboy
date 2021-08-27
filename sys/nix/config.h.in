@@ -1,7 +1,10 @@
-/* sys/nix/config.h.in.  Generated from configure.in by autoheader.  */
+/* sys/nix/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
+
+/* Define to 1 if you have the <ao/ao.h> header file. */
+#undef HAVE_AO_AO_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
