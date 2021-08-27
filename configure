@@ -692,6 +692,7 @@ enable_option_checking
 with_fb
 with_svgalib
 with_sdl
+with_sound
 with_x
 enable_warnings
 enable_debug
@@ -1331,9 +1332,10 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-fb               build framebuffer device interface
-  --with-svgalib          build Linux svgalib interface
-  --with-sdl              build SDL interface
+  --with-fb                       build framebuffer device interface
+  --with-svgalib                  build Linux svgalib interface
+  --with-sdl                      build SDL interface
+  --with-sound=no,oss,sdl         select sound interface
   --with-x                use the X Window System
 
 Some influential environment variables:
@@ -3731,6 +3733,13 @@ else
 fi
 
 
+# Check whether --with-sound was given.
+if test "${with_sound+set}" = set; then :
+  withval=$with_sound;
+else
+  with_sound=yes
+fi
+
 
 
 
@@ -3738,9 +3747,7 @@ fi
 SOUND=""
 JOY=""
 
-case `uname -s` in
-Linux)
-SYS_DEFS=-DIS_LINUX
+if test "$with_sound" = "yes" || test "$with_sound" = "oss" ; then
 for ac_header in sys/soundcard.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "sys/soundcard.h" "ac_cv_header_sys_soundcard_h" "$ac_includes_default"
@@ -3748,11 +3755,63 @@ if test "x$ac_cv_header_sys_soundcard_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_SOUNDCARD_H 1
 _ACEOF
- SOUND=sys/oss/oss.o
+ SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DHAVE_SYS_SOUNDCARD_H"
+else
+
+ for ac_header in machine/soundcard.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "machine/soundcard.h" "ac_cv_header_machine_soundcard_h" "$ac_includes_default"
+if test "x$ac_cv_header_machine_soundcard_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MACHINE_SOUNDCARD_H 1
+_ACEOF
+ SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DHAVE_MACHINE_SOUNDCARD_H"
+else
+
+  for ac_header in soundcard.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "soundcard.h" "ac_cv_header_soundcard_h" "$ac_includes_default"
+if test "x$ac_cv_header_soundcard_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SOUNDCARD_H 1
+_ACEOF
+ SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DHAVE_SOUNDCARD_H"
+else
+
+   test "$with_sound" = "oss" && { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: oss selected but required headers not found" >&5
+$as_echo "$as_me: WARNING: oss selected but required headers not found" >&2;}
+
 fi
 
 done
 
+
+fi
+
+done
+
+
+fi
+
+done
+
+elif test "$with_sound" = "sdl" ; then
+for ac_header in SDL/SDL.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "SDL/SDL.h" "ac_cv_header_SDL_SDL_h" "$ac_includes_default"
+if test "x$ac_cv_header_SDL_SDL_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SDL_SDL_H 1
+_ACEOF
+ SOUND=sys/sdl/sdl-audio.o ; LIBS="$LIBS -lSDL"
+fi
+
+done
+
+fi
+
+case `uname -s` in
+Linux)
 for ac_header in linux/joystick.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "linux/joystick.h" "ac_cv_header_linux_joystick_h" "$ac_includes_default"
@@ -3773,36 +3832,6 @@ if test "x$ac_cv_header_linux_fb_h" = xyes; then :
 #define HAVE_LINUX_FB_H 1
 _ACEOF
  with_fb=linux
-fi
-
-done
-
-;;
-FreeBSD)
-SYS_DEFS=-DIS_FBSD
-for ac_header in machine/soundcard.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "machine/soundcard.h" "ac_cv_header_machine_soundcard_h" "$ac_includes_default"
-if test "x$ac_cv_header_machine_soundcard_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_MACHINE_SOUNDCARD_H 1
-_ACEOF
- SOUND=sys/oss/oss.o
-fi
-
-done
-
-;;
-OpenBSD)
-SYS_DEFS=-DIS_OBSD
-for ac_header in soundcard.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "soundcard.h" "ac_cv_header_soundcard_h" "$ac_includes_default"
-if test "x$ac_cv_header_soundcard_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SOUNDCARD_H 1
-_ACEOF
- SOUND=sys/oss/oss.o
 fi
 
 done

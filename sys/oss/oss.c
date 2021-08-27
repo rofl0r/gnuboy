@@ -10,17 +10,21 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef IS_FBSD
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef HAVE_MACHINE_SOUNDCARD_H
 #include "machine/soundcard.h"
 #define DSP_DEVICE "/dev/dsp"
 #endif
 
-#ifdef IS_OBSD
+#ifdef HAVE_SOUNDCARD_H
 #include "soundcard.h"
 #define DSP_DEVICE "/dev/sound"
 #endif
 
-#ifdef IS_LINUX
+#ifdef HAVE_SYS_SOUNDCARD_H
 #include <sys/soundcard.h>
 #define DSP_DEVICE "/dev/dsp"
 #endif
