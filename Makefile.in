@@ -38,13 +38,13 @@ all: $(TARGETS)
 include Rules
 
 fbgnuboy: $(OBJS) $(SYS_OBJS) $(FB_OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(FB_OBJS) -o $@ $(FB_LIBS)
+	$(LD) $(OBJS) $(SYS_OBJS) $(FB_OBJS) -o $@ $(FB_LIBS) $(LDFLAGS)
 
 sgnuboy: $(OBJS) $(SYS_OBJS) $(SVGA_OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(SVGA_OBJS) -o $@ $(SVGA_LIBS)
+	$(LD) $(OBJS) $(SYS_OBJS) $(SVGA_OBJS) -o $@ $(SVGA_LIBS) $(LDFLAGS)
 
 sdlgnuboy: $(OBJS) $(SYS_OBJS) $(SDL_OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(SDL_OBJS) -o $@ $(SDL_LIBS)
+	$(LD) $(OBJS) $(SYS_OBJS) $(SDL_OBJS) -o $@ $(SDL_LIBS) $(LDFLAGS)
 
 sys/sdl/sdl.o: sys/sdl/sdl.c
 	$(MYCC) $(SDL_CFLAGS) -c $< -o $@
@@ -53,10 +53,10 @@ sys/sdl/keymap.o: sys/sdl/keymap.c
 	$(MYCC) $(SDL_CFLAGS) -c $< -o $@
 
 xgnuboy: $(OBJS) $(SYS_OBJS) $(X11_OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) $(SYS_OBJS) $(X11_OBJS) -o $@ $(X11_LIBS)
+	$(LD) $(OBJS) $(SYS_OBJS) $(X11_OBJS) -o $@ $(X11_LIBS) $(LDFLAGS)
 
 joytest: joytest.o @JOY@
-	$(LD) $(LDFLAGS) $^ -o $@
+	$(LD) $^ -o $@ $(LDFLAGS)
 
 install: all
 	$(INSTALL) -d $(bindir)
