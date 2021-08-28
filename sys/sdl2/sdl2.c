@@ -8,6 +8,7 @@
  *
  * Licensed under the GPLv2, or later.
  *
+ * TODO: evaluate whether double buffering is desirable
  */
 
 #include <stdlib.h>
@@ -37,7 +38,7 @@ static unsigned char Xstatus, Ystatus;
 
 static SDL_Window *win;
 static SDL_Renderer *renderer;
-static SDL_Surface *screen, *screens[2];
+static SDL_Surface *screen;
 static SDL_Texture *texture;
 
 static int vmode[3] = { 0, 0, 32 };
@@ -111,7 +112,7 @@ static void joy_init()
 
 void vid_init()
 {
-	int i, flags;
+	int flags;
 	int scale = rc_getint("scale");
 
 	if (!vmode[0] || !vmode[1])
@@ -139,10 +140,8 @@ void vid_init()
 
 	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 	SDL_RenderSetScale(renderer, scale, scale);
-	for (i = 0; i < 2; ++i)
-		screens[i] = SDL_CreateRGBSurface(0, 160, 144, 32,
+	screen = SDL_CreateRGBSurface(0, 160, 144, 32,
 			0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-	screen = screens[0];
 
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
 			SDL_TEXTUREACCESS_STREAMING, 160, 144);
@@ -322,8 +321,6 @@ void vid_close()
 	SDL_UnlockSurface(screen);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(win);
-	SDL_FreeSurface(screens[0]);
-	SDL_FreeSurface(screens[1]);
 	SDL_Quit();
 	fb.enabled = 0;
 }
@@ -347,8 +344,6 @@ void vid_end()
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
-		if (screen == screens[0]) screen = screens[1];
-		else screen = screens[1];
 	}
 }
 
