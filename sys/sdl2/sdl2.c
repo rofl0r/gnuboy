@@ -20,6 +20,11 @@
 #include "input.h"
 #include "rc.h"
 
+enum joyaxis { JA_X=0, JA_Y };
+enum joyaxisvalue {
+	JAV_LEFT_OR_UP = 0, JAV_CENTERED = 1, JAV_RIGHT_OR_DOWN = 2
+};
+
 struct fb fb;
 
 static int fullscreen = 0;
@@ -27,7 +32,7 @@ static int use_altenter = 1;
 static int use_joy = 1, sdl_joy_num;
 static SDL_Joystick * sdl_joy = NULL;
 static const int joy_commit_range = 3276;
-static char Xstatus, Ystatus;
+static unsigned char Xstatus, Ystatus;
 
 static SDL_Window *win;
 static SDL_Renderer *renderer;
@@ -74,6 +79,8 @@ static void joy_init()
 {
 	int i;
 	int joy_count;
+
+	Xstatus = Ystatus = JAV_CENTERED;
 
 	/* Initilize the Joystick, and disable all later joystick code if an error occured */
 	if (!use_joy) return;
@@ -165,6 +172,30 @@ void vid_init()
 	fb.dirty = 0;
 }
 
+static void joyaxis_evt(enum joyaxis axis, enum joyaxisvalue newstate)
+{
+	static const struct {
+		unsigned char *const axis;
+		int action[3];
+	} axis_data[2] = {
+		{&Xstatus, {K_JOYLEFT, 0, K_JOYRIGHT}},
+		{&Ystatus, {K_JOYUP, 0, K_JOYDOWN}},
+	};
+	event_t ev;
+	if (*axis_data[axis].axis == newstate) return;
+	/* release last state */
+	ev.type = EV_RELEASE;
+	ev.code = axis_data[axis].action[*axis_data[axis].axis];
+	ev_postevent(&ev);
+	/* store new state */
+	*axis_data[axis].axis = newstate;
+	/* fire new event, if necessary */
+	if (newstate != 1) {
+		ev.type = EV_PRESS;
+		ev.code = axis_data[axis].action[newstate];
+		ev_postevent(&ev);
+	}
+}
 
 void ev_poll()
 {
@@ -200,6 +231,42 @@ void ev_poll()
 			ev.type = EV_RELEASE;
 			ev.code = mapscancode(event.key.keysym.sym);
 			ev_postevent(&ev);
+			break;
+		case SDL_JOYHATMOTION:
+			switch (event.jhat.value) {
+			case SDL_HAT_LEFTUP:
+				joyaxis_evt(JA_X, JAV_LEFT_OR_UP);
+				joyaxis_evt(JA_Y, JAV_LEFT_OR_UP);
+				break;
+			case SDL_HAT_UP:
+				joyaxis_evt(JA_Y, JAV_LEFT_OR_UP);
+				break;
+			case SDL_HAT_RIGHTUP:
+				joyaxis_evt(JA_X, JAV_RIGHT_OR_DOWN);
+				joyaxis_evt(JA_Y, JAV_LEFT_OR_UP);
+				break;
+			case SDL_HAT_LEFT:
+				joyaxis_evt(JA_X, JAV_LEFT_OR_UP);
+				break;
+			case SDL_HAT_CENTERED:
+				joyaxis_evt(JA_X, JAV_CENTERED);
+				joyaxis_evt(JA_Y, JAV_CENTERED);
+				break;
+			case SDL_HAT_RIGHT:
+				joyaxis_evt(JA_X, JAV_RIGHT_OR_DOWN);
+				break;
+			case SDL_HAT_LEFTDOWN:
+				joyaxis_evt(JA_X, JAV_LEFT_OR_UP);
+				joyaxis_evt(JA_Y, JAV_RIGHT_OR_DOWN);
+				break;
+			case SDL_HAT_DOWN:
+				joyaxis_evt(JA_Y, JAV_RIGHT_OR_DOWN);
+				break;
+			case SDL_HAT_RIGHTDOWN:
+				joyaxis_evt(JA_X, JAV_RIGHT_OR_DOWN);
+				joyaxis_evt(JA_Y, JAV_RIGHT_OR_DOWN);
+				break;
+			}
 			break;
 		case SDL_JOYAXISMOTION:
 			switch (event.jaxis.axis)
