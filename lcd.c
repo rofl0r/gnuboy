@@ -45,6 +45,7 @@ byte patpix[4096][8][8];
 byte patdirty[1024];
 byte anydirty;
 
+# define MAX_SCALE 4
 static int scale = 1;
 static int density = 0;
 
@@ -576,7 +577,7 @@ void lcd_begin()
 void lcd_refreshline()
 {
 	int i, work_scale;
-	byte scalebuf[160*4*4], *dest;
+	byte scalebuf[160*4*MAX_SCALE], *dest;
 
 	if (!fb.enabled) return;
 
@@ -628,6 +629,9 @@ void lcd_refreshline()
 	work_scale = fb.delegate_scaling ? 1: scale;
 
 	dest = (density != 1) ? scalebuf : vdest;
+	if(work_scale > MAX_SCALE) {
+		die("error: no code available to scale > %d!", MAX_SCALE);
+	}
 
 	switch (work_scale)
 	{
