@@ -146,7 +146,7 @@ test "$with_sdl2" = "no" || TARGETS="$TARGETS sdl2gnuboy"
 AC_ARG_ENABLE(warnings, [  --enable-warnings       enable selected compiler warnings], [], [enable_warnings=yes])
 AC_ARG_ENABLE(debug,    [  --enable-debug          include debugging symbols], [])
 AC_ARG_ENABLE(profile,  [  --enable-profile        enable performance profiling], [])
-AC_ARG_ENABLE(arch,     [  --enable-arch           compile for specific host cpu architecture], [], [enable_arch=yes])
+AC_ARG_ENABLE(arch,     [  --enable-arch           compile for specific host cpu architecture], [], [enable_arch=no])
 AC_ARG_ENABLE(optimize, [  --enable-optimize=LEVEL select optimization level (full,low,none)], [], [enable_optimize=yes])
 AC_ARG_ENABLE(asm,      [  --enable-asm            use hand-optimized asm cores], [], [enable_asm=yes])
 
@@ -171,50 +171,8 @@ CFLAGS="$CFLAGS -pg"
 fi
 
 if test "$enable_arch" = yes ; then
-if test `uname -s` = Linux -a -f /proc/cpuinfo ; then
-case `grep "model name" /proc/cpuinfo` in
-*AMD-K6*) enable_arch=k6 ;;
-*Pentium*Pro*|*Pentium\ I*|*Klamath*) enable_arch=i686 ;;
-*Pentium*|*586*) enable_arch=i586 ;;
-*486*) enable_arch=i486 ;;
-*386*) enable_arch=i386 ;;
-*) enable_arch=no ;;
-esac
-else
-enable_arch=no
-#case `uname -m` in
-#i686) enable_arch=i686 ;;
-#i586) enable_arch=i586 ;;
-#i486) enable_arch=i486 ;;
-#i386) enable_arch=i386 ;;
-#*) enable_arch=no ;;
-#esac
+CFLAGS="$CFLAGS -march=native"
 fi
-fi
-
-
-case `$CC --version` in
-
-2.9*|3.*)
-
-case "$enable_arch" in
-k6|i686|i586|i486|i386) CFLAGS="$CFLAGS -march=$enable_arch" ;;
-no) ;;
-*) AC_MSG_WARN(unknown architecture $enable_arch) ;;
-esac ;;
-
-*)
-
-case "$enable_arch" in
-k6|i686|i586) AC_MSG_WARN(your compiler is too old to support $enable_arch optimizations) ;;
-i486) CFLAGS="$CFLAGS -m486" ;;
-i386) CFLAGS="$CFLAGS -m386" ;;
-no) ;;
-*) AC_MSG_WARN(unknown architecture $enable_arch) ;;
-esac ;;
-
-esac
-
 
 case "$enable_optimize" in
 yes|full)
@@ -226,16 +184,9 @@ case `$CC -dumpmachine` in
 x86_64*|i?86*) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
 esac
 
-#case `$CC --version` in
-#2.9*|3.*)
 CFLAGS="$CFLAGS -fstrength-reduce -fthread-jumps \
  -fcse-follow-jumps -fcse-skip-blocks -frerun-cse-after-loop \
  -fexpensive-optimizations -fforce-addr"
-#;;
-#*)
-#AC_MSG_WARN(your compiler is too old for fancy optimizations)
-#;;
-#esac
 
 if test "$enable_debug" != yes -a "$enable_profile" != yes ; then
 CFLAGS="$CFLAGS -fomit-frame-pointer"
