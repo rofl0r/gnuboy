@@ -100,7 +100,7 @@ void updatepatpix()
 	int i, j, k;
 	int a, c;
 	byte *vram = lcd.vbank[0];
-	
+
 	if (!anydirty) return;
 	for (i = 0; i < 1024; i++)
 	{
@@ -198,7 +198,7 @@ void tilebuf()
 	}
 
 	if (WX >= 160) return;
-	
+
 	base = ((R_LCDC&0x40)?0x1C00:0x1800) + (WT<<5);
 	tilemap = lcd.vbank[0] + base;
 	attrmap = lcd.vbank[1] + base;
@@ -246,7 +246,7 @@ void bg_scan()
 	cnt = WX;
 	tile = BG;
 	dest = BUF;
-	
+
 	src = patpix[*(tile++)][V] + U;
 	memcpy(dest, src, 8-U);
 	dest += 8-U;
@@ -274,7 +274,7 @@ void wnd_scan()
 	cnt = 160 - WX;
 	tile = WND;
 	dest = BUF + WX;
-	
+
 	while (cnt >= 8)
 	{
 		src = patpix[*(tile++)][WV];
@@ -314,7 +314,7 @@ void bg_scan_pri()
 		memset(dest, 0, cnt);
 		return;
 	}
-	
+
 	memset(dest, src[i++&31]&128, 8-U);
 	dest += 8-U;
 	cnt -= 8-U;
@@ -338,13 +338,13 @@ void wnd_scan_pri()
 	cnt = 160 - WX;
 	dest = PRI + WX;
 	src = lcd.vbank[1] + ((R_LCDC&0x40)?0x1C00:0x1800) + (WT<<5);
-	
+
 	if (!priused(src))
 	{
 		memset(dest, 0, cnt);
 		return;
 	}
-	
+
 	while (cnt >= 8)
 	{
 		memset(dest, src[i++]&128, 8);
@@ -365,7 +365,7 @@ void bg_scan_color()
 	cnt = WX;
 	tile = BG;
 	dest = BUF;
-	
+
 	src = patpix[*(tile++)][V] + U;
 	blendcpy(dest, src, *(tile++), 8-U);
 	dest += 8-U;
@@ -393,7 +393,7 @@ void wnd_scan_color()
 	cnt = 160 - WX;
 	tile = WND;
 	dest = BUF + WX;
-	
+
 	while (cnt >= 8)
 	{
 		src = patpix[*(tile++)][WV];
@@ -414,12 +414,12 @@ void spr_count()
 {
 	int i;
 	struct obj *o;
-	
+
 	NS = 0;
 	if (!(R_LCDC & 0x02)) return;
-	
+
 	o = lcd.oam.obj;
-	
+
 	for (i = 40; i; i--, o++)
 	{
 		if (L >= o->y || L + 16 < o->y)
@@ -442,7 +442,7 @@ void spr_enum()
 	if (!(R_LCDC & 0x02)) return;
 
 	o = lcd.oam.obj;
-	
+
 	for (i = 40; i; i--, o++)
 	{
 		if (L >= o->y || L + 16 < o->y)
@@ -508,7 +508,7 @@ void spr_scan()
 
 	memcpy(bgdup, BUF, 256);
 	vs = &VS[ns-1];
-	
+
 	for (; ns; ns--, vs--)
 	{
 		x = vs->x;
@@ -577,12 +577,12 @@ void lcd_refreshline()
 {
 	int i;
 	byte scalebuf[160*4*4], *dest;
-	
+
 	if (!fb.enabled) return;
-	
+
 	if (!(R_LCDC & 0x80))
 		return; /* should not happen... */
-	
+
 	updatepatpix();
 
 	L = R_LY;
@@ -592,7 +592,7 @@ void lcd_refreshline()
 	T = Y >> 3;
 	U = X & 7;
 	V = Y & 7;
-	
+
 	WX = R_WX - 7;
 	if (WY>L || WY<0 || WY>143 || WX<-7 || WX>159 || !(R_LCDC&0x20))
 		WX = 160;
@@ -626,7 +626,7 @@ void lcd_refreshline()
 	if (scale == 1) density = 1;
 
 	dest = (density != 1) ? scalebuf : vdest;
-	
+
 	switch (scale)
 	{
 	case 0:
@@ -740,7 +740,7 @@ static void updatepalette(int i)
 		r = rr;
 		g = gg;
 	}
-	
+
 	if (fb.yuv)
 	{
 		y = (((r *  263) + (g * 516) + (b * 100)) >> 10) + 16;
@@ -756,7 +756,7 @@ static void updatepalette(int i)
 			| (u<<fb.cc[1].l) | (v<<fb.cc[2].l);
 		return;
 	}
-	
+
 	if (fb.indexed)
 	{
 		pal_release(PAL1[i]);
@@ -771,7 +771,7 @@ static void updatepalette(int i)
 	g = (g >> fb.cc[1].r) << fb.cc[1].l;
 	b = (b >> fb.cc[2].r) << fb.cc[2].l;
 	c = r|g|b;
-	
+
 	switch (fb.pelsize)
 	{
 	case 1:
