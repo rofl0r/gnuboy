@@ -30,6 +30,7 @@ LIBS="$LIBS -L/usr/local/lib -L/usr/X11R6/lib"
 AC_ARG_WITH(fb,      [  --with-fb                       build framebuffer device interface], [], [with_fb=yes])
 AC_ARG_WITH(svgalib, [  --with-svgalib                  build Linux svgalib interface], [], [with_svgalib=yes])
 AC_ARG_WITH(sdl,     [  --with-sdl                      build SDL interface], [], [with_sdl=yes])
+AC_ARG_WITH(sdl,     [  --with-sdl2                     build SDL2 interface], [], [with_sdl2=yes])
 AC_ARG_WITH(sound,   [  --with-sound=no,oss,sdl,ao      select sound interface], [], [with_sound=yes])
 
 
@@ -84,6 +85,15 @@ with_svgalib=no
 ])], [with_svgalib=no])
 fi
 
+if test "$with_sdl2" != no ; then
+SDL2_LIBS=-lSDL2
+AC_CHECK_LIB(SDL2, SDL_Init, [
+AC_CHECK_HEADERS(SDL2/SDL.h, ,[
+AC_MSG_WARN(SDL2 found but headers are missing!!)
+with_sdl2=no
+])], [with_sdl2=no], $SDL2_LIBS)
+fi
+
 if test "$with_sdl" != "no" ; then
 AC_CHECK_PROG(SDL_CONFIG, sdl-config, yes)
 if test "$SDL_CONFIG" ; then
@@ -126,6 +136,7 @@ test "$with_x" = "no" || TARGETS="$TARGETS xgnuboy"
 test "$with_fb" = "no" || TARGETS="$TARGETS fbgnuboy"
 test "$with_svgalib" = "no" || TARGETS="$TARGETS sgnuboy"
 test "$with_sdl" = "no" || TARGETS="$TARGETS sdlgnuboy"
+test "$with_sdl2" = "no" || TARGETS="$TARGETS sdl2gnuboy"
 
 
 
@@ -262,6 +273,7 @@ AC_SUBST(ASM_OBJS)
 AC_SUBST(FB_OBJS)
 AC_SUBST(SDL_CFLAGS)
 AC_SUBST(SDL_LIBS)
+AC_SUBST(SDL2_LIBS)
 AC_SUBST(TARGETS)
 AC_SUBST(XINCS)
 AC_SUBST(XLIBS)

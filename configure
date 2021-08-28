@@ -624,6 +624,7 @@ LIBOBJS
 XLIBS
 XINCS
 TARGETS
+SDL2_LIBS
 SDL_LIBS
 SDL_CFLAGS
 FB_OBJS
@@ -1335,6 +1336,7 @@ Optional Packages:
   --with-fb                       build framebuffer device interface
   --with-svgalib                  build Linux svgalib interface
   --with-sdl                      build SDL interface
+  --with-sdl2                     build SDL2 interface
   --with-sound=no,oss,sdl,ao      select sound interface
   --with-x                use the X Window System
 
@@ -3733,6 +3735,14 @@ else
 fi
 
 
+# Check whether --with-sdl was given.
+if test "${with_sdl+set}" = set; then :
+  withval=$with_sdl;
+else
+  with_sdl2=yes
+fi
+
+
 # Check whether --with-sound was given.
 if test "${with_sound+set}" = set; then :
   withval=$with_sound;
@@ -3929,6 +3939,70 @@ done
 
 else
   with_svgalib=no
+fi
+
+fi
+
+if test "$with_sdl2" != no ; then
+SDL2_LIBS=-lSDL2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_Init in -lSDL2" >&5
+$as_echo_n "checking for SDL_Init in -lSDL2... " >&6; }
+if ${ac_cv_lib_SDL2_SDL_Init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lSDL2 $SDL2_LIBS $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char SDL_Init ();
+int
+main ()
+{
+return SDL_Init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_SDL2_SDL_Init=yes
+else
+  ac_cv_lib_SDL2_SDL_Init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_SDL2_SDL_Init" >&5
+$as_echo "$ac_cv_lib_SDL2_SDL_Init" >&6; }
+if test "x$ac_cv_lib_SDL2_SDL_Init" = xyes; then :
+
+for ac_header in SDL2/SDL.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "SDL2/SDL.h" "ac_cv_header_SDL2_SDL_h" "$ac_includes_default"
+if test "x$ac_cv_header_SDL2_SDL_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SDL2_SDL_H 1
+_ACEOF
+
+else
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: SDL2 found but headers are missing!!" >&5
+$as_echo "$as_me: WARNING: SDL2 found but headers are missing!!" >&2;}
+with_sdl2=no
+
+fi
+
+done
+
+else
+  with_sdl2=no
 fi
 
 fi
@@ -4315,6 +4389,7 @@ test "$with_x" = "no" || TARGETS="$TARGETS xgnuboy"
 test "$with_fb" = "no" || TARGETS="$TARGETS fbgnuboy"
 test "$with_svgalib" = "no" || TARGETS="$TARGETS sgnuboy"
 test "$with_sdl" = "no" || TARGETS="$TARGETS sdlgnuboy"
+test "$with_sdl2" = "no" || TARGETS="$TARGETS sdl2gnuboy"
 
 
 
@@ -4483,6 +4558,7 @@ ASM="-DUSE_ASM -I./asm/i386" ; ASM_OBJS="asm/i386/cpu.o asm/i386/lcd.o asm/i386/
 $as_echo "no optimized asm core available for \`uname -m\`" >&6; } ;;
 esac
 fi
+
 
 
 

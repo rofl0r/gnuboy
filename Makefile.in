@@ -30,6 +30,9 @@ SDL_OBJS = sys/sdl/sdl.o sys/sdl/sdl-audio.o sys/sdl/keymap.o
 SDL_LIBS = @SDL_LIBS@
 SDL_CFLAGS = @SDL_CFLAGS@
 
+SDL2_OBJS = sys/sdl2/sdl2.o sys/sdl2/keymap.c @SOUND@
+SDL2_LIBS = @SDL2_LIBS@
+
 X11_OBJS = sys/x11/xlib.o sys/x11/keymap.o @JOY@ @SOUND@
 X11_LIBS = @XLIBS@ -lX11 -lXext
 
@@ -45,6 +48,9 @@ sgnuboy: $(OBJS) $(SYS_OBJS) $(SVGA_OBJS)
 
 sdlgnuboy: $(OBJS) $(SYS_OBJS) $(SDL_OBJS)
 	$(LD) $(OBJS) $(SYS_OBJS) $(SDL_OBJS) -o $@ $(SDL_LIBS) $(LDFLAGS)
+
+sdl2gnuboy: $(OBJS) $(SYS_OBJS) $(SDL2_OBJS)
+	$(LD) $(OBJS) $(SYS_OBJS) $(SDL2_OBJS) -o $@ $(SDL2_LIBS) $(LDFLAGS)
 
 sys/sdl/sdl.o: sys/sdl/sdl.c
 	$(MYCC) $(SDL_CFLAGS) -c $< -o $@

@@ -575,7 +575,7 @@ void lcd_begin()
 
 void lcd_refreshline()
 {
-	int i;
+	int i, work_scale;
 	byte scalebuf[160*4*4], *dest;
 
 	if (!fb.enabled) return;
@@ -623,11 +623,13 @@ void lcd_refreshline()
 	if (fb.dirty) memset(fb.ptr, 0, fb.pitch * fb.h);
 	fb.dirty = 0;
 	if (density > scale) density = scale;
-	if (scale == 1) density = 1;
+	if (scale == 1 || fb.delegate_scaling) density = 1;
+
+	work_scale = fb.delegate_scaling ? 1: scale;
 
 	dest = (density != 1) ? scalebuf : vdest;
 
-	switch (scale)
+	switch (work_scale)
 	{
 	case 0:
 	case 1:
@@ -711,7 +713,7 @@ void lcd_refreshline()
 			vdest += fb.pitch;
 		}
 	}
-	else vdest += fb.pitch * scale;
+	else vdest += fb.pitch * work_scale;
 }
 
 

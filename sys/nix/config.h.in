@@ -24,6 +24,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the <SDL2/SDL.h> header file. */
+#undef HAVE_SDL2_SDL_H
+
 /* Define to 1 if you have the <SDL/SDL.h> header file. */
 #undef HAVE_SDL_SDL_H
 
