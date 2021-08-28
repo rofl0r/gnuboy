@@ -69,7 +69,7 @@ static int mapscancode(SDLKey sym)
 }
 
 
-static void joy_init()
+void joy_init()
 {
 	int i;
 	int joy_count;
@@ -99,6 +99,8 @@ static void joy_init()
 	/* make sure that Joystick event polling is a go */
 	SDL_JoystickEventState(SDL_ENABLE);
 }
+
+void joy_close() {}
 
 static void overlay_init()
 {
@@ -176,8 +178,6 @@ void vid_init()
 		die("SDL: can't set video mode: %s\n", SDL_GetError());
 
 	SDL_ShowCursor(0);
-
-	joy_init();
 
 	overlay_init();
 	

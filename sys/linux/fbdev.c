@@ -181,7 +181,6 @@ void vid_init()
 	char cmd[256];
 
 	kb_init();
-	joy_init();
 
 	if (!fb_device)
 		if (!(fb_device = getenv("FRAMEBUFFER")))
@@ -239,7 +238,6 @@ void vid_close()
 {
 	fb.enabled = 0;
 	overlay_switch();
-	joy_close();
 	kb_close();
 	ioctl(fbfd, FBIOPUT_VSCREENINFO, &initial_vi);
 	memset(fbmap, 0, maplen);

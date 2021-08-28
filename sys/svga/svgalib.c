@@ -181,7 +181,6 @@ void vid_init()
 	keyboard_init();
 	keyboard_seteventhandler(kbhandler);
 
-	joy_init();
 }
 
 
@@ -189,7 +188,6 @@ void vid_close()
 {
 	if (!fb.ptr) return;
 	memset(&fb, 0, sizeof fb);
-	joy_close();
 	keyboard_close();
 	vga_setmode(TEXT);
 }

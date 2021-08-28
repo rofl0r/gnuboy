@@ -360,14 +360,11 @@ void vid_init()
 	colorshifts();
 	allocscreen();
 
-	joy_init();
-
 	initok = 1;
 }
 
 void vid_close()
 {
-	joy_close();
 	if (!initok) return;
 	freescreen();
 	XFreeGC(x_display, x_gc);

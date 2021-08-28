@@ -142,6 +142,7 @@ void doevents()
 
 static void shutdown()
 {
+	joy_close();
 	vid_close();
 	pcm_close();
 }
@@ -295,6 +296,7 @@ int main(int argc, char *argv[])
 	atexit(shutdown);
 	catch_signals();
 	vid_init();
+	joy_init();
 	pcm_init();
 
 	rom = strdup(rom);

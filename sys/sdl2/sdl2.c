@@ -75,7 +75,7 @@ static int mapscancode(SDL_Keycode sym)
 }
 
 
-static void joy_init()
+void joy_init()
 {
 	int i;
 	int joy_count;
@@ -107,6 +107,8 @@ static void joy_init()
 	/* make sure that Joystick event polling is a go */
 	SDL_JoystickEventState(SDL_ENABLE);
 }
+
+void joy_close() {}
 
 void vid_init()
 {
@@ -156,8 +158,6 @@ void vid_init()
 			SDL_TEXTUREACCESS_STREAMING, 160, 144);
 
 	SDL_ShowCursor(0);
-
-	joy_init();
 
 	format = SDL_AllocFormat(SDL_PIXELFORMAT_BGRA32);
 	SDL_LockTexture(texture, NULL, &pixels, &pitch);

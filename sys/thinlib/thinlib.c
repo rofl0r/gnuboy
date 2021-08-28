@@ -267,8 +267,6 @@ void vid_preinit()
 
 	/* don't spam the graphics screen if we don't have soundcard */
 	thin_setlogfunc(NULL);
-
-	joy_init();
 }
 
 void vid_init()
@@ -341,7 +339,6 @@ void vid_init()
 void vid_close()
 {
 	fb.enabled = 0;
-	joy_close();
 	thin_shutdown();
 }
 
