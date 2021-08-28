@@ -25,13 +25,14 @@ enum joyaxisvalue {
 	JAV_LEFT_OR_UP = 0, JAV_CENTERED = 1, JAV_RIGHT_OR_DOWN = 2
 };
 
+#define JOY_COMMIT_RANGE 3276
+
 struct fb fb;
 
 static int fullscreen = 0;
 static int use_altenter = 1;
 static int use_joy = 1, sdl_joy_num;
 static SDL_Joystick * sdl_joy = NULL;
-static const int joy_commit_range = 3276;
 static unsigned char Xstatus, Ystatus;
 
 static SDL_Window *win;
@@ -201,7 +202,7 @@ void ev_poll()
 {
 	event_t ev;
 	SDL_Event event;
-	int axisval;
+	enum joyaxis ja;
 
 	while (SDL_PollEvent(&event))
 	{
@@ -268,121 +269,21 @@ void ev_poll()
 				break;
 			}
 			break;
+		/* case SDL_CONTROLLERAXISMOTION: */
 		case SDL_JOYAXISMOTION:
+			ja = JA_Y;
 			switch (event.jaxis.axis)
 			{
-			case 0: /* X axis */
-				axisval = event.jaxis.value;
-				if (axisval > joy_commit_range)
-				{
-					if (Xstatus==2) break;
-
-					if (Xstatus==0)
-					{
-						ev.type = EV_RELEASE;
-						ev.code = K_JOYLEFT;
-						ev_postevent(&ev);
-					}
-
-					ev.type = EV_PRESS;
-					ev.code = K_JOYRIGHT;
-					ev_postevent(&ev);
-					Xstatus=2;
-					break;
-				}
-
-				if (axisval < -(joy_commit_range))
-				{
-					if (Xstatus==0) break;
-
-					if (Xstatus==2)
-					{
-						ev.type = EV_RELEASE;
-						ev.code = K_JOYRIGHT;
-						ev_postevent(&ev);
-					}
-
-					ev.type = EV_PRESS;
-					ev.code = K_JOYLEFT;
-					ev_postevent(&ev);
-					Xstatus=0;
-					break;
-				}
-
-				/* if control reaches here, the axis is centered,
-				 * so just send a release signal if necisary */
-
-				if (Xstatus==2)
-				{
-					ev.type = EV_RELEASE;
-					ev.code = K_JOYRIGHT;
-					ev_postevent(&ev);
-				}
-
-				if (Xstatus==0)
-				{
-					ev.type = EV_RELEASE;
-					ev.code = K_JOYLEFT;
-					ev_postevent(&ev);
-				}
-				Xstatus=1;
-				break;
-
-			case 1: /* Y axis*/
-				axisval = event.jaxis.value;
-				if (axisval > joy_commit_range)
-				{
-					if (Ystatus==2) break;
-
-					if (Ystatus==0)
-					{
-						ev.type = EV_RELEASE;
-						ev.code = K_JOYUP;
-						ev_postevent(&ev);
-					}
-
-					ev.type = EV_PRESS;
-					ev.code = K_JOYDOWN;
-					ev_postevent(&ev);
-					Ystatus=2;
-					break;
-				}
-
-				if (axisval < -joy_commit_range)
-				{
-					if (Ystatus==0) break;
-
-					if (Ystatus==2)
-					{
-						ev.type = EV_RELEASE;
-						ev.code = K_JOYDOWN;
-						ev_postevent(&ev);
-					}
-
-					ev.type = EV_PRESS;
-					ev.code = K_JOYUP;
-					ev_postevent(&ev);
-					Ystatus=0;
-					break;
-				}
-
-				/* if control reaches here, the axis is centered,
-				 * so just send a release signal if necisary */
-
-				if (Ystatus==2)
-				{
-					ev.type = EV_RELEASE;
-					ev.code = K_JOYDOWN;
-					ev_postevent(&ev);
-				}
-
-				if (Ystatus==0)
-				{
-					ev.type = EV_RELEASE;
-					ev.code = K_JOYUP;
-					ev_postevent(&ev);
-				}
-				Ystatus=1;
+			case 0:
+				ja = JA_X;
+				/* fall-through */
+			case 1:
+				if (event.jaxis.value > JOY_COMMIT_RANGE)
+					joyaxis_evt(ja, JAV_RIGHT_OR_DOWN);
+				else if (event.jaxis.value < -JOY_COMMIT_RANGE)
+					joyaxis_evt(ja, JAV_LEFT_OR_UP);
+				else
+					joyaxis_evt(ja, JAV_CENTERED);
 				break;
 			}
 			break;
