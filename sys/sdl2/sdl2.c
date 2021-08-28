@@ -8,7 +8,6 @@
  *
  * Licensed under the GPLv2, or later.
  *
- * TODO: evaluate whether double buffering is desirable
  */
 
 #include <stdlib.h>
@@ -38,7 +37,6 @@ static unsigned char Xstatus, Ystatus;
 
 static SDL_Window *win;
 static SDL_Renderer *renderer;
-static SDL_Surface *screen;
 static SDL_Texture *texture;
 
 static int vmode[3] = { 0, 0, 32 };
@@ -114,6 +112,9 @@ void vid_init()
 {
 	int flags;
 	int scale = rc_getint("scale");
+	int pitch = 0;
+	void *pixels = 0;
+	SDL_PixelFormat *format;
 
 	if (!vmode[0] || !vmode[1])
 	{
@@ -138,35 +139,46 @@ void vid_init()
 	   render everything into a 32bit high color buffer, and let the
 	   hardware do the scaling; thus "fb.delegate_scaling" */
 
-	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
-	SDL_RenderSetScale(renderer, scale, scale);
-	screen = SDL_CreateRGBSurface(0, 160, 144, 32,
-			0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	/* warning: using vsync causes much higher CPU usage in the XServer
+	   you may want to turn it off using by setting the environment
+	   variable SDL_RENDER_VSYNC to "0" or "false", which activates
+	   SDL_HINT_RENDER_VSYNC (yes, the env var lacks "HINT") */
+	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+	if (!renderer) {
+		fprintf(stderr, "warning: fallback to software renderer\n");
+		renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE|SDL_RENDERER_PRESENTVSYNC);
+	}
+	if (!renderer) die("SDL2: can't create renderer: %s\n", SDL_GetError());
 
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
+	SDL_RenderSetScale(renderer, scale, scale);
+
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRA32,
 			SDL_TEXTUREACCESS_STREAMING, 160, 144);
 
 	SDL_ShowCursor(0);
 
 	joy_init();
 
-	SDL_LockSurface(screen);
+	format = SDL_AllocFormat(SDL_PIXELFORMAT_BGRA32);
+	SDL_LockTexture(texture, NULL, &pixels, &pitch);
 
 	fb.delegate_scaling = 1;
 	fb.w = 160;
 	fb.h = 144;
 	fb.pelsize = 4;
-	fb.pitch = screen->pitch;
+	fb.pitch = pitch;
 	fb.indexed = 0;
-	fb.ptr = screen->pixels;
-	fb.cc[0].r = screen->format->Rloss;
-	fb.cc[0].l = screen->format->Rshift;
-	fb.cc[1].r = screen->format->Gloss;
-	fb.cc[1].l = screen->format->Gshift;
-	fb.cc[2].r = screen->format->Bloss;
-	fb.cc[2].l = screen->format->Bshift;
+	fb.ptr = pixels;
 
-	SDL_UnlockSurface(screen);
+	fb.cc[0].r = format->Rloss;
+	fb.cc[0].l = format->Rshift;
+	fb.cc[1].r = format->Gloss;
+	fb.cc[1].l = format->Gshift;
+	fb.cc[2].r = format->Bloss;
+	fb.cc[2].l = format->Bshift;
+
+	SDL_UnlockTexture(texture);
+	SDL_FreeFormat(format);
 
 	fb.enabled = 1;
 	fb.dirty = 0;
@@ -318,7 +330,8 @@ void vid_preinit()
 
 void vid_close()
 {
-	SDL_UnlockSurface(screen);
+	SDL_UnlockTexture(texture);
+	SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(win);
 	SDL_Quit();
@@ -332,16 +345,16 @@ void vid_settitle(char *title)
 
 void vid_begin()
 {
-	SDL_LockSurface(screen);
-	fb.ptr = screen->pixels;
+	void *p = 0;
+	int pitch;
+	SDL_LockTexture(texture, NULL, &p, &pitch);
+	fb.ptr = p;
 }
 
 void vid_end()
 {
-	SDL_UnlockSurface(screen);
+	SDL_UnlockTexture(texture);
 	if (fb.enabled) {
-		SDL_UpdateTexture(texture, 0, screen->pixels, screen->pitch);
-		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}
