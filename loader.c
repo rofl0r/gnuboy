@@ -17,6 +17,7 @@
 #include "rc.h"
 #include "lcd.h"
 #include "inflate.h"
+#define XZ_USE_CRC64
 #include "xz/xz.h"
 #include "save.h"
 #include "sound.h"
