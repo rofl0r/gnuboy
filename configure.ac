@@ -2,6 +2,8 @@
 AC_INIT(cpu.c)
 
 CFLAGS="$CFLAGS"
+# if user sets custom CFLAGS, don't enforce our optimization flags
+test -n "$CFLAGS" && enable_optimize=no
 
 AC_PROG_CC
 AC_PROG_CPP
