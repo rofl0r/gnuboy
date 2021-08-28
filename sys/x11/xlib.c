@@ -437,7 +437,7 @@ static int nextevent(int sync)
 
 void ev_poll()
 {
-	while (nextevent(0));
+	if (initok) while (nextevent(0));
 	joy_poll();
 }
 

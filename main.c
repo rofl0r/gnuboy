@@ -96,6 +96,33 @@ static void copying()
 	exit(0);
 }
 
+static void joytest()
+{
+	event_t e;
+	char *ename, *kname;
+	printf("press joystick buttons to see their name mappings\n");
+	joy_init();
+	while(1) {
+		ev_poll();
+		if(ev_getevent(&e)) {
+			switch(e.type) {
+			case EV_NONE: ename = "none"; break;
+			case EV_PRESS: ename = "press"; break;
+			case EV_RELEASE: ename = "release"; break;
+			case EV_REPEAT: ename = "repeat"; break;
+			case EV_MOUSE: ename = "mouse"; break;
+			default: ename = "unknown";
+			};
+			kname = k_keyname(e.code);
+			printf("%s: %s\n", ename, kname ? kname : "<null>");
+		} else {
+			sys_sleep(300);
+		}
+	}
+	joy_close();
+	exit(0);
+}
+
 static void help(char *name)
 {
 	banner();
@@ -110,6 +137,7 @@ static void help(char *name)
 "      --help                    display this help and exit\n"
 "      --version                 output version information and exit\n"
 "      --copying                 show copying permissions\n"
+"      --joytest                 init joystick and show button names pressed\n"
 "");
 	exit(0);
 }
@@ -214,6 +242,8 @@ int main(int argc, char *argv[])
 			show_exports();
 			exit(0);
 		}
+		else if (!strcmp(argv[i], "--joytest"))
+			joytest();
 		else if (argv[i][0] == '-' && argv[i][1] == '-');
 		else if (argv[i][0] == '-' && argv[i][1]);
 		else rom = argv[i];
