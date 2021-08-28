@@ -3837,8 +3837,6 @@ done
 fi
 fi
 
-case `uname -s` in
-Linux)
 for ac_header in linux/joystick.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "linux/joystick.h" "ac_cv_header_linux_joystick_h" "$ac_includes_default"
@@ -3863,8 +3861,6 @@ fi
 
 done
 
-;;
-esac
 
 test "$SOUND" || SOUND=sys/dummy/nosound.o
 test "$JOY" || JOY=sys/dummy/nojoy.o
@@ -4519,8 +4515,8 @@ $as_echo "producing heavily optimized code" >&6; }
 
 CFLAGS="$CFLAGS -O3"
 
-case `uname -m` in
-i?86) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
+case `$CC -dumpmachine` in
+x86_64*|i?86*) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
 esac
 
 #case `$CC --version` in
@@ -4548,14 +4544,14 @@ CFLAGS="$CFLAGS -O3" ;;
 esac
 
 if test "$enable_asm" = yes ; then
-case `uname -m` in
-i?86)
+case `$CC -dumpmachine` in
+i?86*)
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: using optimized i386 cores" >&5
 $as_echo "using optimized i386 cores" >&6; }
 ASM="-DUSE_ASM -I./asm/i386" ; ASM_OBJS="asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.s" ;;
 *)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no optimized asm core available for \`uname -m\`" >&5
-$as_echo "no optimized asm core available for \`uname -m\`" >&6; } ;;
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no optimized asm core available for \`$CC -dumpmachine\`" >&5
+$as_echo "no optimized asm core available for \`$CC -dumpmachine\`" >&6; } ;;
 esac
 fi
 

@@ -57,12 +57,8 @@ AC_CHECK_HEADERS(sys/soundcard.h, [SOUND=sys/oss/oss.o ; CPPFLAGS="$CPPFLAGS -DH
 fi
 fi
 
-case `uname -s` in
-Linux)
 AC_CHECK_HEADERS(linux/joystick.h, [JOY=sys/linux/joy.o])
 test "$with_fb" = "no" || AC_CHECK_HEADERS(linux/fb.h, [with_fb=linux])
-;;
-esac
 
 test "$SOUND" || SOUND=sys/dummy/nosound.o
 test "$JOY" || JOY=sys/dummy/nojoy.o
@@ -226,8 +222,8 @@ AC_MSG_RESULT(producing heavily optimized code)
 
 CFLAGS="$CFLAGS -O3"
 
-case `uname -m` in
-i?86) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
+case `$CC -dumpmachine` in
+x86_64*|i?86*) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
 esac
 
 #case `$CC --version` in
@@ -254,12 +250,12 @@ CFLAGS="$CFLAGS -O3" ;;
 esac
 
 if test "$enable_asm" = yes ; then
-case `uname -m` in
-i?86)
+case `$CC -dumpmachine` in
+i?86*)
 AC_MSG_RESULT(using optimized i386 cores)
 ASM="-DUSE_ASM -I./asm/i386" ; ASM_OBJS="asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.s" ;;
 *)
-AC_MSG_RESULT(no optimized asm core available for `uname -m`) ;;
+AC_MSG_RESULT(no optimized asm core available for `$CC -dumpmachine`) ;;
 esac
 fi
 
