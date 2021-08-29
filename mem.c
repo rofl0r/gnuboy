@@ -159,6 +159,9 @@ void ioreg_write(byte r, byte b)
 		}
 		R_SC = b; /* & 0x7f; */
 		break;
+	case RI_SB:
+		REG(r) = b;
+		break;
 	case RI_DIV:
 		REG(r) = 0;
 		break;
