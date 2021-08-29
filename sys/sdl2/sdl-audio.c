@@ -1,8 +1,9 @@
 /*
  * sdl-audio.c
- * sdl audio interface
+ * sdl2 audio interface
  *
  * (C) 2001 Laguna
+ * (C) 2021 rofl0r
  *
  * Licensed under the GPLv2, or later.
  */
@@ -10,7 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #include "rc.h"
 #include "pcm.h"
@@ -18,11 +19,10 @@
 
 struct pcm pcm;
 
-
 static int sound = 1;
 static int samplerate = 44100;
 static int stereo = 1;
-static volatile int audio_done;
+static SDL_AudioDeviceID device;
 
 rcvar_t pcm_exports[] =
 {
@@ -31,14 +31,6 @@ rcvar_t pcm_exports[] =
 	RCV_INT("samplerate", &samplerate),
 	RCV_END
 };
-
-
-static void audio_callback(void *blah, byte *stream, int len)
-{
-	memcpy(stream, pcm.buf, len);
-	audio_done = 1;
-}
-
 
 void pcm_init()
 {
@@ -52,43 +44,35 @@ void pcm_init()
 	as.format = AUDIO_U8;
 	as.channels = 1 + stereo;
 	as.samples = samplerate / 60;
+	as.userdata = 0;
 	for (i = 1; i < as.samples; i<<=1);
 	as.samples = i;
-	as.callback = audio_callback;
-	as.userdata = 0;
-	if (SDL_OpenAudio(&as, &ob) == -1) {
+	as.callback = NULL;
+	device = SDL_OpenAudioDevice(NULL, 0, &as, &ob, SDL_AUDIO_ALLOW_CHANNELS_CHANGE|SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
+	if (!device) {
 		sound = 0;
 		return;
 	}
-
 	pcm.hz = ob.freq;
 	pcm.stereo = ob.channels - 1;
 	pcm.len = ob.size;
 	pcm.buf = malloc(pcm.len);
 	pcm.pos = 0;
 	memset(pcm.buf, 0, pcm.len);
-
-	SDL_PauseAudio(0);
+	SDL_PauseAudioDevice(device, 0);
 }
 
 int pcm_submit()
 {
-	if (!pcm.buf) return 0;
-	if (pcm.pos < pcm.len) return 1;
-	while (!audio_done)
-		SDL_Delay(4);
-	audio_done = 0;
+	int res;
+	if (!sound || !pcm.buf) return 0;
+	res = SDL_QueueAudio(device, pcm.buf, pcm.pos) == 0;
 	pcm.pos = 0;
-	return 1;
+	return res;
 }
 
 void pcm_close()
 {
-	if (sound) SDL_CloseAudio();
+	if (sound) SDL_CloseAudioDevice(device);
 }
-
-
-
-
-
 

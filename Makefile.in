@@ -30,7 +30,7 @@ SDL_OBJS = sys/sdl/sdl.o sys/sdl/sdl-audio.o sys/sdl/keymap.o sys/sdl/sdl-joysti
 SDL_LIBS = @SDL_LIBS@
 SDL_CFLAGS = @SDL_CFLAGS@
 
-SDL2_OBJS = sys/sdl2/sdl2.o sys/sdl2/keymap.o sys/sdl2/sdl-joystick.o @SOUND@
+SDL2_OBJS = sys/sdl2/sdl2.o sys/sdl2/sdl-audio.o sys/sdl2/keymap.o sys/sdl2/sdl-joystick.o
 SDL2_LIBS = @SDL2_LIBS@
 
 X11_OBJS = sys/x11/xlib.o sys/x11/keymap.o @JOY@ @SOUND@
