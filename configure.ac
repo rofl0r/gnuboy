@@ -43,7 +43,7 @@ JOY=""
 
 if test "$with_sound" != "no" ; then
 if test "$with_sound" = "yes" || test "$with_sound" = "ao" ; then
-AC_CHECK_HEADERS(ao/ao.h, [SOUND=sys/ao/ao.o ; LIBS="$LIBS -lao"])
+AC_CHECK_HEADERS(ao/ao.h, [SOUND=sys/ao/ao.o ; LIBS="$LIBS -Wl,--as-needed -lao -Wl,--no-as-needed"])
 fi
 if test -z "$SOUND" && ( test "$with_sound" = "yes" || test "$with_sound" = "sdl" ) ; then
 AC_CHECK_HEADERS(SDL/SDL.h, [SOUND=sys/sdl/sdl-audio.o ; LIBS="$LIBS -lSDL"])
@@ -112,9 +112,10 @@ fi
 
 AC_PATH_X
 
+AH_TEMPLATE(HAVE_LIBXEXT)
 if test "$no_x" != "yes" ; then
 with_x=yes
-AC_CHECK_LIB(Xext, XShmCreateImage)
+AC_CHECK_LIB(Xext, XShmCreateImage, [AC_DEFINE(HAVE_LIBXEXT)])
 AC_CHECK_HEADERS(sys/ipc.h sys/shm.h X11/Xlib.h X11/Xutil.h X11/keysym.h X11/extensions/XShm.h, [], [], [[
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
