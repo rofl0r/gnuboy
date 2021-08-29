@@ -23,7 +23,7 @@ AC_MSG_ERROR(your system must support either usleep or select)
 
 
 
-LIBS="$LIBS -L/usr/local/lib -L/usr/X11R6/lib"
+test "$cross_compiling" = "yes" || LIBS="$LIBS -L/usr/X11R6/lib"
 
 
 
