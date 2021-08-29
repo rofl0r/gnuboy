@@ -3706,7 +3706,7 @@ done
 
 
 
-LIBS="$LIBS -L/usr/local/lib -L/usr/X11R6/lib"
+test "$cross_compiling" = "yes" || LIBS="$LIBS -L/usr/X11R6/lib"
 
 
 
@@ -3768,7 +3768,7 @@ if test "x$ac_cv_header_ao_ao_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_AO_AO_H 1
 _ACEOF
- SOUND=sys/ao/ao.o ; LIBS="$LIBS -lao"
+ SOUND=sys/ao/ao.o ; LIBS="$LIBS -Wl,--as-needed -lao -Wl,--no-as-needed"
 fi
 
 done
@@ -4308,6 +4308,7 @@ $as_echo "libraries $x_libraries, headers $x_includes" >&6; }
 fi
 
 
+
 if test "$no_x" != "yes" ; then
 with_x=yes
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for XShmCreateImage in -lXext" >&5
@@ -4347,11 +4348,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_Xext_XShmCreateImage" >&5
 $as_echo "$ac_cv_lib_Xext_XShmCreateImage" >&6; }
 if test "x$ac_cv_lib_Xext_XShmCreateImage" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBXEXT 1
-_ACEOF
-
-  LIBS="-lXext $LIBS"
+  $as_echo "#define HAVE_LIBXEXT 1" >>confdefs.h
 
 fi
 
