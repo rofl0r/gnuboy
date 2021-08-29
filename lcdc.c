@@ -23,10 +23,10 @@
 
 void stat_trigger()
 {
-	static const int condbits[4] = { 0x08, 0x30, 0x20, 0x00 };
+	static const int condbits[4] = { 0x08, 0x10, 0x20, 0x00 };
 	int flag = 0;
 
-	if ((R_LY < 0x91) && (R_LY == R_LYC))
+	if (R_LY == R_LYC)
 	{
 		R_STAT |= 0x04;
 		if (R_STAT & 0x40) flag = IF_STAT;
