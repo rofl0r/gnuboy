@@ -64,10 +64,12 @@ void pcm_init()
 
 int pcm_submit()
 {
-	int res;
+	int res, min = pcm.len*2;
 	if (!sound || !pcm.buf) return 0;
 	res = SDL_QueueAudio(device, pcm.buf, pcm.pos) == 0;
 	pcm.pos = 0;
+	while (res && SDL_GetQueuedAudioSize(device) > min)
+		SDL_Delay(1);
 	return res;
 }
 
