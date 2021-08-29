@@ -10,7 +10,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifndef SDL_H_INCLUDED
 #include <SDL/SDL.h>
+#endif
 
 #include "rc.h"
 #include "pcm.h"
