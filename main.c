@@ -14,6 +14,7 @@
 #include "emu.h"
 #include "exports.h"
 #include "loader.h"
+#include "mem.h"
 
 #include "Version"
 
@@ -138,10 +139,21 @@ static void help(char *name)
 "      --version                 output version information and exit\n"
 "      --copying                 show copying permissions\n"
 "      --joytest                 init joystick and show button names pressed\n"
+"      --rominfo                 show some info about the rom\n"
 "");
 	exit(0);
 }
 
+static void rominfo(char* fn) {
+	extern int rom_load_simple(char *fn);
+	rom_load_simple(fn);
+	printf( "rom name:\t%s\n"
+		"mbc type:\t%s\n"
+		"rom size:\t%u KB\n"
+		"ram size:\t%u KB\n"
+		, rom.name, mbc_to_string(mbc.type), mbc.romsize*16, mbc.ramsize*8);
+	exit(0);
+}
 
 static void version(char *name)
 {
@@ -223,7 +235,7 @@ static char *base(char *s)
 
 int main(int argc, char *argv[])
 {
-	int i;
+	int i, ri = 0;
 	char *opt, *arg, *cmd, *s, *rom = 0;
 
 	/* Avoid initializing video if we don't have to */
@@ -244,12 +256,14 @@ int main(int argc, char *argv[])
 		}
 		else if (!strcmp(argv[i], "--joytest"))
 			joytest();
+		else if (!strcmp(argv[i], "--rominfo")) ri = 1;
 		else if (argv[i][0] == '-' && argv[i][1] == '-');
 		else if (argv[i][0] == '-' && argv[i][1]);
 		else rom = argv[i];
 	}
-	
+
 	if (!rom) usage(base(argv[0]));
+	if (ri) rominfo(rom);
 
 	/* If we have special perms, drop them ASAP! */
 	vid_preinit();

@@ -574,7 +574,19 @@ void mbc_reset()
 	mem_updatemap();
 }
 
-
+const char* mbc_to_string(int mbc_type) {
+	switch (mbc_type) {
+	case MBC_NONE:   return "NONE";
+	case MBC_MBC1:   return "MBC1";
+	case MBC_MBC2:   return "MBC2";
+	case MBC_MBC3:   return "MBC3";
+	case MBC_MBC5:   return "MBC5";
+	case MBC_RUMBLE: return "RUMBL";
+	case MBC_HUC1:   return "HUC1";
+	case MBC_HUC3:   return "HUC3";
+	default: return "UNKN";
+	}
+}
 
 
 

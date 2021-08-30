@@ -58,7 +58,7 @@ void mbc_write(int a, byte b);
 void mem_write(int a, byte b);
 byte mem_read(int a);
 void mbc_reset();
-
+const char* mbc_to_string(int mbc_type);
 
 
 #define READB(a) ( mbc.rmap[(a)>>12] \

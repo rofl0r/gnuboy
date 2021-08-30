@@ -223,7 +223,6 @@ static byte *decompress(byte *data, int *len)
 	return data;
 }
 
-
 int rom_load()
 {
 	FILE *f;
@@ -271,6 +270,11 @@ int rom_load()
 	if (strcmp(romfile, "-")) fclose(f);
 
 	return 0;
+}
+
+int rom_load_simple(char *fn) {
+	romfile = fn;
+	return rom_load();
 }
 
 int sram_load()
