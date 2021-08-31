@@ -28,9 +28,9 @@ static int aodriver;
 
 rcvar_t pcm_exports[] =
 {
-	RCV_BOOL("sound", &sound),
-	RCV_INT("stereo", &stereo),
-	RCV_INT("samplerate", &samplerate),
+	RCV_BOOL("sound", &sound, "enable sound"),
+	RCV_INT("stereo", &stereo, "enable stereo"),
+	RCV_INT("samplerate", &samplerate, "samplerate, recommended: 32768"),
 	RCV_END
 };
 

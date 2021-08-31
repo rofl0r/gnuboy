@@ -47,8 +47,8 @@ static int x_shmsync = 1;
 
 rcvar_t vid_exports[] =
 {
-	RCV_VECTOR("vmode", &vmode, 3),
-	RCV_BOOL("x_shmsync", &x_shmsync),
+	RCV_VECTOR("vmode", &vmode, 3, "advisory video mode, w h bpp"),
+	RCV_BOOL("x_shmsync", &x_shmsync, "use shm sync"),
 	RCV_END
 };
 

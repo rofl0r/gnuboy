@@ -19,16 +19,17 @@ typedef enum rctype
 typedef struct rcvar_s
 {
 	char *name;
+	char *help;
 	int type;
 	int len;
 	void *mem;
 } rcvar_t;
 
-#define RCV_END { 0, rcv_end, 0, 0 }
-#define RCV_INT(n,v) { (n), rcv_int, 1, (v) }
-#define RCV_STRING(n,v) { (n), rcv_string, 0, (v) }
-#define RCV_VECTOR(n,v,l) { (n), rcv_vector, (l), (v) }
-#define RCV_BOOL(n,v) { (n), rcv_bool, 1, (v) }
+#define RCV_END { 0, 0, rcv_end, 0, 0 }
+#define RCV_INT(n,v,h) { (n), (h), rcv_int, 1, (v) }
+#define RCV_STRING(n,v,h) { (n), (h), rcv_string, 0, (v) }
+#define RCV_VECTOR(n,v,l,h) { (n), (h), rcv_vector, (l), (v) }
+#define RCV_BOOL(n,v,h) { (n), (h), rcv_bool, 1, (v) }
 
 typedef struct rccmd_s
 {

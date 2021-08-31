@@ -229,8 +229,8 @@ char *rc_getstr(char *name)
 const char *rc_type_to_string(rcvtype_t type) {
 	switch (type) {
 	case rcv_int: return "int";
-	case rcv_string: return "string";
-	case rcv_vector: return "vector";
+	case rcv_string: return "str";
+	case rcv_vector: return "vec";
 	case rcv_bool: return "bool";
 	default: return "unknown";
 	}

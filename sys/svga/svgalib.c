@@ -28,9 +28,9 @@ static int svga_vsync = 1;
 
 rcvar_t vid_exports[] =
 {
-	RCV_VECTOR("vmode", vmode, 3),
-	RCV_INT("vsync", &svga_vsync),
-	RCV_INT("svga_mode", &svga_mode),
+	RCV_VECTOR("vmode", vmode, 3, ""),
+	RCV_INT("vsync", &svga_vsync, ""),
+	RCV_INT("svga_mode", &svga_mode, ""),
 	RCV_END
 };
 

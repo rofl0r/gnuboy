@@ -27,15 +27,15 @@ static int vmode[3] = { 320, 200, 8 };
 
 rcvar_t vid_exports[] = 
 {
-	RCV_VECTOR("vmode", vmode, 3),
+	RCV_VECTOR("vmode", vmode, 3, ""),
 	RCV_END
 };
 
 rcvar_t pcm_exports[] =
 {
-	RCV_BOOL("sound", &sound),
-	RCV_INT("samplerate", &samplerate),
-	RCV_INT("stereo", &stereo),
+	RCV_BOOL("sound", &sound, ""),
+	RCV_INT("samplerate", &samplerate, ""),
+	RCV_INT("stereo", &stereo, ""),
 	RCV_END
 };
 

@@ -38,7 +38,7 @@ int rc_sourcefile(char *filename)
 
 rcvar_t rcfile_exports[] =
 {
-	RCV_STRING("rcpath", &rcpath),
+	RCV_STRING("rcpath", &rcpath, "path to look for gnuboy.rc"),
 	RCV_END
 };
 

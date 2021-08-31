@@ -67,20 +67,20 @@ static int filter[3][4] = {
 
 rcvar_t lcd_exports[] =
 {
-	RCV_INT("scale", &scale),
-	RCV_INT("density", &density),
-	RCV_BOOL("rgb332", &rgb332),
-	RCV_VECTOR("dmg_bgp", dmg_pal[0], 4),
-	RCV_VECTOR("dmg_wndp", dmg_pal[1], 4),
-	RCV_VECTOR("dmg_obp0", dmg_pal[2], 4),
-	RCV_VECTOR("dmg_obp1", dmg_pal[3], 4),
-	RCV_BOOL("sprsort", &sprsort),
-	RCV_BOOL("sprdebug", &sprdebug),
-	RCV_BOOL("colorfilter", &usefilter),
-	RCV_BOOL("filterdmg", &filterdmg),
-	RCV_VECTOR("red", filter[0], 4),
-	RCV_VECTOR("green", filter[1], 4),
-	RCV_VECTOR("blue", filter[2], 4),
+	RCV_INT("scale", &scale, "scaling factor"),
+	RCV_INT("density", &density, "density!=scale: blank scanlines"),
+	RCV_BOOL("rgb332", &rgb332, "hi-color game hack in 8bit mode"),
+	RCV_VECTOR("dmg_bgp", dmg_pal[0], 4, "colors for bg palette"),
+	RCV_VECTOR("dmg_wndp", dmg_pal[1], 4, "colors for window palette"),
+	RCV_VECTOR("dmg_obp0", dmg_pal[2], 4, "colors for sprite pal 1"),
+	RCV_VECTOR("dmg_obp1", dmg_pal[3], 4, "colors for sprite pal 2"),
+	RCV_BOOL("sprsort", &sprsort, "speedhack: disable sprite sorting"),
+	RCV_BOOL("sprdebug", &sprdebug, "debug sprite visibility"),
+	RCV_BOOL("colorfilter", &usefilter, "washed out look like a real CGB"),
+	RCV_BOOL("filterdmg", &filterdmg, "like colorfilter but for DMG"),
+	RCV_VECTOR("red", filter[0], 4, "filter values for red"),
+	RCV_VECTOR("green", filter[1], 4, "filter values for green"),
+	RCV_VECTOR("blue", filter[2], 4, "filter values for blue"),
 	RCV_END
 };
 

@@ -33,10 +33,10 @@ static int vmode[3] = { 0, 0, 16 };
 
 rcvar_t vid_exports[] =
 {
-	RCV_VECTOR("vmode", &vmode, 3),
-	RCV_BOOL("yuv", &use_yuv),
-	RCV_BOOL("fullscreen", &fullscreen),
-	RCV_BOOL("altenter", &use_altenter),
+	RCV_VECTOR("vmode", &vmode, 3, "video mode: w h bpp"),
+	RCV_BOOL("yuv", &use_yuv, "try to use hardware YUV scaling"),
+	RCV_BOOL("fullscreen", &fullscreen, "whether to start in fullscreen mode"),
+	RCV_BOOL("altenter", &use_altenter, "alt-enter can toggle fullscreen"),
 	RCV_END
 };
 

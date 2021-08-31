@@ -560,7 +560,7 @@ int debug_trace = 0;
 
 rcvar_t debug_exports[] =
 {
-	RCV_BOOL("trace", &debug_trace),
+	RCV_BOOL("trace", &debug_trace, "print debug trace for each CPU insn"),
 	RCV_END
 };
 

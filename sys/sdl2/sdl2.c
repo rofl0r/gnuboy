@@ -33,9 +33,9 @@ static int vmode[3] = { 0, 0, 32 };
 
 rcvar_t vid_exports[] =
 {
-	RCV_VECTOR("vmode", &vmode, 3),
-	RCV_BOOL("fullscreen", &fullscreen),
-	RCV_BOOL("altenter", &use_altenter),
+	RCV_VECTOR("vmode", &vmode, 3, "video mode: w h bpp"),
+	RCV_BOOL("fullscreen", &fullscreen, "start in fullscreen mode"),
+	RCV_BOOL("altenter", &use_altenter, "alt-enter can toggle fullscreen"),
 	RCV_END
 };
 

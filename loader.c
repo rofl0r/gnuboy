@@ -475,17 +475,17 @@ void loader_init(char *s)
 
 rcvar_t loader_exports[] =
 {
-	RCV_STRING("bootrom_dmg", &bootroms[0]),
-	RCV_STRING("bootrom_cgb", &bootroms[1]),
-	RCV_STRING("savedir", &savedir),
-	RCV_STRING("savename", &savename),
-	RCV_INT("saveslot", &saveslot),
-	RCV_BOOL("forcebatt", &forcebatt),
-	RCV_BOOL("nobatt", &nobatt),
-	RCV_BOOL("forcedmg", &forcedmg),
-	RCV_BOOL("gbamode", &gbamode),
-	RCV_INT("memfill", &memfill),
-	RCV_INT("memrand", &memrand),
+	RCV_STRING("bootrom_dmg", &bootroms[0], "bootrom for DMG games"),
+	RCV_STRING("bootrom_cgb", &bootroms[1], "bootrom for CGB games"),
+	RCV_STRING("savedir", &savedir, "save directory"),
+	RCV_STRING("savename", &savename, "base filename for saves"),
+	RCV_INT("saveslot", &saveslot, "which savestate slot to use"),
+	RCV_BOOL("forcebatt", &forcebatt, "save SRAM even on carts w/o battery"),
+	RCV_BOOL("nobatt", &nobatt, "never save SRAM"),
+	RCV_BOOL("forcedmg", &forcedmg, "force DMG mode for CGB carts"),
+	RCV_BOOL("gbamode", &gbamode, "simulate cart being used on a GBA"),
+	RCV_INT("memfill", &memfill, ""),
+	RCV_INT("memrand", &memrand, ""),
 	RCV_END
 };
 

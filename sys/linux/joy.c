@@ -25,8 +25,8 @@ static const int axis[2][2] =
 
 rcvar_t joy_exports[] =
 {
-	RCV_BOOL("joy", &usejoy),
-	RCV_STRING("joy_device", &joydev),
+	RCV_BOOL("joy", &usejoy, "enable joystick"),
+	RCV_STRING("joy_device", &joydev, "joystick device, e.g. /dev/input/js0"),
 	RCV_END
 };
 

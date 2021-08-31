@@ -19,7 +19,7 @@ static unsigned char Xstatus, Ystatus;
 
 rcvar_t joy_exports[] =
 {
-	RCV_BOOL("joy", &use_joy),
+	RCV_BOOL("joy", &use_joy, "enable joystick"),
 	RCV_END
 };
 

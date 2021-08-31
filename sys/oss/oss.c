@@ -46,10 +46,10 @@ static int sound = 1;
 
 rcvar_t pcm_exports[] =
 {
-	RCV_BOOL("sound", &sound),
-	RCV_INT("stereo", &stereo),
-	RCV_INT("samplerate", &samplerate),
-	RCV_STRING("oss_device", &dsp_device),
+	RCV_BOOL("sound", &sound, "enable sound"),
+	RCV_INT("stereo", &stereo, "enable stereo"),
+	RCV_INT("samplerate", &samplerate, "sample rate"),
+	RCV_STRING("oss_device", &dsp_device, "dsp device"),
 	RCV_END
 };
 

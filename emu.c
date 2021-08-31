@@ -19,8 +19,8 @@ static int framecount;
 
 rcvar_t emu_exports[] =
 {
-	RCV_INT("framelen", &framelen),
-	RCV_INT("framecount", &framecount),
+	RCV_INT("framelen", &framelen, ""),
+	RCV_INT("framecount", &framecount, ""),
 	RCV_END
 };
 

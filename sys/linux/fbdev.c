@@ -51,12 +51,12 @@ static struct fb_var_screeninfo vi, initial_vi;
 
 rcvar_t vid_exports[] =
 {
-	RCV_VECTOR("vmode", &vmode, 3),
-	RCV_STRING("fb_device", &fb_device),
-	RCV_STRING("fb_mode", &fb_mode),
-	RCV_INT("fb_depth", &fb_depth),
-	RCV_BOOL("yuv", &use_yuv),
-	RCV_BOOL("yuvinterp", &use_interp),
+	RCV_VECTOR("vmode", &vmode, 3, "video mode: w h bpp"),
+	RCV_STRING("fb_device", &fb_device, "frame buffer device"),
+	RCV_STRING("fb_mode", &fb_mode, "run fbset with the specified mode string"),
+	RCV_INT("fb_depth", &fb_depth, "override fbcon depth"),
+	RCV_BOOL("yuv", &use_yuv, "force hardware YUV scaling"),
+	RCV_BOOL("yuvinterp", &use_interp, "disable YUV interpolation filter"),
 	RCV_END
 };
 
