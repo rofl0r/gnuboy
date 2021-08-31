@@ -57,6 +57,7 @@ char *rc_getstr(char *name);
 
 int rc_command(char *line);
 int rc_sourcefile(char *filename);
+const char *rc_type_to_string(rcvtype_t type);
 
 #endif
 

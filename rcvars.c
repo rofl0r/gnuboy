@@ -153,7 +153,7 @@ int rc_setvar_n(int i, int c, char **v)
 int rc_setvar(char *name, int c, char **v)
 {
 	int i;
-	
+
 	i = rc_findvar(name);
 	if (i < 0) return i;
 
@@ -226,8 +226,15 @@ char *rc_getstr(char *name)
 	return rc_getstr_n(rc_findvar(name));
 }
 
-
-
+const char *rc_type_to_string(rcvtype_t type) {
+	switch (type) {
+	case rcv_int: return "int";
+	case rcv_string: return "string";
+	case rcv_vector: return "vector";
+	case rcv_bool: return "bool";
+	default: return "unknown";
+	}
+}
 
 
 

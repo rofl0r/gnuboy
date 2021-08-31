@@ -237,7 +237,7 @@ static char *base(char *s)
 
 int main(int argc, char *argv[])
 {
-	int i, ri = 0;
+	int i, ri = 0, sv = 0;
 	char *opt, *arg, *cmd, *s, *rom = 0;
 
 	/* Avoid initializing video if we don't have to */
@@ -251,11 +251,7 @@ int main(int argc, char *argv[])
 			copying();
 		else if (!strcmp(argv[i], "--bind")) i += 2;
 		else if (!strcmp(argv[i], "--source")) i++;
-		else if (!strcmp(argv[i], "--showvars"))
-		{
-			show_exports();
-			exit(0);
-		}
+		else if (!strcmp(argv[i], "--showvars")) sv = 1;
 		else if (!strcmp(argv[i], "--joytest"))
 			joytest();
 		else if (!strcmp(argv[i], "--rominfo")) ri = 1;
@@ -264,7 +260,7 @@ int main(int argc, char *argv[])
 		else rom = argv[i];
 	}
 
-	if (!rom) usage(base(argv[0]));
+	if (!rom && !sv) usage(base(argv[0]));
 	if (ri) rominfo(rom);
 
 	/* If we have special perms, drop them ASAP! */
@@ -278,6 +274,11 @@ int main(int argc, char *argv[])
 
 	for (i = 0; defaultconfig[i]; i++)
 		rc_command(defaultconfig[i]);
+
+	if (sv) {
+		show_exports();
+		exit(0);
+	}
 
 	cmd = malloc(strlen(rom) + 11);
 	sprintf(cmd, "source %s", rom);
