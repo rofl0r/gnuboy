@@ -21,6 +21,8 @@
 
 static char *defaultconfig[] =
 {
+	"bootrom_dmg \"\"",
+	"bootrom_gbc \"\"",
 	"bind esc quit",
 	"bind up +up",
 	"bind down +down",

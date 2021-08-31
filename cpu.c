@@ -253,14 +253,14 @@ void cpu_reset()
 
 	IME = 0;
 	IMA = 0;
-	
-	PC = 0x0100;
+
+	PC = bootrom.bank ? 0 : 0x0100;
 	SP = 0xFFFE;
 	AF = 0x01B0;
 	BC = 0x0013;
 	DE = 0x00D8;
 	HL = 0x014D;
-	
+
 	if (hw.cgb) A = 0x11;
 	if (hw.gba) B = 0x01;
 }

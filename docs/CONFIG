@@ -505,6 +505,24 @@ example, if you have a really slow computer, you might use:
 Keep in mind that this will sound really really bad.
 
 
+  BOOT ROM OPTIONS
+
+Gnuboy can now optionally use one of the original boot roms.
+This might or might not improve compatibility with some games or
+test roms; either way it provides a more authentic experience.
+
+Use
+
+  set bootrom_dmg "/path/to/dmg_boot.bin"
+  set bootrom_cgb "/path/to/cgb_agb_boot.bin"
+
+to set the bootroms for DMG or Color Game Boy, respectively.
+Note that CGB bootrom(s) work also with DMG games, but not vice
+versa. the SGB (Super Game Boy) boot roms don't work for either
+mode, as they try to communicate with the host console via the
+Joypad I/O port.
+
+
   FILESYSTEM OPTIONS
 
 There are a good deal of options that affect where and how files are

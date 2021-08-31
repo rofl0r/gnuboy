@@ -17,6 +17,8 @@
 
 #define RI_KEY1  0x4D
 
+#define RI_BOOT  0x50
+
 #define RI_RP    0x56
 
 #define RI_SVBK  0x70

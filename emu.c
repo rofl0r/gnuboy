@@ -49,6 +49,7 @@ void emu_reset()
 	cpu_reset();
 	mbc_reset();
 	sound_reset();
+	mem_mapbootrom();
 }
 
 

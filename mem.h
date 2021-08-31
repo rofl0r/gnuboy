@@ -47,11 +47,11 @@ struct ram
 extern struct mbc mbc;
 extern struct rom rom;
 extern struct ram ram;
+extern struct rom bootrom;
 
 
 
-
-
+void mem_mapbootrom();
 void mem_updatemap();
 void ioreg_write(byte r, byte b);
 void mbc_write(int a, byte b);
