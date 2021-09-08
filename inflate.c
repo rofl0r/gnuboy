@@ -433,13 +433,13 @@ inflate (const unsigned char *data, long *p,
   else if ( btype == 0 )
     /* Non compressed block */
     {
-      unsigned int len, nlen;
+      unsigned int len;
       unsigned int l;
       unsigned char b;
 
       *p = (*p+7)/8; /* Jump to next byte boundary */
       len = read_bits (data, p, 16);
-      nlen = read_bits (data, p, 16);
+      /* nlen = */ (void) read_bits (data, p, 16);
       for ( l=0 ; l<len ; l++ )
 	{
 	  b = read_bits (data, p, 8);
