@@ -501,7 +501,7 @@ void spr_enum()
 		ts[i] = VS[l];
 		VS[l].x = 160;
 	}
-	memcpy(VS, ts, sizeof VS);
+	memcpy(VS, ts, sizeof ts);
 }
 
 void spr_scan()
