@@ -128,7 +128,7 @@ void sdljoy_process_event(SDL_Event *event)
 	/* case SDL_CONTROLLERAXISMOTION: */
 	case SDL_JOYAXISMOTION:
 		ja = JA_Y;
-		switch (event->jaxis.axis)
+		switch (event->jaxis.axis & 1)
 		{
 		case 0:
 			ja = JA_X;
