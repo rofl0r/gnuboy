@@ -5,10 +5,14 @@ CFLAGS="$CFLAGS"
 # if user sets custom CFLAGS, don't enforce our optimization flags
 test -n "$CFLAGS" && enable_optimize=no
 
+
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 
+old_cflags="$CFLAGS"
+CFLAGS="$CLAGS -Wno-unused-function -Wno-deprecated-declarations -Wno-overlength-strings"
+AC_TRY_COMPILE([], [typedef int foo;], [], [CFLAGS="$old_cflags"])
 
 test "$cross_compiling" = "yes" || AC_C_BIGENDIAN
 test "$ac_cv_c_bigendian" = "no" && ENDIAN="-DIS_LITTLE_ENDIAN"
