@@ -86,8 +86,15 @@ rcvar_t lcd_exports[] =
 
 static byte *vdest;
 
-#ifdef ALLOW_UNALIGNED_IO /* long long is ok since this is i386-only anyway? */
-#define MEMCPY8(d, s) ((*(long long *)(d)) = (*(long long *)(s)))
+#if defined(ALLOW_UNALIGNED_IO) && defined(__GNUC__)
+#include <stdint.h>
+static __inline void memcpy8(void *__restrict dest, const void *__restrict src)
+{
+	typedef uint64_t u64a __attribute__((__may_alias__));
+	u64a *d = dest;  u64a const* s = src;
+	*d = *s;
+}
+#define MEMCPY8(d, s) memcpy8(d, s)
 #else
 #define MEMCPY8(d, s) memcpy((d), (s), 8)
 #endif
