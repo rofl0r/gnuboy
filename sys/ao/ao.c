@@ -83,7 +83,7 @@ int pcm_submit()
 		pcm.pos = 0;
 		return 0;
 	}
-	if (pcm.buf) ao_play(device, pcm.buf, pcm.pos);
+	if (pcm.buf) ao_play(device, (void*)pcm.buf, pcm.pos);
 	pcm.pos = 0;
 	return 1;
 }
