@@ -11,7 +11,7 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 
 old_cflags="$CFLAGS"
-CFLAGS="$CLAGS -Wno-unused-function -Wno-deprecated-declarations -Wno-overlength-strings"
+CFLAGS="$CFLAGS -Wno-unused-function -Wno-deprecated-declarations -Wno-overlength-strings"
 AC_TRY_COMPILE([], [typedef int foo;], [], [CFLAGS="$old_cflags"])
 
 test "$cross_compiling" = "yes" || AC_C_BIGENDIAN
