@@ -67,6 +67,14 @@ void vram_dirty();
 void pal_dirty();
 void lcd_reset();
 
+#define LCDC_BIT_BG_EN    (1<<0) /* BG display off or on - CGB: always on */
+#define LCDC_BIT_OBJ_EN   (1<<1) /* OBJs off or on */
+#define LCDC_BIT_OBJ_SIZE (1<<2) /* OBJ size: 0:8x8 1:8x16 */
+#define LCDC_BIT_BG_MAP   (1<<3) /* BG code area 0:9800-9bff, 1:9c00-9fff */
+#define LCDC_BIT_TILE_SEL (1<<4) /* BG char data 0:8800-97ff, 1:8000-8fff */
+#define LCDC_BIT_WIN_EN   (1<<5) /* WIN off or on */
+#define LCDC_BIT_WIN_MAP  (1<<6) /* WIN code area 0:9800-9bff, 1:9c00-9fff */
+#define LCDC_BIT_LCD_EN   (1<<7) /* LCD controller off or on */
 
 
 #endif

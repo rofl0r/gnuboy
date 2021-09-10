@@ -159,7 +159,7 @@ void tilebuf()
 		0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,-32
 	};
 
-	base = ((R_LCDC&0x08)?0x1C00:0x1800) + (T<<5) + S;
+	base = ((R_LCDC & LCDC_BIT_BG_MAP)?0x1C00:0x1800) + (T<<5) + S;
 	tilemap = lcd.vbank[0] + base;
 	attrmap = lcd.vbank[1] + base;
 	tilebuf = BG;
@@ -168,7 +168,7 @@ void tilebuf()
 
 	if (hw.cgb)
 	{
-		if (R_LCDC & 0x10)
+		if (R_LCDC & LCDC_BIT_TILE_SEL)
 			for (i = cnt; i > 0; i--)
 			{
 				*(tilebuf++) = *tilemap
@@ -191,7 +191,7 @@ void tilebuf()
 	}
 	else
 	{
-		if (R_LCDC & 0x10)
+		if (R_LCDC & LCDC_BIT_TILE_SEL)
 			for (i = cnt; i > 0; i--)
 			{
 				*(tilebuf++) = *(tilemap++);
@@ -207,7 +207,7 @@ void tilebuf()
 
 	if (WX >= 160) return;
 
-	base = ((R_LCDC&0x40)?0x1C00:0x1800) + (WT<<5);
+	base = ((R_LCDC & LCDC_BIT_WIN_MAP)?0x1C00:0x1800) + (WT<<5);
 	tilemap = lcd.vbank[0] + base;
 	attrmap = lcd.vbank[1] + base;
 	tilebuf = WND;
@@ -215,7 +215,7 @@ void tilebuf()
 
 	if (hw.cgb)
 	{
-		if (R_LCDC & 0x10)
+		if (R_LCDC & LCDC_BIT_TILE_SEL)
 			for (i = cnt; i > 0; i--)
 			{
 				*(tilebuf++) = *(tilemap++)
@@ -234,7 +234,7 @@ void tilebuf()
 	}
 	else
 	{
-		if (R_LCDC & 0x10)
+		if (R_LCDC & LCDC_BIT_TILE_SEL)
 			for (i = cnt; i > 0; i--)
 				*(tilebuf++) = *(tilemap++);
 		else
@@ -315,7 +315,7 @@ void bg_scan_pri()
 	i = S;
 	cnt = WX;
 	dest = PRI;
-	src = lcd.vbank[1] + ((R_LCDC&0x08)?0x1C00:0x1800) + (T<<5);
+	src = lcd.vbank[1] + ((R_LCDC & LCDC_BIT_BG_MAP)?0x1C00:0x1800) + (T<<5);
 
 	if (!priused(src))
 	{
@@ -345,7 +345,7 @@ void wnd_scan_pri()
 	i = 0;
 	cnt = 160 - WX;
 	dest = PRI + WX;
-	src = lcd.vbank[1] + ((R_LCDC&0x40)?0x1C00:0x1800) + (WT<<5);
+	src = lcd.vbank[1] + ((R_LCDC & LCDC_BIT_WIN_MAP)?0x1C00:0x1800) + (WT<<5);
 
 	if (!priused(src))
 	{
@@ -424,7 +424,7 @@ void spr_count()
 	struct obj *o;
 
 	NS = 0;
-	if (!(R_LCDC & 0x02)) return;
+	if (!(R_LCDC & LCDC_BIT_OBJ_EN)) return;
 
 	o = lcd.oam.obj;
 
@@ -432,7 +432,7 @@ void spr_count()
 	{
 		if (L >= o->y || L + 16 < o->y)
 			continue;
-		if (L + 8 >= o->y && !(R_LCDC & 0x04))
+		if (L + 8 >= o->y && !(R_LCDC & LCDC_BIT_OBJ_SIZE))
 			continue;
 		if (++NS == 10) break;
 	}
@@ -447,7 +447,7 @@ void spr_enum()
 	int l, x;
 
 	NS = 0;
-	if (!(R_LCDC & 0x02)) return;
+	if (!(R_LCDC & LCDC_BIT_OBJ_EN)) return;
 
 	o = lcd.oam.obj;
 
@@ -455,7 +455,7 @@ void spr_enum()
 	{
 		if (L >= o->y || L + 16 < o->y)
 			continue;
-		if (L + 8 >= o->y && !(R_LCDC & 0x04))
+		if (L + 8 >= o->y && !(R_LCDC & LCDC_BIT_OBJ_SIZE))
 			continue;
 		VS[NS].x = (int)o->x - 8;
 		v = L - (int)o->y + 16;
@@ -471,7 +471,7 @@ void spr_enum()
 			VS[NS].pal = 32 + ((o->flags & 0x10) >> 2);
 		}
 		VS[NS].pri = (o->flags & 0x80) >> 7;
-		if ((R_LCDC & 0x04))
+		if ((R_LCDC & LCDC_BIT_OBJ_SIZE))
 		{
 			pat &= ~1;
 			if (v >= 8)
@@ -588,7 +588,7 @@ void lcd_refreshline()
 
 	if (!fb.enabled) return;
 
-	if (!(R_LCDC & 0x80))
+	if (!(R_LCDC & LCDC_BIT_LCD_EN))
 		return; /* should not happen... */
 
 	updatepatpix();
@@ -602,7 +602,7 @@ void lcd_refreshline()
 	V = Y & 7;
 
 	WX = R_WX - 7;
-	if (WY>L || WY<0 || WY>143 || WX<-7 || WX>159 || !(R_LCDC&0x20))
+	if (WY>L || WY<0 || WY>143 || WX<-7 || WX>159 || !(R_LCDC & LCDC_BIT_WIN_EN))
 		WX = 160;
 	WT = (L - WY) >> 3;
 	WV = (L - WY) & 7;
