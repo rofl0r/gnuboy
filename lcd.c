@@ -583,8 +583,9 @@ void lcd_begin()
 
 void lcd_refreshline()
 {
-	int i, work_scale, wx_save;
+	int i, work_scale;
 	byte scalebuf[160*4*MAX_SCALE], *dest;
+	static int WL = 0;
 
 	if (!fb.enabled) return;
 
@@ -600,21 +601,18 @@ void lcd_refreshline()
 	T = Y >> 3;
 	U = X & 7;
 	V = Y & 7;
-	if (L == 0) WY = R_WY;
-
-	wx_save = WX;
+	if (L == 0) { WY = R_WY; WL = 0; }
 
 	WX = R_WX - 7;
 	if (WY>L || WY<0 || WY>143 || WX<-7 || WX>159 || !(R_LCDC & LCDC_BIT_WIN_EN))
 		WX = 160;
-	else if (wx_save == 160)
-		WY = L;
-
-	/* in order to have these offsets correct WY is set above to
-	   the line number that actually made the window visible, and
-	   not to what's in R_WY. */
-	WT = (L - WY) >> 3;
-	WV = (L - WY) & 7;
+	else {
+		/* in order to have these offsets correct we need to count
+		   the number of lines that displayed a window */
+		WT = WL >> 3;
+		WV = WL & 7;
+		++WL;
+	}
 
 	spr_enum();
 
