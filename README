@@ -1,6 +1,44 @@
+GNUBOY 1.0.4 README
 
-GNUBOY README
+Welcome to gnuboy, one of the fastest if not the fastest GB/GBC emu-
+lator available.
 
+gnuboy was written well over 20 years ago and achieved full speed
+on most machines of that era, on today's machines it runs close to
+0% CPU usage.
+
+gnuboy development was mostly stagnant for the past 20 years, but
+i revived it using the last released sources and CVS dumps and fixed
+numerous minor issues with modern compilers and systems, as well
+as the occasional bugfix, plus a new SDL2 backend.
+
+changes to 1.0.3 include:
+
+- new ao audio backend
+- new SDL2 video/input/audio backend
+- fixed cpu cycle accuracy for all CPU ops
+- backported fix for some opcodes
+- fixed issues with window in NBA hoopz
+- added support for .xz compressed roms
+- added support for original BIOS
+
+unlike most modern GB emulators, gnuboy doesn't strive to be
+cycle-accurate (except where necessary), but to be fast, portable
+and compatible and to provide a good gaming experience.
+
+it works using the following backends:
+
+- linux fbdev
+- linux joystick
+- SDL1.2
+- SDL2
+- X11
+- AO audio
+- OSS audio
+- SVGAlib
+- DOS/Windows (untested)
+
+old README follows.
 
   INTRO
 
