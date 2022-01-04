@@ -86,21 +86,17 @@ AC_CHECK_LIB(SDL2, SDL_Init, [
 fi
 
 if test "$with_sdl2" = "no" && test "$with_sdl" != "no" ; then
-AC_CHECK_PROG(SDL_CONFIG, sdl-config, yes)
-if test "$SDL_CONFIG" ; then
-SDL_LIBS="`sdl-config --libs`"
-SDL_CFLAGS="`sdl-config --cflags`"
-old_incs="$INCS"
-INCS="$INCS $SDL_CFLAGS"
-AC_CHECK_LIB(SDL, SDL_Init, [
-AC_CHECK_HEADERS(SDL/SDL.h, ,[
-AC_MSG_WARN(SDL found but headers are missing!!)
-with_sdl=no
-])], [with_sdl=no], $SDL_LIBS)
-INCS="$old_incs"
+ SDL_LIBS=-lSDL
+ AC_CHECK_LIB(SDL, SDL_Init, [
+  AC_CHECK_HEADERS(SDL/SDL.h, [
+    with_sdl=yes
+   ], [
+    AC_MSG_WARN(SDL found but headers are missing!!)
+    with_sdl=no
+  ])
+ ], [with_sdl=no], $SDL2_LIBS)
 else
-with_sdl=no
-fi
+ with_sdl=no
 fi
 
 if test "$with_sdl" != yes && test "$with_sdl2" != yes ; then
