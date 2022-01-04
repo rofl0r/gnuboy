@@ -35,7 +35,7 @@ test "$cross_compiling" = "yes" || LIBS="$LIBS -L/usr/X11R6/lib"
 
 AC_ARG_WITH(fb,      [  --with-fb                       build framebuffer device interface], [], [with_fb=yes])
 AC_ARG_WITH(svgalib, [  --with-svgalib                  build Linux svgalib interface], [], [with_svgalib=yes])
-AC_ARG_WITH(sdl,     [  --with-sdl                      build SDL interface], [], [with_sdl=yes])
+AC_ARG_WITH(sdl,     [  --with-sdl                      build SDL interface], [], [with_sdl=auto])
 AC_ARG_WITH(sdl2,    [  --with-sdl2                     build SDL2 interface], [], [with_sdl2=yes])
 AC_ARG_WITH(sound,   [  --with-sound=no,oss,sdl,ao      select sound interface], [], [with_sound=yes])
 
