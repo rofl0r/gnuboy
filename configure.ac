@@ -183,9 +183,11 @@ case "$host" in
 x86_64*|i?86*) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
 esac
 
-CFLAGS="$CFLAGS -fstrength-reduce -fthread-jumps \
+case "$CC" in
+*gcc*) CFLAGS="$CFLAGS -fstrength-reduce -fthread-jumps \
  -fcse-follow-jumps -fcse-skip-blocks -frerun-cse-after-loop \
- -fexpensive-optimizations -fforce-addr"
+ -fexpensive-optimizations -fforce-addr" ;;
+esac
 
 if test "$enable_debug" != yes -a "$enable_profile" != yes ; then
 CFLAGS="$CFLAGS -fomit-frame-pointer"
