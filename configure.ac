@@ -85,7 +85,7 @@ with_sdl2=no
 ])], [with_sdl2=no], $SDL2_LIBS)
 fi
 
-if test "$with_sdl" != "no" ; then
+if test "$with_sdl2" = "no" && test "$with_sdl" != "no" ; then
 AC_CHECK_PROG(SDL_CONFIG, sdl-config, yes)
 if test "$SDL_CONFIG" ; then
 SDL_LIBS="`sdl-config --libs`"
