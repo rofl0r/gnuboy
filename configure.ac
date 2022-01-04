@@ -213,6 +213,12 @@ AC_MSG_RESULT(no optimized asm core available for $host) ;;
 esac
 fi
 
+case "$host" in
+    *-*-mingw* | *-*-cygwin* | *-*-windows* ) SYS_OBJS=sys/windows/windows.o ;;
+    *-*-dos* ) SYS_OBJS=sys/dos/dos.o ;;
+    *) SYS_OBJS=sys/nix/nix.o ;;
+esac
+
 
 AC_SUBST(SYS_DEFS)
 AC_SUBST(ENDIAN)
@@ -220,6 +226,7 @@ AC_SUBST(SOUND)
 AC_SUBST(JOY)
 AC_SUBST(ASM)
 AC_SUBST(ASM_OBJS)
+AC_SUBST(SYS_OBJS)
 AC_SUBST(FB_OBJS)
 AC_SUBST(SDL_CFLAGS)
 AC_SUBST(SDL_LIBS)
