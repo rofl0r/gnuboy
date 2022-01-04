@@ -67,6 +67,7 @@ void vid_init()
 	int pitch = 0;
 	void *pixels = 0;
 	SDL_PixelFormat *format;
+	SDL_RendererInfo info;
 
 	if (!vmode[0] || !vmode[1])
 	{
@@ -82,6 +83,8 @@ void vid_init()
 
 	if (SDL_Init(SDL_INIT_VIDEO))
 		die("SDL: Couldn't initialize SDL: %s\n", SDL_GetError());
+
+	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
 	if (!(win = SDL_CreateWindow("gnuboy", SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED, vmode[0], vmode[1], flags)))
@@ -101,6 +104,9 @@ void vid_init()
 		renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE|SDL_RENDERER_PRESENTVSYNC);
 	}
 	if (!renderer) die("SDL2: can't create renderer: %s\n", SDL_GetError());
+
+	SDL_GetRendererInfo(renderer, &info);
+	fprintf(stdout, "using renderer %s\n", info.name);
 
 	SDL_RenderSetScale(renderer, scale, scale);
 
