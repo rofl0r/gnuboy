@@ -48,6 +48,8 @@ void refresh_4_4x(un32 *dest, byte *src, un32 *pal, int cnt);
 
 #ifdef __GNUC__
 #define MAY_ALIAS __attribute__((__may_alias__))
+#else
+#define MAY_ALIAS
 #endif
 
 typedef un16 un16a MAY_ALIAS;
