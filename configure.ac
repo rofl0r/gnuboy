@@ -16,17 +16,6 @@ AC_TRY_COMPILE([], [typedef int foo;], [], [CFLAGS="$old_cflags"])
 
 test "$cross_compiling" = "yes" || AC_C_BIGENDIAN
 test "$ac_cv_c_bigendian" = "no" && ENDIAN="-DIS_LITTLE_ENDIAN"
-
-
-
-AC_CHECK_FUNCS(usleep, ,[
-AC_CHECK_FUNCS(select, ,[
-AC_MSG_ERROR(your system must support either usleep or select)
-])])
-
-
-
-
 test "$cross_compiling" = "yes" || LIBS="$LIBS -L/usr/X11R6/lib"
 
 
@@ -112,6 +101,13 @@ INCS="$old_incs"
 else
 with_sdl=no
 fi
+fi
+
+if test "$with_sdl" != yes && test "$with_sdl2" != yes ; then
+AC_CHECK_FUNCS(usleep, ,[
+AC_CHECK_FUNCS(select, ,[
+AC_MSG_ERROR(your system must support either usleep or select)
+])])
 fi
 
 AC_PATH_X
