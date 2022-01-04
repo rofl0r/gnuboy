@@ -155,7 +155,7 @@ AC_ARG_ENABLE(debug,    [  --enable-debug          include debugging symbols], [
 AC_ARG_ENABLE(profile,  [  --enable-profile        enable performance profiling], [])
 AC_ARG_ENABLE(arch,     [  --enable-arch           compile for specific host cpu architecture], [], [enable_arch=no])
 AC_ARG_ENABLE(optimize, [  --enable-optimize=LEVEL select optimization level (full,low,none)], [], [enable_optimize=yes])
-AC_ARG_ENABLE(asm,      [  --enable-asm            use hand-optimized asm cores], [], [enable_asm=yes])
+AC_ARG_ENABLE(asm,      [  --enable-asm            use hand-optimized asm cores], [], [enable_asm=no])
 
 
 if test "$enable_warnings" = yes ; then
