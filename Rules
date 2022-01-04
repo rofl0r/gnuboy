@@ -11,7 +11,7 @@ OBJS = lcd.o refresh.o lcdc.o palette.o cpu.o mem.o rtc.o hw.o sound.o \
 
 INCS = -I.
 
-MYCC = $(CC) $(CFLAGS) $(INCS) $(SYS_INCS) $(SYS_DEFS)
+MYCC = $(CC) $(CPPFLAGS) $(CFLAGS) $(INCS) $(SYS_INCS) $(SYS_DEFS)
 MYAS = $(AS) $(ASFLAGS) $(INCS) $(SYS_INCS) $(SYS_DEFS)
 
 main.o: Version
