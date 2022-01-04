@@ -5,12 +5,20 @@
  * -Dave Kiddell
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 char *strdup();
 
+#ifdef HAVE_SDL2_SDL_H
+#include <SDL2/SDL.h>
+#else
 #include <SDL/SDL.h>
+#endif
 
 void *sys_timer()
 {
