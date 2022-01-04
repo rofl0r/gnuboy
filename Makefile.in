@@ -19,7 +19,7 @@ ASM_OBJS = @ASM_OBJS@
 
 SYS_DEFS = @DEFS@ @ENDIAN@ @ASM@ @SYS_DEFS@
 SYS_OBJS = @SYS_OBJS@ $(ASM_OBJS)
-SYS_INCS = -I/usr/local/include @XINCS@ -I./sys/nix
+SYS_INCS = @XINCS@ -I./sys/nix
 
 FB_OBJS = @FB_OBJS@ @JOY@ @SOUND@
 FB_LIBS = 
