@@ -17,9 +17,7 @@ AC_TRY_COMPILE([], [typedef int foo;], [], [CFLAGS="$old_cflags"])
 test "$cross_compiling" = "yes" || AC_C_BIGENDIAN
 test "$ac_cv_c_bigendian" = "no" && ENDIAN="-DIS_LITTLE_ENDIAN"
 test "$cross_compiling" = "yes" || LIBS="$LIBS -L/usr/X11R6/lib"
-
-
-
+test x"$host" = x && host=`$CC -dumpmachine`
 
 
 AC_ARG_WITH(fb,      [  --with-fb                       build framebuffer device interface], [], [with_fb=yes])
@@ -27,7 +25,6 @@ AC_ARG_WITH(svgalib, [  --with-svgalib                  build Linux svgalib inte
 AC_ARG_WITH(sdl,     [  --with-sdl                      build SDL interface], [], [with_sdl=auto])
 AC_ARG_WITH(sdl2,    [  --with-sdl2                     build SDL2 interface], [], [with_sdl2=yes])
 AC_ARG_WITH(sound,   [  --with-sound=no,oss,sdl,ao      select sound interface], [], [with_sound=yes])
-
 
 
 
@@ -186,7 +183,7 @@ AC_MSG_RESULT(producing heavily optimized code)
 
 CFLAGS="$CFLAGS -O3"
 
-case `$CC -dumpmachine` in
+case "$host" in
 x86_64*|i?86*) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
 esac
 
@@ -207,12 +204,12 @@ CFLAGS="$CFLAGS -O3" ;;
 esac
 
 if test "$enable_asm" = yes ; then
-case `$CC -dumpmachine` in
+case "$host" in
 i?86*)
 AC_MSG_RESULT(using optimized i386 cores)
 ASM="-DUSE_ASM -I./asm/i386" ; ASM_OBJS="asm/i386/cpu.o asm/i386/lcd.o asm/i386/refresh.s" ;;
 *)
-AC_MSG_RESULT(no optimized asm core available for `$CC -dumpmachine`) ;;
+AC_MSG_RESULT(no optimized asm core available for $host) ;;
 esac
 fi
 
