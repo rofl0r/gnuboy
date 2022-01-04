@@ -7,43 +7,43 @@
 #endif
 
 #ifdef ASM_REFRESH_1
-void refresh_1(byte *dest, byte *src, byte *pal, int cnt);
+void refresh_1(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_2
-void refresh_2(un16 *dest, byte *src, un16 *pal, int cnt);
+void refresh_2(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_3
-void refresh_3(byte *dest, byte *src, un32 *pal, int cnt);
+void refresh_3(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_4
-void refresh_4(un32 *dest, byte *src, un32 *pal, int cnt);
+void refresh_4(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_1_2X
-void refresh_1_2x(byte *dest, byte *src, byte *pal, int cnt);
+void refresh_1_2x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_2_2X
-void refresh_2_2x(un16 *dest, byte *src, un16 *pal, int cnt);
+void refresh_2_2x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_3_2X
-void refresh_3_2x(byte *dest, byte *src, un32 *pal, int cnt);
+void refresh_3_2x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_4_2X
-void refresh_4_2x(un32 *dest, byte *src, un32 *pal, int cnt);
+void refresh_4_2x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_2_3X
-void refresh_2_3x(un16 *dest, byte *src, un16 *pal, int cnt);
+void refresh_2_3x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_3_3X
-void refresh_3_3x(byte *dest, byte *src, un32 *pal, int cnt);
+void refresh_3_3x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_4_3X
-void refresh_4_3x(un32 *dest, byte *src, un32 *pal, int cnt);
+void refresh_4_3x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_3_4X
-void refresh_3_4x(byte *dest, byte *src, un32 *pal, int cnt);
+void refresh_3_4x(void *dest, byte *src, void *pal, int cnt);
 #endif
 #ifdef ASM_REFRESH_4_4X
-void refresh_4_4x(un32 *dest, byte *src, un32 *pal, int cnt);
+void refresh_4_4x(void *dest, byte *src, void *pal, int cnt);
 #endif
 
 #ifdef __GNUC__
