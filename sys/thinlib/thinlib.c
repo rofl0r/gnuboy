@@ -192,10 +192,11 @@ static void buildscanmap()
 		scanmap[key] = mapscancode(key);
 }
 
-void ev_poll()
+void ev_poll(int wait)
 {
 	thin_event_t event;
 	event_t ev;
+	(void) wait;
 
 	thin_event_gather();
 	

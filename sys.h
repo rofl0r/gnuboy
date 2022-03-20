@@ -15,7 +15,7 @@ void pcm_init();
 int pcm_submit();
 void pcm_close();
 
-void ev_poll();
+void ev_poll(int wait);
 
 void sys_checkdir(char *path, int wr);
 void sys_sleep(int us);

@@ -140,13 +140,16 @@ void vid_init()
 	fb.dirty = 0;
 }
 
-void ev_poll()
+void ev_poll(int wait)
 {
 	event_t ev;
 	SDL_Event event;
 
+	if(wait && SDL_WaitEvent(&event)) goto process_evt;
+
 	while (SDL_PollEvent(&event))
 	{
+	process_evt:;
 		switch(event.type)
 		{
 		case SDL_WINDOWEVENT:

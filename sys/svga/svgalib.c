@@ -223,8 +223,9 @@ void kb_poll()
 	keyboard_update();
 }
 
-void ev_poll()
+void ev_poll(int wait)
 {
+	(void) wait;
 	kb_poll();
 	joy_poll();
 }

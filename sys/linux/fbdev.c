@@ -274,8 +274,9 @@ void vid_end()
 	overlay_switch();
 }
 
-void ev_poll()
+void ev_poll(int wait)
 {
+	(void) wait;
 	kb_poll();
 	joy_poll();
 }

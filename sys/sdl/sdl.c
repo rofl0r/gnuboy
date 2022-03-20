@@ -163,10 +163,11 @@ void vid_init()
 }
 
 
-void ev_poll()
+void ev_poll(int wait)
 {
 	event_t ev;
 	SDL_Event event;
+	(void) wait;
 
 	while (SDL_PollEvent(&event))
 	{

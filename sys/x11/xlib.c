@@ -435,8 +435,9 @@ static int nextevent(int sync)
 
 
 
-void ev_poll()
+void ev_poll(int wait)
 {
+	(void) wait;
 	if (initok) while (nextevent(0));
 	joy_poll();
 }

@@ -106,7 +106,7 @@ static void joytest()
 	printf("press joystick buttons to see their name mappings\n");
 	joy_init();
 	while(1) {
-		ev_poll();
+		ev_poll(0);
 		if(ev_getevent(&e)) {
 			switch(e.type) {
 			case EV_NONE: ename = "none"; break;
@@ -169,7 +169,7 @@ void doevents()
 	event_t ev;
 	int st;
 
-	ev_poll();
+	ev_poll(0);
 	while (ev_getevent(&ev))
 	{
 		if (ev.type != EV_PRESS && ev.type != EV_RELEASE)
