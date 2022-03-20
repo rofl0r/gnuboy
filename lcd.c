@@ -581,62 +581,9 @@ void lcd_begin()
 	WY = R_WY;
 }
 
-void lcd_refreshline()
-{
+void lcd_linetovram() {
 	int i, work_scale;
 	byte scalebuf[160*4*MAX_SCALE], *dest;
-	static int WL = 0;
-
-	if (!fb.enabled) return;
-
-	if (!(R_LCDC & LCDC_BIT_LCD_EN))
-		return; /* should not happen... */
-
-	updatepatpix();
-
-	L = R_LY;
-	X = R_SCX;
-	Y = (R_SCY + L) & 0xff;
-	S = X >> 3;
-	T = Y >> 3;
-	U = X & 7;
-	V = Y & 7;
-	if (L == 0) { WY = R_WY; WL = 0; }
-
-	WX = R_WX - 7;
-	if (WY>L || WY<0 || WY>143 || WX<-7 || WX>159 || !(R_LCDC & LCDC_BIT_WIN_EN))
-		WX = 160;
-	else {
-		/* in order to have these offsets correct we need to count
-		   the number of lines that displayed a window */
-		WT = WL >> 3;
-		WV = WL & 7;
-		++WL;
-	}
-
-	spr_enum();
-
-	tilebuf();
-	if (hw.cgb)
-	{
-		bg_scan_color();
-		wnd_scan_color();
-		if (NS)
-		{
-			bg_scan_pri();
-			wnd_scan_pri();
-		}
-	}
-	else
-	{
-		bg_scan();
-		wnd_scan();
-		recolor(BUF+WX, 0x04, 160-WX);
-	}
-	spr_scan();
-
-	if (fb.dirty) memset(fb.ptr, 0, fb.pitch * fb.h);
-	fb.dirty = 0;
 	if (density > scale) density = scale;
 	if (scale == 1 || fb.delegate_scaling) density = 1;
 
@@ -732,6 +679,64 @@ void lcd_refreshline()
 		}
 	}
 	else vdest += fb.pitch * work_scale;
+}
+
+void lcd_refreshline()
+{
+	static int WL = 0;
+
+	if (!fb.enabled) return;
+
+	if (!(R_LCDC & LCDC_BIT_LCD_EN))
+		return; /* should not happen... */
+
+	updatepatpix();
+
+	L = R_LY;
+	X = R_SCX;
+	Y = (R_SCY + L) & 0xff;
+	S = X >> 3;
+	T = Y >> 3;
+	U = X & 7;
+	V = Y & 7;
+	if (L == 0) { WY = R_WY; WL = 0; }
+
+	WX = R_WX - 7;
+	if (WY>L || WY<0 || WY>143 || WX<-7 || WX>159 || !(R_LCDC & LCDC_BIT_WIN_EN))
+		WX = 160;
+	else {
+		/* in order to have these offsets correct we need to count
+		   the number of lines that displayed a window */
+		WT = WL >> 3;
+		WV = WL & 7;
+		++WL;
+	}
+
+	spr_enum();
+
+	tilebuf();
+	if (hw.cgb)
+	{
+		bg_scan_color();
+		wnd_scan_color();
+		if (NS)
+		{
+			bg_scan_pri();
+			wnd_scan_pri();
+		}
+	}
+	else
+	{
+		bg_scan();
+		wnd_scan();
+		recolor(BUF+WX, 0x04, 160-WX);
+	}
+	spr_scan();
+
+	if (fb.dirty) memset(fb.ptr, 0, fb.pitch * fb.h);
+	fb.dirty = 0;
+
+	lcd_linetovram();
 }
 
 

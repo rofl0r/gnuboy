@@ -60,6 +60,7 @@ void spr_enum();
 void spr_scan();
 void lcd_begin();
 void lcd_refreshline();
+void lcd_linetovram();
 void pal_write(int i, byte b);
 void pal_write_dmg(int i, int mapnum, byte d);
 void vram_write(int a, byte b);
