@@ -5,7 +5,7 @@
 
 extern rcvar_t rcfile_exports[], emu_exports[], loader_exports[],
 	lcd_exports[], rtc_exports[], debug_exports[], sound_exports[],
-	vid_exports[], joy_exports[], pcm_exports[];
+	vid_exports[], joy_exports[], pcm_exports[], menu_exports[];
 
 
 rcvar_t *sources[] =
@@ -20,6 +20,7 @@ rcvar_t *sources[] =
 	vid_exports,
 	joy_exports,
 	pcm_exports,
+	menu_exports,
 	NULL
 };
 

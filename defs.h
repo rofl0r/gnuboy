@@ -31,7 +31,7 @@ typedef word addr;
 /* stuff from main.c ... */
 void die(char *fmt, ...);
 void doevents();
-
+int load_rom_and_rc(char *rom);
 
 
 #endif

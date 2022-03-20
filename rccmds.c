@@ -8,6 +8,8 @@
 #include "emu.h"
 #include "loader.h"
 #include "split.h"
+#include "menu.h"
+#include "sys.h"
 
 
 /*
@@ -108,6 +110,14 @@ static int cmd_loadstate(int argc, char **argv)
 	return 0;
 }
 
+static int cmd_menu(int argc, char **argv)
+{
+	/* some of the actions we perform from the menu require us
+	   to break out of the emu_run main loop, so we just signal
+	   it to return and then let main() enter the menu instead. */
+	emu_pause(1);
+	return 0;
+}
 
 
 /*
@@ -124,6 +134,7 @@ rccmd_t rccmds[] =
 	RCC("source", cmd_source),
 	RCC("reset", cmd_reset),
 	RCC("quit", cmd_quit),
+	RCC("menu", cmd_menu),
 	RCC("savestate", cmd_savestate),
 	RCC("loadstate", cmd_loadstate),
 	

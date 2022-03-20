@@ -15,6 +15,7 @@
 #include "exports.h"
 #include "loader.h"
 #include "mem.h"
+#include "menu.h"
 
 #include "Version"
 
@@ -53,6 +54,7 @@ static char *defaultconfig[] =
 	"bind 0 \"set saveslot 0\"",
 	"bind ins savestate",
 	"bind del loadstate",
+	"set romdir .",
 	"source gnuboy.rc",
 	NULL
 };
@@ -237,6 +239,24 @@ static char *base(char *s)
 	return s;
 }
 
+int load_rom_and_rc(char *rom) {
+	char *s, *cmd = malloc(strlen(rom) + 11);
+	sprintf(cmd, "source %s", rom);
+	s = strchr(cmd, '.');
+	if (s) *s = 0;
+	strcat(cmd, ".rc");
+	rc_command(cmd);
+	free(cmd);
+	rom = strdup(rom);
+	sys_sanitize(rom);
+	if(loader_init(rom)) {
+		/*loader_get_error();*/
+		return -1;
+	}
+	emu_reset();
+	return 0;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -263,7 +283,7 @@ int main(int argc, char *argv[])
 		else rom = argv[i];
 	}
 
-	if (!rom && !sv) usage(base(argv[0]));
+	if (ri && !rom) usage(base(argv[0]));
 	if (ri) rominfo(rom);
 
 	/* If we have special perms, drop them ASAP! */
@@ -282,13 +302,6 @@ int main(int argc, char *argv[])
 		show_exports();
 		exit(0);
 	}
-
-	cmd = malloc(strlen(rom) + 11);
-	sprintf(cmd, "source %s", rom);
-	s = strchr(cmd, '.');
-	if (s) *s = 0;
-	strcat(cmd, ".rc");
-	rc_command(cmd);
 
 	for (i = 1; i < argc; i++)
 	{
@@ -348,14 +361,23 @@ int main(int argc, char *argv[])
 	vid_init();
 	joy_init();
 	pcm_init();
+	menu_init();
 
-	rom = strdup(rom);
-	sys_sanitize(rom);
-	
-	loader_init(rom);
-	
-	emu_reset();
-	emu_run();
+	if(rom) load_rom_and_rc(rom);
+	else {
+		rc_command("bind esc menu");
+		menu_initpage(mp_romsel);
+		menu_enter();
+	}
+	while(1) {
+		emu_run();
+		/* if we get here it means emu was paused, so enter menu. */
+		pcm_pause(1);
+		menu_initpage(mp_main);
+		menu_enter();
+		pcm_pause(0);
+		emu_pause(0);
+	}
 
 	/* never reached */
 	return 0;
