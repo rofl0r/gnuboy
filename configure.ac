@@ -153,7 +153,7 @@ AC_ARG_ENABLE(asm,      [  --enable-asm            use hand-optimized asm cores]
 if test "$enable_warnings" = yes ; then
 case "$CC" in *gcc*)
 AC_MSG_RESULT(enabling selected compiler warnings)
-CFLAGS="$CFLAGS -ansi -pedantic -Wall" ;;
+CFLAGS="$CFLAGS -Wall" ;;
 *)
 AC_MSG_RESULT(disabling warnings for non-gcc compiler) ;;
 esac

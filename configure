@@ -4416,7 +4416,7 @@ if test "$enable_warnings" = yes ; then
 case "$CC" in *gcc*)
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: enabling selected compiler warnings" >&5
 $as_echo "enabling selected compiler warnings" >&6; }
-CFLAGS="$CFLAGS -ansi -pedantic -Wall" ;;
+CFLAGS="$CFLAGS -Wall" ;;
 *)
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: disabling warnings for non-gcc compiler" >&5
 $as_echo "disabling warnings for non-gcc compiler" >&6; } ;;
