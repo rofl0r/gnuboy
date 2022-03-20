@@ -23,6 +23,7 @@ static int sound = 1;
 static int samplerate = 44100;
 static int stereo = 1;
 static volatile int audio_done;
+static int paused;
 
 rcvar_t pcm_exports[] =
 {
@@ -73,7 +74,10 @@ void pcm_init()
 
 int pcm_submit()
 {
-	if (!pcm.buf) return 0;
+	if (!pcm.buf || paused) {
+		pcm.pos = 0;
+		return 0;
+	}
 	if (pcm.pos < pcm.len) return 1;
 	while (!audio_done)
 		SDL_Delay(4);
@@ -87,7 +91,11 @@ void pcm_close()
 	if (sound) SDL_CloseAudio();
 }
 
-
+void pcm_pause(int dopause)
+{
+	paused = dopause;
+	SDL_PauseAudio(paused);
+}
 
 
 

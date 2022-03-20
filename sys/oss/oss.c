@@ -43,6 +43,7 @@ static char *dsp_device;
 static int stereo = 1;
 static int samplerate = 44100;
 static int sound = 1;
+static int paused;
 
 rcvar_t pcm_exports[] =
 {
@@ -94,7 +95,7 @@ void pcm_close()
 
 int pcm_submit()
 {
-	if (dsp < 0)
+	if (dsp < 0 || paused)
 	{
 		pcm.pos = 0;
 		return 0;
@@ -104,7 +105,10 @@ int pcm_submit()
 	return 1;
 }
 
-
+void pcm_pause(int dopause)
+{
+	paused = dopause;
+}
 
 
 

@@ -13,6 +13,7 @@ static volatile int audio_int;
 static int samplerate = 44100;
 static int sound = 1;
 static int stereo = 0;
+static int sound_paused;
 
 static int joystick = 1;
 
@@ -148,7 +149,7 @@ void pcm_close()
 
 int pcm_submit()
 {
-	if (!sound)
+	if (!sound || sound_paused)
 	{
 		pcm.pos = 0;
 		return 0;
@@ -166,6 +167,10 @@ int pcm_submit()
 	return 1;
 }
 
+void pcm_pause(int dopause)
+{
+	sound_paused = dopause;
+}
 
 /* keyboard stuff... */
 

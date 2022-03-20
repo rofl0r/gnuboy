@@ -24,7 +24,7 @@ static int sound = 1;
 static ao_device *device;
 static ao_sample_format format;
 static int aodriver;
-
+static int paused;
 
 rcvar_t pcm_exports[] =
 {
@@ -78,7 +78,7 @@ void pcm_close()
 
 int pcm_submit()
 {
-	if (!device)
+	if (!device || paused)
 	{
 		pcm.pos = 0;
 		return 0;
@@ -86,4 +86,9 @@ int pcm_submit()
 	if (pcm.buf) ao_play(device, (void*)pcm.buf, pcm.pos);
 	pcm.pos = 0;
 	return 1;
+}
+
+void pcm_pause(int dopause)
+{
+	paused = dopause;
 }

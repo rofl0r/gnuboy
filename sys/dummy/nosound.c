@@ -37,6 +37,9 @@ int pcm_submit()
 	return 0;
 }
 
+void pcm_pause(int dopause)
+{
+}
 
 
 

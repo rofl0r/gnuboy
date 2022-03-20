@@ -14,6 +14,7 @@ void vid_settitle(char *title);
 void pcm_init();
 int pcm_submit();
 void pcm_close();
+void pcm_pause(int dopause);
 
 void ev_poll(int wait);
 

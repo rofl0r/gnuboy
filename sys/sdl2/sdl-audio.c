@@ -23,6 +23,7 @@ static int sound = 1;
 static int samplerate = 44100;
 static int stereo = 1;
 static SDL_AudioDeviceID device;
+static int paused;
 
 rcvar_t pcm_exports[] =
 {
@@ -65,7 +66,10 @@ void pcm_init()
 int pcm_submit()
 {
 	int res, min = pcm.len*2;
-	if (!sound || !pcm.buf) return 0;
+	if (!sound || !pcm.buf || paused) {
+		pcm.pos = 0;
+		return 0;
+	}
 	res = SDL_QueueAudio(device, pcm.buf, pcm.pos) == 0;
 	pcm.pos = 0;
 	while (res && SDL_GetQueuedAudioSize(device) > min)
@@ -78,3 +82,8 @@ void pcm_close()
 	if (sound) SDL_CloseAudioDevice(device);
 }
 
+void pcm_pause(int dopause)
+{
+	paused = dopause;
+	SDL_PauseAudioDevice(device, paused);
+}
