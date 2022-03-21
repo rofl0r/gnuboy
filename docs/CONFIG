@@ -81,6 +81,14 @@ something like this:
 Observe that each number is separate, and there are no quotation marks
 used.
 
+Another command is "toggle", which allows to toggle a boolean variable
+from one state to the other.
+
+  bind m "toggle sound"
+
+would toggle sound on or off whenever "m" on the keyboard is pressed.
+See section below for explanation of the bind command.
+
 
   RC FILES -- KEYBINDINGS
 

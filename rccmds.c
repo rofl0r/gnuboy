@@ -40,6 +40,17 @@ static int cmd_set(int argc, char **argv)
 	return rc_setvar(argv[1], argc-2, argv+2);
 }
 
+/*
+ * the toggle command is used to switch rc-exported bool variables.
+ */
+
+static int cmd_toggle(int argc, char **argv)
+{
+	static const char* bools[] = {"0", "1", 0};
+	if (argc < 2)
+		return -1;
+	return rc_setvar(argv[1], 1, rc_getint(argv[1])?bools:bools+1);
+}
 
 
 /*
@@ -106,6 +117,7 @@ static int cmd_loadstate(int argc, char **argv)
 rccmd_t rccmds[] =
 {
 	RCC("set", cmd_set),
+	RCC("toggle", cmd_toggle),
 	RCC("bind", cmd_bind),
 	RCC("unbind", cmd_unbind),
 	RCC("unbindall", cmd_unbindall),
