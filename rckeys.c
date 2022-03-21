@@ -66,19 +66,21 @@ void rc_unbindall()
 
 
 
-void rc_dokey(int key, int st)
+int rc_dokey(int key, int st)
 {
-	if (!keybind[key]) return;
-	if (keybind[key][0] != '+' && !st) return;
+	int ret;
+	if (!keybind[key]) return 0;
+	if (keybind[key][0] != '+' && !st) return 0;
 	
 	if (st)
-		rc_command(keybind[key]);
+		ret = rc_command(keybind[key]);
 	else
 	{
 		keybind[key][0] = '-';
-		rc_command(keybind[key]);
+		ret = rc_command(keybind[key]);
 		keybind[key][0] = '+';
 	}
+	return ret;
 }
 
 
