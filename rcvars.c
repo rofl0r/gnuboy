@@ -110,6 +110,9 @@ int my_atoi(const char *s)
 }
 
 
+/* i - index of variable in rcvars array
+   c - count of values in v string array
+   v - the actual values as string array */
 int rc_setvar_n(int i, int c, char **v)
 {
 	int j;
