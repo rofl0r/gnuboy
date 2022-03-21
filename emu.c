@@ -16,6 +16,7 @@
 
 static int framelen = 16743;
 static int framecount;
+static int paused;
 
 rcvar_t emu_exports[] =
 {
@@ -26,9 +27,13 @@ rcvar_t emu_exports[] =
 
 
 
+void emu_pause(int dopause) {
+	paused = dopause;
+}
 
-
-
+int emu_paused(void) {
+	return paused;
+}
 
 void emu_init()
 {
@@ -91,9 +96,9 @@ void emu_run()
 			sys_elapsed(timer);
 		}
 		doevents();
+		if (paused) return;
 		vid_begin();
 		if (framecount) { if (!--framecount) die("finished\n"); }
-		
 		if (!(R_LCDC & 0x80))
 			cpu_emulate(32832);
 		
