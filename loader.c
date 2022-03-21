@@ -273,9 +273,13 @@ int rom_load()
 	if (!mbc.ramsize) die("unknown SRAM size %02X\n", header[0x0149]);
 
 	rlen = 16384 * mbc.romsize;
+
+	c = header[0x0143];
+
+	/* from this point on, we may no longer access data and header */
 	rom.bank = realloc(data, rlen);
 	if (rlen > len) memset(rom.bank[0]+len, 0xff, rlen - len);
-	
+
 	ram.sbank = malloc(8192 * mbc.ramsize);
 
 	initmem(ram.sbank, 8192 * mbc.ramsize);
@@ -284,7 +288,6 @@ int rom_load()
 	mbc.rombank = 1;
 	mbc.rambank = 0;
 
-	c = header[0x0143];
 	hw.cgb = ((c == 0x80) || (c == 0xc0)) && !forcedmg;
 	hw.gba = (hw.cgb && gbamode);
 
