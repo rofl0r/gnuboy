@@ -6,10 +6,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <time.h>
 
 #include "defs.h"
+#include "loader.h"
 #include "regs.h"
 #include "mem.h"
 #include "hw.h"
@@ -133,16 +135,36 @@ static byte *loadfile(FILE *f, int *len)
 
 static byte *inf_buf;
 static int inf_pos, inf_len;
+static char* loader_error;
 
-static void inflate_callback(byte b)
+char* loader_get_error(void)
+{
+	return loader_error;
+}
+
+void loader_set_error(char *fmt, ...)
+{
+	char buf[1024];
+	va_list ap;
+	va_start(ap, fmt);
+	vsnprintf(buf, sizeof buf, fmt, ap);
+	va_end(ap);
+	loader_error = strdup(buf);
+}
+
+static int inflate_callback(byte b)
 {
 	if (inf_pos >= inf_len)
 	{
 		inf_len += 512;
 		inf_buf = realloc(inf_buf, inf_len);
-		if (!inf_buf) die("out of memory inflating file @ %d bytes\n", inf_pos);
+		if (!inf_buf) {
+			loader_set_error("out of memory inflating file @ %d bytes\n", inf_pos);
+			return -1;
+		}
 	}
 	inf_buf[inf_pos++] = b;
+	return 0;
 }
 
 static byte *gunzip(byte *data, int *len) {
@@ -155,10 +177,11 @@ static byte *gunzip(byte *data, int *len) {
 	return inf_buf;
 }
 
-static void write_dec(byte *data, int len) {
+static int write_dec(byte *data, int len) {
 	int i;
 	for(i=0; i < len; i++)
-		inflate_callback(data[i]);
+		if(inflate_callback(data[i])) return -1;
+	return 0;
 }
 
 static int unxz(byte *data, int len) {
@@ -184,13 +207,13 @@ static int unxz(byte *data, int len) {
 	while (1) {
 		ret = xz_dec_run(s, &b);
 		if(b.out_pos == sizeof(out)) {
-			write_dec(out, sizeof(out));
+			if(write_dec(out, sizeof(out))) goto err;
 			b.out_pos = 0;
 		}
 
 		if(ret == XZ_OK) continue;
 
-		write_dec(out, b.out_pos);
+		if(write_dec(out, b.out_pos)) goto err;
 
 		if(ret == XZ_STREAM_END) {
 			xz_dec_end(s);
@@ -228,7 +251,10 @@ static FILE* rom_loadfile(char *fn, byte** data, int *len) {
 	FILE *f;
 	if (strcmp(fn, "-")) f = fopen(fn, "rb");
 	else f = stdin;
-	if (!f) die("cannot open rom file: %s\n", fn);
+	if (!f) {
+		loader_set_error("cannot open rom file: %s\n", fn);
+		return f;
+	}
 	*data = loadfile(f, len);
 	*data = decompress(*data, len);
 	return f;
@@ -241,6 +267,7 @@ int bootrom_load() {
 	REG(RI_BOOT) = 0xff;
 	if (!bootroms[hw.cgb] || !bootroms[hw.cgb][0]) return 0;
 	f = rom_loadfile(bootroms[hw.cgb], &data, &len);
+	if(!f) return -1;
 	bootrom.bank = realloc(data, 16384);
 	memset(bootrom.bank[0]+len, 0xff, 16384-len);
 	memcpy(bootrom.bank[0]+0x100, rom.bank[0]+0x100, 0x100);
@@ -255,6 +282,7 @@ int rom_load()
 	byte c, *data, *header;
 	int len = 0, rlen;
 	f = rom_loadfile(romfile, &data, &len);
+	if(!f) return -1;
 	header = data;
 
 	memcpy(rom.name, header+0x0134, 16);
@@ -269,8 +297,14 @@ int rom_load()
 	mbc.romsize = romsize_table[header[0x0148]];
 	mbc.ramsize = ramsize_table[header[0x0149]];
 
-	if (!mbc.romsize) die("unknown ROM size %02X\n", header[0x0148]);
-	if (!mbc.ramsize) die("unknown SRAM size %02X\n", header[0x0149]);
+	if (!mbc.romsize) {
+		loader_set_error("unknown ROM size %02X\n", header[0x0148]);
+		return -1;
+	}
+	if (!mbc.ramsize) {
+		loader_set_error("unknown SRAM size %02X\n", header[0x0149]);
+		return -1;
+	}
 
 	rlen = 16384 * mbc.romsize;
 
@@ -435,14 +469,14 @@ static void cleanup()
 	/* IDEA - if error, write emergency savestate..? */
 }
 
-void loader_init(char *s)
+int loader_init(char *s)
 {
 	char *name, *p;
 
 	sys_checkdir(savedir, 1); /* needs to be writable */
 
 	romfile = s;
-	rom_load();
+	if(rom_load()) return -1;
 	bootrom_load();
 	vid_settitle(rom.name);
 	if (savename && *savename)
@@ -458,7 +492,7 @@ void loader_init(char *s)
 		if (p) *p = 0;
 	}
 	else name = ldup(rom.name);
-	
+
 	saveprefix = malloc(strlen(savedir) + strlen(name) + 2);
 	sprintf(saveprefix, "%s/%s", savedir, name);
 
@@ -469,11 +503,12 @@ void loader_init(char *s)
 	rtcfile = malloc(strlen(saveprefix) + 5);
 	strcpy(rtcfile, saveprefix);
 	strcat(rtcfile, ".rtc");
-	
+
 	sram_load();
 	rtc_load();
 
 	atexit(cleanup);
+	return 0;
 }
 
 rcvar_t loader_exports[] =

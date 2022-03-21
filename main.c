@@ -148,7 +148,10 @@ static void help(char *name)
 
 static void rominfo(char* fn) {
 	extern int rom_load_simple(char *fn);
-	rom_load_simple(fn);
+	if(rom_load_simple(fn)) {
+		fprintf(stderr, "rom load failed: %s\n", loader_get_error()?loader_get_error():"");
+		exit(1);
+	}
 	printf( "rom name:\t%s\n"
 		"mbc type:\t%s\n"
 		"rom size:\t%u KB\n"

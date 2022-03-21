@@ -272,7 +272,7 @@ get_data (const unsigned char *data, long *p,
 	  const unsigned int hlit_code_table[HLIT_TSIZE],
 	  const char hdist_size_table[HDIST_TSIZE],
 	  const unsigned int hdist_code_table[HDIST_TSIZE],
-	  void (* callback) (unsigned char d))
+	  int (* callback) (unsigned char d))
      /* Do the actual uncompressing.  Call callback on each character
       * uncompressed. */
 {
@@ -286,7 +286,7 @@ get_data (const unsigned char *data, long *p,
       /* Literal */
       {
 	pushout ((unsigned char) b);
-	callback ((unsigned char) b);
+	if(callback ((unsigned char) b)) return -1;
       }
     else if ( b == 256 )
       /* End of block */
@@ -375,7 +375,7 @@ get_data (const unsigned char *data, long *p,
 
 	    ch = pushin (dist);
 	    pushout (ch);
-	    callback (ch);
+	    if (callback (ch)) return -1;
 	  }
       }
   }
@@ -384,7 +384,7 @@ get_data (const unsigned char *data, long *p,
 
 static int
 inflate (const unsigned char *data, long *p,
-	 void (* callback) (unsigned char d))
+	 int (* callback) (unsigned char d))
      /* Main uncompression function for the deflate method */
 {
   char blast, btype;
@@ -444,7 +444,7 @@ inflate (const unsigned char *data, long *p,
 	{
 	  b = read_bits (data, p, 8);
 	  pushout (b);
-	  callback (b);
+	  if (callback (b)) return -1;
 	}
     }
   else
@@ -458,7 +458,7 @@ inflate (const unsigned char *data, long *p,
 
 int
 unzip (const unsigned char *data, long *p,
-       void (* callback) (unsigned char d))
+       int (* callback) (unsigned char d))
      /* Uncompress gzipped data.  data is a pointer to the data, p is
       * a pointer to a long that is initialized to 0 (unless for some
       * reason you want to start uncompressing further down the data),

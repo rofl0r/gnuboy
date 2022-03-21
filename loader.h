@@ -21,7 +21,10 @@ int rom_load();
 int sram_load();
 int sram_save();
 
-void loader_init(char *s);
+int loader_init(char *s);
+char *loader_get_error();
+void loader_set_error(char *fmt, ...);
+
 void state_save(int n);
 void state_load(int n);
 
