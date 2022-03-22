@@ -49,7 +49,7 @@ static int cmd_toggle(int argc, char **argv)
 	static const char* bools[] = {"0", "1", 0};
 	if (argc < 2)
 		return -1;
-	return rc_setvar(argv[1], 1, rc_getint(argv[1])?bools:bools+1);
+	return rc_setvar(argv[1], 1, rc_getint(argv[1])?(void*)bools:(void*)(bools+1));
 }
 
 
