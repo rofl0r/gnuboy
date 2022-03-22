@@ -20,7 +20,8 @@
 #ifdef USE_XSHM
 /* make sure ipc.h and shm.h will work! */
 #define _SVID_SOURCE
-#define _XOPEN_SOURCE
+#undef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
 #endif
 
 #include <stdlib.h>
