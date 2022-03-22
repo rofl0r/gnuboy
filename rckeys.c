@@ -64,7 +64,11 @@ void rc_unbindall()
 	}
 }
 
-
+char *rc_getkeybind(int key)
+{
+	if(key <= 0 || key > MAX_KEYS) return 0;
+	return keybind[key];
+}
 
 int rc_dokey(int key, int st)
 {
