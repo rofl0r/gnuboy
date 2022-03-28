@@ -22,6 +22,7 @@ int sram_load();
 int sram_save();
 
 int loader_init(char *s);
+void loader_unload(void);
 char *loader_get_error();
 void loader_set_error(char *fmt, ...);
 
