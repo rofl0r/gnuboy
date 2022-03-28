@@ -25,7 +25,7 @@ AC_ARG_WITH(svgalib, [  --with-svgalib                  build Linux svgalib inte
 AC_ARG_WITH(sdl,     [  --with-sdl                      build SDL interface], [], [with_sdl=auto])
 AC_ARG_WITH(sdl2,    [  --with-sdl2                     build SDL2 interface], [], [with_sdl2=yes])
 AC_ARG_WITH(sound,   [  --with-sound=no,oss,sdl,ao      select sound interface], [], [with_sound=yes])
-
+AC_ARG_WITH(x11,     [  --with-x                        build x11 interface], [], [with_x11=auto])
 
 
 SOUND=""
@@ -106,6 +106,8 @@ AC_MSG_ERROR(your system must support either usleep or select)
 ])])
 fi
 
+if test "$with_x" != "no" ; then
+
 AC_PATH_X
 
 AH_TEMPLATE(HAVE_LIBXEXT)
@@ -124,7 +126,7 @@ test "$x_libraries" && XLIBS="-L$x_libraries"
 else
 with_x=no
 fi
-
+fi
 
 
 test "$with_x" = "no" || TARGETS="$TARGETS xgnuboy"
