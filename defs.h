@@ -9,11 +9,12 @@
 #ifdef IS_LITTLE_ENDIAN
 #define LO 0
 #define HI 1
+#define LIL(x) (x)
 #else
 #define LO 1
 #define HI 0
+#define LIL(x) ((x<<24)|((x&0xff00)<<8)|((x>>8)&0xff00)|(x>>24))
 #endif
-
 
 typedef unsigned char byte;
 

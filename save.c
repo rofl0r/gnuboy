@@ -13,13 +13,6 @@
 #include "sound.h"
 
 
-
-#ifdef IS_LITTLE_ENDIAN
-#define LIL(x) (x)
-#else
-#define LIL(x) ((x<<24)|((x&0xff00)<<8)|((x>>8)&0xff00)|(x>>24))
-#endif
-
 #define I1(s, p) { 1, s, p }
 #define I2(s, p) { 2, s, p }
 #define I4(s, p) { 4, s, p }
