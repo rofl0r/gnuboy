@@ -65,6 +65,7 @@ void vid_init()
 	int flags;
 	int scale = rc_getint("scale");
 	int pitch = 0;
+	int fmt = 0;
 	void *pixels = 0;
 	SDL_PixelFormat *format;
 	SDL_RendererInfo info;
@@ -75,6 +76,12 @@ void vid_init()
 		vmode[0] = 160 * scale;
 		vmode[1] = 144 * scale;
 	}
+	if (vmode[2] == 32)
+		fmt = SDL_PIXELFORMAT_BGRA32;
+	else if(vmode[2] == 16)
+		fmt = SDL_PIXELFORMAT_BGR565;
+	else
+		die("vmode pixel format not supported, choose 16 or 32");
 
 	flags = SDL_WINDOW_OPENGL;
 
@@ -110,18 +117,18 @@ void vid_init()
 
 	SDL_RenderSetScale(renderer, scale, scale);
 
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRA32,
+	texture = SDL_CreateTexture(renderer, fmt,
 			SDL_TEXTUREACCESS_STREAMING, 160, 144);
 
 	SDL_ShowCursor(0);
 
-	format = SDL_AllocFormat(SDL_PIXELFORMAT_BGRA32);
+	format = SDL_AllocFormat(fmt);
 	SDL_LockTexture(texture, NULL, &pixels, &pitch);
 
 	fb.delegate_scaling = 1;
 	fb.w = 160;
 	fb.h = 144;
-	fb.pelsize = 4;
+	fb.pelsize = vmode[2]/8;
 	fb.pitch = pitch;
 	fb.indexed = 0;
 	fb.ptr = pixels;
