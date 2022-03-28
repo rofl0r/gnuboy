@@ -73,6 +73,8 @@ with_svgalib=no
 ])], [with_svgalib=no])
 fi
 
+test -z "$PKG_CONFIG" && PKG_CONFIG=pkg-config
+
 if test "$with_sdl2" != no ; then
 SDL2_LIBS=-lSDL2
 AC_CHECK_LIB(SDL2, SDL_Init, [
@@ -82,7 +84,15 @@ AC_CHECK_LIB(SDL2, SDL_Init, [
    AC_MSG_WARN(SDL2 found but headers are missing!!)
    with_sdl2=no
  ])
-], [with_sdl2=no], $SDL2_LIBS)
+], [
+  AC_MSG_WARN(testing pkg-config for SDL2)
+  if "$PKG_CONFIG" --libs sdl2 >/dev/null 2>&1 ; then
+    with_sdl2=yes
+    SDL2_LIBS=$("$PKG_CONFIG" --libs sdl2)
+  else
+    with_sdl2=no
+  fi
+], $SDL2_LIBS)
 fi
 
 if test "$with_sdl2" = "no" && test "$with_sdl" != "no" ; then
