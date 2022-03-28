@@ -382,7 +382,7 @@ get_data (const unsigned char *data, long *p,
   return 0;
 }
 
-static int
+int
 inflate (const unsigned char *data, long *p,
 	 int (* callback) (unsigned char d))
      /* Main uncompression function for the deflate method */
