@@ -265,6 +265,8 @@ static enum menu_key menu_translate_key(int k) {
 		if(!strcmp(bind, "a")) return mk_ok;
 		if(!strcmp(bind, "b")) return mk_cancel;
 		if(!strcmp(bind, "start")) return mk_ok;
+		if(!strcmp(bind, "up")) return mk_up;
+		if(!strcmp(bind, "down")) return mk_down;
 		return mk_ignore;
 	}
 }
