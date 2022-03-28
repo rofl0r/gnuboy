@@ -24,6 +24,7 @@ struct fb fb;
 
 static int fullscreen = 0;
 static int use_altenter = 1;
+static int vsync;
 
 static SDL_Window *win;
 static SDL_Renderer *renderer;
@@ -33,6 +34,7 @@ static int vmode[3] = { 0, 0, 32 };
 
 rcvar_t vid_exports[] =
 {
+	RCV_BOOL("vsync", &vsync, "enforce vsync (slow)"),
 	RCV_VECTOR("vmode", &vmode, 3, "video mode: w h bpp"),
 	RCV_BOOL("fullscreen", &fullscreen, "start in fullscreen mode"),
 	RCV_BOOL("altenter", &use_altenter, "alt-enter can toggle fullscreen"),
@@ -105,10 +107,10 @@ void vid_init()
 	   you may want to turn it off using by setting the environment
 	   variable SDL_RENDER_VSYNC to "0" or "false", which activates
 	   SDL_HINT_RENDER_VSYNC (yes, the env var lacks "HINT") */
-	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED|vsync*SDL_RENDERER_PRESENTVSYNC);
 	if (!renderer) {
 		fprintf(stderr, "warning: fallback to software renderer\n");
-		renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE|SDL_RENDERER_PRESENTVSYNC);
+		renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE|vsync*SDL_RENDERER_PRESENTVSYNC);
 	}
 	if (!renderer) die("SDL2: can't create renderer: %s\n", SDL_GetError());
 
