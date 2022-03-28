@@ -1,11 +1,7 @@
-
-
-
-
 #include "defs.h"
 #include "pcm.h"
 #include "rc.h"
-
+#include <string.h>
 
 struct pcm pcm;
 
