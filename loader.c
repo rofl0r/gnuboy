@@ -167,14 +167,49 @@ static int inflate_callback(byte b)
 	return 0;
 }
 
-static byte *gunzip(byte *data, int *len) {
+typedef int (*unzip_or_inflate_func) (const unsigned char *data, long *p, int (* callback) (unsigned char d));
+
+static byte *gunzip_or_inflate(byte *data, int *len, unsigned offset,
+	unzip_or_inflate_func func)
+{
 	long pos = 0;
 	inf_buf = 0;
 	inf_pos = inf_len = 0;
-	if (unzip(data, &pos, inflate_callback) < 0)
+	if (func(data+offset, &pos, inflate_callback) < 0)
 		return data;
+	free(data);
 	*len = inf_pos;
 	return inf_buf;
+}
+
+static byte *gunzip(byte *data, int *len) {
+	return gunzip_or_inflate(data, len, 0, unzip);
+}
+
+/* primitive pkzip decompressor. it can only decompress the first
+   file in a zip archive. */
+static byte *pkunzip(byte *data, int *len) {
+	unsigned short fnl, el, comp;
+	unsigned int st;
+	if (*len < 128) return data;
+	memcpy(&comp, data+8, 2);
+	comp = LIL(comp);
+	if(comp != 0 && comp != 8) return data;
+	memcpy(&fnl, data+26, 2);
+	memcpy(&el, data+28, 2);
+	fnl = LIL(fnl);
+	el = LIL(el);
+	st = 30 + fnl + el;
+	if(*len < st) return data;
+	if(comp == 0) {
+		inf_buf = realloc(NULL, *len - st);
+		memcpy(inf_buf, data+st, *len - st);
+		free(data);
+		inf_len = *len = *len - st;
+		return inf_buf;
+	}
+	*len -= st;
+	return gunzip_or_inflate(data, len, st, inflate);
 }
 
 static int write_dec(byte *data, int len) {
@@ -234,6 +269,7 @@ static byte *do_unxz(byte *data, int *len) {
 	inf_pos = inf_len = 0;
 	if (unxz(data, *len) < 0)
 		return data;
+	free(data);
 	*len = inf_pos;
 	return inf_buf;
 }
@@ -242,8 +278,10 @@ static byte *decompress(byte *data, int *len)
 {
 	if (data[0] == 0x1f && data[1] == 0x8b)
 		return gunzip(data, len);
-	if(data[0] == 0xFD && !memcmp(data+1, "7zXZ", 4))
+	if (data[0] == 0xFD && !memcmp(data+1, "7zXZ", 4))
 		return do_unxz(data, len);
+	if (data[0] == 'P' && !memcmp(data+1, "K\03\04", 3))
+		return pkunzip(data, len);
 	return data;
 }
 
@@ -275,6 +313,23 @@ int bootrom_load() {
 	REG(RI_BOOT) = 0xfe;
 	return 0;
 }
+
+/* memory allocation breakdown:
+   loadfile returns local buffer retrieved via realloc()
+   it's called only by rom_loadfile.
+     rom_loadfile is called by bootrom_load and rom_load.
+      bootrom_load is called once per romfile load via loader_init from
+      load_rom_and_rc, and mem ends up in bootrom.bank, loader_unload() frees it.
+      rom_load is called by rom_load_simple and loader_init().
+       rom_load_simple is only called by rominfo in main.c, which we can ignore.
+       the mem allocated by loadfile thru loader_init/rom_load ends up in
+       rom.bank, which is freed in loader_unload(), just like the malloc'd
+       rom.sbank.
+   where it gets complicated is when rom_loadfile uncompresses data.
+   the allocation returned by loadfile is passed to decompress().
+   if it fails, it returns the original loadfile allocation, on success
+   it returns a pointer to inf_buf which contains the uncompressed data.
+*/
 
 int rom_load()
 {
@@ -438,6 +493,7 @@ void loader_unload()
 	if (saveprefix) free(saveprefix);
 	if (rom.bank) free(rom.bank);
 	if (ram.sbank) free(ram.sbank);
+	if (bootrom.bank) free(bootrom.bank);
 	romfile = sramfile = saveprefix = 0;
 	rom.bank = 0;
 	ram.sbank = 0;
