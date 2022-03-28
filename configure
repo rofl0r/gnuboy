@@ -695,6 +695,7 @@ with_svgalib
 with_sdl
 with_sdl2
 with_sound
+with_x11
 with_x
 enable_warnings
 enable_debug
@@ -1339,6 +1340,7 @@ Optional Packages:
   --with-sdl                      build SDL interface
   --with-sdl2                     build SDL2 interface
   --with-sound=no,oss,sdl,ao      select sound interface
+  --with-x                        build x11 interface
   --with-x                use the X Window System
 
 Some influential environment variables:
@@ -3737,6 +3739,13 @@ else
 fi
 
 
+# Check whether --with-x11 was given.
+if test "${with_x11+set}" = set; then :
+  withval=$with_x11;
+else
+  with_x11=auto
+fi
+
 
 
 SOUND=""
@@ -3924,6 +3933,8 @@ fi
 
 fi
 
+test -z "$PKG_CONFIG" && PKG_CONFIG=pkg-config
+
 if test "$with_sdl2" != no ; then
 SDL2_LIBS=-lSDL2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_Init in -lSDL2" >&5
@@ -3986,7 +3997,16 @@ done
 
 
 else
-  with_sdl2=no
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: testing pkg-config for SDL2" >&5
+$as_echo "$as_me: WARNING: testing pkg-config for SDL2" >&2;}
+  if "$PKG_CONFIG" --libs sdl2 >/dev/null 2>&1 ; then
+    with_sdl2=yes
+    SDL2_LIBS=$("$PKG_CONFIG" --libs sdl2)
+  else
+    with_sdl2=no
+  fi
+
 fi
 
 fi
@@ -4090,6 +4110,8 @@ fi
 done
 
 fi
+
+if test "$with_x" != "no" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for X" >&5
 $as_echo_n "checking for X... " >&6; }
@@ -4354,7 +4376,7 @@ test "$x_libraries" && XLIBS="-L$x_libraries"
 else
 with_x=no
 fi
-
+fi
 
 
 test "$with_x" = "no" || TARGETS="$TARGETS xgnuboy"
