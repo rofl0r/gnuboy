@@ -24,6 +24,9 @@ static char *romdir;
 static struct ezmenu ezm;
 static enum menu_page currpage;
 static unsigned char screen[160*144];
+static char statusline[64];
+
+
 void menu_init(void) {
 	ezmenu_init(&ezm, 160, 144, FONTW, FONTH);
 	ezm.wraparound = 1;
@@ -344,7 +347,8 @@ entry:;
 				while((k = menu_getevent(&st)) == 0 || !st);
 				rc_unbindkey(k_keyname(k));
 				rc_bindkey(k_keyname(k), ezm.vislines[ezm.vissel]);
-				ezmenu_setfooter(&ezm, "key assigned");
+				snprintf(statusline, sizeof statusline, "key assigned: %s", k_keyname(k));
+				ezmenu_setfooter(&ezm, statusline);
 				ezmenu_update(&ezm);
 				menu_paint();
 			} else if (currpage == mp_savestate || currpage == mp_loadstate) {
