@@ -117,6 +117,7 @@ int rc_setvar_n(int i, int c, char **v)
 {
 	int j;
 	int *n;
+	float *f;
 	char **s;
 
 	switch (rcvars[i].type)
@@ -125,6 +126,11 @@ int rc_setvar_n(int i, int c, char **v)
 		if (c < 1) return -1;
 		n = (int *)rcvars[i].mem;
 		*n = my_atoi(v[0]);
+		return 0;
+	case rcv_float:
+		if (c < 1) return -1;
+		f = (float *)rcvars[i].mem;
+		*f = atof(v[0]);
 		return 0;
 	case rcv_string:
 		if (c < 1) return -1;
@@ -190,6 +196,17 @@ int rc_getint_n(int i)
 	return 0;
 }
 
+float rc_getfloat_n(int i)
+{
+	if (i < 0) return 0.0;
+	switch (rcvars[i].type)
+	{
+	case rcv_float:
+		return *(float *)rcvars[i].mem;
+	}
+	return 0.0;
+}
+
 int *rc_getvec_n(int i)
 {
 	if (i < 0) return NULL;
@@ -219,6 +236,11 @@ int rc_getint(char *name)
 	return rc_getint_n(rc_findvar(name));
 }
 
+float rc_getfloat(char *name)
+{
+	return rc_getfloat_n(rc_findvar(name));
+}
+
 int *rc_getvec(char *name)
 {
 	return rc_getvec_n(rc_findvar(name));
@@ -232,6 +254,7 @@ char *rc_getstr(char *name)
 const char *rc_type_to_string(rcvtype_t type) {
 	switch (type) {
 	case rcv_int: return "int";
+	case rcv_float: return "float";
 	case rcv_string: return "str";
 	case rcv_vector: return "vec";
 	case rcv_bool: return "bool";

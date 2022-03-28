@@ -10,6 +10,7 @@ typedef enum rctype
 {
 	rcv_end,
 	rcv_int,
+	rcv_float,
 	rcv_string,
 	rcv_vector,
 	rcv_bool
@@ -27,6 +28,7 @@ typedef struct rcvar_s
 
 #define RCV_END { 0, 0, rcv_end, 0, 0 }
 #define RCV_INT(n,v,h) { (n), (h), rcv_int, 1, (v) }
+#define RCV_FLOAT(n,v,h) { (n), (h), rcv_float, 1, (v) }
 #define RCV_STRING(n,v,h) { (n), (h), rcv_string, 0, (v) }
 #define RCV_VECTOR(n,v,l,h) { (n), (h), rcv_vector, (l), (v) }
 #define RCV_BOOL(n,v,h) { (n), (h), rcv_bool, 1, (v) }
@@ -49,10 +51,12 @@ int rc_setvar_n(int i, int c, char **v);
 int rc_setvar(char *name, int c, char **v);
 
 int rc_getint_n(int i);
+float rc_getfloat_n(int i);
 int *rc_getvec_n(int i);
 char *rc_getstr_n(int i);
 
 int rc_getint(char *name);
+float rc_getfloat(char *name);
 int *rc_getvec(char *name);
 char *rc_getstr(char *name);
 
