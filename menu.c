@@ -302,6 +302,7 @@ entry:;
 					menu_initpage(mp_romsel);
 					goto entry;
 				} else {
+					loader_unload();
 					if(load_rom_and_rc(rd)) {
 						menu_initpage(mp_loaderr);
 						goto entry;
@@ -334,7 +335,10 @@ entry:;
 					menu_initpage(mp_savestate);
 					goto entry;
 				}
-				else if(!strcmp(ezm.vislines[ezm.vissel], "quit")) exit(0);
+				else if(!strcmp(ezm.vislines[ezm.vissel], "quit")) {
+					loader_unload();
+					exit(0);
+				}
 			} else if (currpage == mp_loaderr) {
 				menu_initpage(mp_romsel);
 				goto entry;
