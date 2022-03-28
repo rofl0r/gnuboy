@@ -33,7 +33,7 @@ void menu_init(void) {
 }
 
 static int allowed_ext(char *fn) {
-	static const char *exttab[] = {".gb", ".gbc", ".xz", ".gz", 0};
+	static const char *exttab[] = {".gb", ".gbc", ".xz", ".gz", ".zip", 0};
 	char *e = strrchr(fn, '.');
 	if(!e) return 0;
 	int i;
