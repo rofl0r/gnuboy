@@ -117,7 +117,7 @@ static void initmem(void *mem, int size)
 static byte *loadfile(FILE *f, int *len)
 {
 	int c, l = 0, p = 0;
-	byte *d = 0, buf[512];
+	byte *d = 0, buf[4096];
 
 	for(;;)
 	{
