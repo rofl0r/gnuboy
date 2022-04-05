@@ -290,10 +290,16 @@ static FILE* rom_loadfile(char *fn, byte** data, int *len) {
 	if (strcmp(fn, "-")) f = fopen(fn, "rb");
 	else f = stdin;
 	if (!f) {
+	err:
 		loader_set_error("cannot open rom file: %s\n", fn);
 		return f;
 	}
 	*data = loadfile(f, len);
+	if (!*data) {
+		fclose(f);
+		f = 0;
+		goto err;
+	}
 	*data = decompress(*data, len);
 	return f;
 }
