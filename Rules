@@ -7,7 +7,7 @@ OBJS = lcd.o refresh.o lcdc.o palette.o cpu.o mem.o rtc.o hw.o sound.o \
 	events.o keytable.o menu.o \
 	loader.o save.o debug.o emu.o main.o \
 	rccmds.o rckeys.o rcvars.o rcfile.o exports.o \
-	split.o path.o inflate.o $(XZ_OBJS)
+	split.o path.o inflate.o miniz_tinfl.o $(XZ_OBJS)
 
 INCS = -I.
 

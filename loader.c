@@ -19,6 +19,7 @@
 #include "rc.h"
 #include "lcd.h"
 #include "inflate.h"
+#include "miniz.h"
 #define XZ_USE_CRC64
 #include "xz/xz.h"
 #include "save.h"
@@ -191,6 +192,9 @@ static byte *gunzip(byte *data, int *len) {
 static byte *pkunzip(byte *data, int *len) {
 	unsigned short fnl, el, comp;
 	unsigned int st;
+	void *new;
+	size_t newlen;
+	int oldlen = *len;
 	if (*len < 128) return data;
 	memcpy(&comp, data+8, 2);
 	comp = LIL(comp);
@@ -209,7 +213,15 @@ static byte *pkunzip(byte *data, int *len) {
 		return inf_buf;
 	}
 	*len -= st;
-	return gunzip_or_inflate(data, len, st, inflate);
+	newlen = 0;
+	new = tinfl_decompress_mem_to_heap(data+st, *len, &newlen, 0);
+	if(new) {
+		*len = newlen;
+		free(data);
+		return new;
+	}
+	*len = oldlen;
+	return data;
 }
 
 static int write_dec(byte *data, int len) {
