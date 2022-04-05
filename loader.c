@@ -490,19 +490,16 @@ void rtc_load()
 	fclose(f);
 }
 
-
+#define FREENULL(X) do { free(X); X = 0; } while(0)
 void loader_unload()
 {
 	sram_save();
-	if (romfile) free(romfile);
-	if (sramfile) free(sramfile);
-	if (saveprefix) free(saveprefix);
-	if (rom.bank) free(rom.bank);
-	if (ram.sbank) free(ram.sbank);
-	if (bootrom.bank) free(bootrom.bank);
-	romfile = sramfile = saveprefix = 0;
-	rom.bank = 0;
-	ram.sbank = 0;
+	if (romfile) FREENULL(romfile);
+	if (sramfile) FREENULL(sramfile);
+	if (saveprefix) FREENULL(saveprefix);
+	if (rom.bank) FREENULL(rom.bank);
+	if (ram.sbank) FREENULL(ram.sbank);
+	if (bootrom.bank) FREENULL(bootrom.bank);
 	mbc.type = mbc.romsize = mbc.ramsize = mbc.batt = 0;
 }
 
