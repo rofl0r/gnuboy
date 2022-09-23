@@ -4113,6 +4113,7 @@ fi
 
 if test "$with_x" != "no" ; then
 
+if test "$cross_compiling" != "yes" ; then
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for X" >&5
 $as_echo_n "checking for X... " >&6; }
 
@@ -4306,6 +4307,7 @@ else
 $as_echo "libraries $x_libraries, headers $x_includes" >&6; }
 fi
 
+fi
 
 
 if test "$no_x" != "yes" ; then

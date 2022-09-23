@@ -118,7 +118,9 @@ fi
 
 if test "$with_x" != "no" ; then
 
+if test "$cross_compiling" != "yes" ; then
 AC_PATH_X
+fi
 
 AH_TEMPLATE(HAVE_LIBXEXT)
 if test "$no_x" != "yes" ; then
