@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "--source"))
 		{
 			if (i + 1 >= argc) die("missing argument to source\n");
-			cmd = malloc(strlen(argv[i+1]) + 6);
+			cmd = malloc(strlen(argv[i+1]) + 8);
 			sprintf(cmd, "source %s", argv[++i]);
 			rc_command(cmd);
 			free(cmd);
