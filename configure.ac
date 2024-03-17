@@ -109,11 +109,14 @@ else
  with_sdl=no
 fi
 
-if test "$with_sdl" != yes && test "$with_sdl2" != yes ; then
+# sdl, until sdl3 comes along, still only supports sleeping with millisecond
+# granularity.
+if true ; then #test "$with_sdl" != yes && test "$with_sdl2" != yes ; then
 AC_CHECK_FUNCS(usleep, ,[
+AC_CHECK_FUNCS(nanosleep, ,[
 AC_CHECK_FUNCS(select, ,[
-AC_MSG_ERROR(your system must support either usleep or select)
-])])
+AC_MSG_ERROR(your system must support either usleep, nanosleep or select)
+])])])
 fi
 
 if test "$with_x" != "no" ; then
