@@ -4080,13 +4080,25 @@ else
  with_sdl=no
 fi
 
-if test "$with_sdl" != yes && test "$with_sdl2" != yes ; then
+# sdl, until sdl3 comes along, still only supports sleeping with millisecond
+# granularity.
+if true ; then #test "$with_sdl" != yes && test "$with_sdl2" != yes ; then
 for ac_func in usleep
 do :
   ac_fn_c_check_func "$LINENO" "usleep" "ac_cv_func_usleep"
 if test "x$ac_cv_func_usleep" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_USLEEP 1
+_ACEOF
+
+else
+
+for ac_func in nanosleep
+do :
+  ac_fn_c_check_func "$LINENO" "nanosleep" "ac_cv_func_nanosleep"
+if test "x$ac_cv_func_nanosleep" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_NANOSLEEP 1
 _ACEOF
 
 else
@@ -4101,7 +4113,10 @@ _ACEOF
 
 else
 
-as_fn_error $? "your system must support either usleep or select" "$LINENO" 5
+as_fn_error nanosleep or select "your system must support either usleep" "$LINENO" 5
+
+fi
+done
 
 fi
 done
@@ -4468,7 +4483,7 @@ yes|full)
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: producing heavily optimized code" >&5
 $as_echo "producing heavily optimized code" >&6; }
 
-CFLAGS="$CFLAGS -O3"
+CFLAGS="-O3 -g $CFLAGS"
 
 case "$host" in
 x86_64*|i?86*) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
@@ -4482,7 +4497,7 @@ esac
 
 if test "$enable_debug" != yes -a "$enable_profile" != yes ; then
 CFLAGS="$CFLAGS -fomit-frame-pointer"
-LDFLAGS="$LDFLAGS -s"
+#LDFLAGS="$LDFLAGS -s"
 fi ;;
 
 low)
