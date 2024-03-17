@@ -81,18 +81,21 @@ int pcm_submit()
 		return 0;
 	}
 	if(threaded) {
+		/* FIXME: the logic for the threaded version should be re-thought */
 		if(pcm.pos < pcm.len) return 1;
-		while(!audio_done) SDL_Delay(4);
+		while(!audio_done) SDL_Delay(1);
 		audio_done = 0;
 		pcm.pos = 0;
 		return 1;
 	}
-	min = pcm.len*2;
+	min = pcm.hz*(1+stereo)/60;
 	res = SDL_QueueAudio(device, pcm.buf, pcm.pos) == 0;
 	pcm.pos = 0;
-	while (res && SDL_GetQueuedAudioSize(device) > min)
-		SDL_Delay(1);
-	return res;
+	/* if we have at least one frame's time audio buffered, let the
+	   emu loop use it's own sleep() implementation for the exact frame
+	   duration, otherwise let it continue immediately (return 1) */
+	if(res && SDL_GetQueuedAudioSize(device) > min) return 0;
+	return 1;
 }
 
 void pcm_close()
