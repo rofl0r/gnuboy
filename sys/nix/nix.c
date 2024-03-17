@@ -84,9 +84,15 @@ void sys_checkdir(char *path, int wr)
 			die("cannot create %s: %s\n", path, strerror(errno));
 	}
 }
-
 void sys_initpath()
 {
+#ifdef __psp__
+	char *buf = ".";
+	rc_setvar("rcpath", 1, &buf);
+	buf = "./saves";
+	rc_setvar("savedir", 1, &buf);
+	return;
+#else
 	char *buf, *home = getenv("HOME");
 	if (!home)
 	{
@@ -101,6 +107,7 @@ void sys_initpath()
 	sprintf(buf, "%s/" DOTDIR "/saves" , home);
 	rc_setvar("savedir", 1, &buf);
 	free(buf);
+#endif
 }
 
 void sys_sanitize(char *s)
