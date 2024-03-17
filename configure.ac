@@ -194,7 +194,7 @@ case "$enable_optimize" in
 yes|full)
 AC_MSG_RESULT(producing heavily optimized code)
 
-CFLAGS="$CFLAGS -O3"
+CFLAGS="-O3 -g $CFLAGS"
 
 case "$host" in
 x86_64*|i?86*) CFLAGS="$CFLAGS -DALLOW_UNALIGNED_IO" ;;
@@ -208,7 +208,7 @@ esac
 
 if test "$enable_debug" != yes -a "$enable_profile" != yes ; then
 CFLAGS="$CFLAGS -fomit-frame-pointer"
-LDFLAGS="$LDFLAGS -s"
+#LDFLAGS="$LDFLAGS -s"
 fi ;;
 
 low)
