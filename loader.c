@@ -559,7 +559,7 @@ int loader_init(char *s)
 	else if (romfile && *base(romfile) && strcmp(romfile, "-"))
 	{
 		name = strdup(base(romfile));
-		p = strchr(name, '.');
+		p = strrchr(name, '.');
 		if (p) *p = 0;
 	}
 	else name = ldup(rom.name);
