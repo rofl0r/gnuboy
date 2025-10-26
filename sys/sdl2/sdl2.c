@@ -107,7 +107,7 @@ void vid_init()
 	   you may want to turn it off using by setting the environment
 	   variable SDL_RENDER_VSYNC to "0" or "false", which activates
 	   SDL_HINT_RENDER_VSYNC (yes, the env var lacks "HINT") */
-	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED|vsync*SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED|(vsync*SDL_RENDERER_PRESENTVSYNC));
 	if (!renderer) {
 		fprintf(stderr, "warning: fallback to software renderer\n");
 		renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE|vsync*SDL_RENDERER_PRESENTVSYNC);
