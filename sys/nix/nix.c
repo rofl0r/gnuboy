@@ -98,8 +98,10 @@ void sys_checkdir(char *path, int wr)
 			die("cannot create %s: %s\n", path, strerror(errno));
 	}
 }
-void sys_initpath()
+
+void sys_initpath(char *exe)
 {
+	(void) exe;
 #ifdef __psp__
 	char *buf = ".";
 	rc_setvar("rcpath", 1, &buf);

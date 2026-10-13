@@ -34,6 +34,6 @@ void kb_close();
 /* FIXME these have different prototype for obsolete ( == M$ ) platforms */
 #include <sys/time.h>
 int sys_elapsed(struct timeval *prev);
-void sys_initpath();
+void sys_initpath(char* exe);
 
 #endif
